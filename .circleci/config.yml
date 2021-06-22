@@ -1,8 +1,18 @@
-version: 2.1
+version: 2
 jobs:
   build:
-    docker: # use the docker executor type; machine and macos executors are also supported
-      - image: circleci/node # the primary container, where your job's commands are run
+    docker: circleci/node
     steps:
-      - checkout # check out the code in the project directory
-      - run: echo "hello world" # run the `echo` command
+      - checkout
+      - run
+        name: "'run' statements can actually contain a 'name' and 'command' argument as well"
+        command: | 
+          echo "You can even have multiline commands."
+      - restore_cache:
+          keys:
+          - v1-dependencies-
+      - run: mkdir ~/cache/
+      - run: echo "testfile" > ~/cache/log.txt
+      - save_cache:
+          key: v1-dependencies-
+          paths: ~/cache
