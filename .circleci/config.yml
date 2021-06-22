@@ -1,7 +1,8 @@
 version: 2
 jobs:
   build:
-    docker: circleci/node
+    docker: 
+      - image: circleci/node
     steps:
       - checkout
       - run:
