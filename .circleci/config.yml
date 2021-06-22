@@ -1,19 +1,16 @@
 version: 2
 jobs:
   build:
-    docker: 
+    docker:
       - image: circleci/node
     steps:
-      - checkout
+      - checkout # check out the code in the project directory
+      - run: echo "hello world" # run the `echo` command
       - run:
-          name: "'run' statements can actually contain a 'name' and 'command' argument as well"
-          command: | 
-            echo "You can even have multiline commands."
-      - restore_cache:
-          keys:
-          - v1-dependencies-
-      - run: mkdir ~/cache/
-      - run: echo "testfile" > ~/cache/log.txt
-      - save_cache:
-          key: v1-dependencies-
-          paths: ~/cache
+          name: install dockerize # This is a utility that will attempt to connect to a database, in place of an application for this sample.
+          command: wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && sudo tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+          environment:
+            DOCKERIZE_VERSION: v0.3.0
+      - run:
+          name: Wait for db # If no database is found in 1 minute the job will fail.
+          command: dockerize -wait tcp://localhost:5432 -timeout 1m
