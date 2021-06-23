@@ -5,8 +5,7 @@ jobs:
       - image: circleci/node
       - image: circleci/postgres
         environment:
-          POSTGRES_USER: circleci-demo-go
-          POSTGRES_DB: circle_test
+          POSTGRES_PASSWORD: testing
     steps:
       - checkout # check out the code in the project directory
       - run: echo "hello world" # run the `echo` command
