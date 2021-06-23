@@ -7,7 +7,7 @@ jobs:
     steps:
       - checkout
       # These two tests should run in parallel. Make it so!
-      - run: circleci tests split < /src | bash src/test_hello.sh | bash src/test_goodbye.sh
+      - run: circleci tests glob "src/*.sh" | circleci tests split
      # - run:
      #     name: Run Hello test
      #     command: |
