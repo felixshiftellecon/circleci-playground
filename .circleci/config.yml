@@ -2,7 +2,7 @@ version: 2.1
 
 orbs:
   # Add Orb here
-
+  ruby: circleci/ruby@1.1.4
 jobs:
   build:
     docker:
@@ -10,8 +10,8 @@ jobs:
     steps:
       - checkout
       # Add step below to install Ruby version 2.3.8
-
-      
+      - ruby/install:
+          version: '2.3.8'
       - run: ruby -v
 
 workflows:
