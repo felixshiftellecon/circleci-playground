@@ -1,23 +1,20 @@
-version: 2
+version: 2.1
+
+orbs:
+  # Add Orb here
+
 jobs:
-  test:
+  build:
     docker:
-      - image: circleci/node
-    parallelism: 2
+      - image: cimg/base:stable
     steps:
       - checkout
-      # These two tests should run in parallel. Make it so!
-      - run: circleci tests glob "src/*.sh" | circleci tests split
-     # - run:
-     #     name: Run Hello test
-     #     command: |
-     #       bash src/test_hello.sh
-     # - run:
-     #     name: Run Goodbye test
-     #     command: |
-     #       bash src/test_goodbye.sh
+      # Add step below to install Ruby version 2.3.8
+
+      
+      - run: ruby -v
+
 workflows:
-  version: 2
-  test:
+  run-jobs:
     jobs:
-      - test
+      - build
