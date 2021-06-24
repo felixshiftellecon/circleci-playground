@@ -10,6 +10,7 @@ jobs:
     steps:
       - checkout
       # Add step below to install Ruby version 2.3.8
+      - ruby/install-deps
       - ruby/install:
           version: '2.3.8'
       - run: ruby -v
