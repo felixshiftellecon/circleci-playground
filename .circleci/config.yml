@@ -9,6 +9,11 @@ jobs:
       - image: circleci/node 
     steps:
       - build-tools/test-results:
+          name: blahblah
           data-dir: ~/project/results
           upload: true
 # Add below this line, do not modify above
+workflows:
+  build:
+    jobs:
+      - build
