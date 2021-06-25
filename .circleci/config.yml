@@ -1,38 +1,42 @@
 version: 2.1
 
-parameters:
-  condition-workflow:
-    type: boolean
-    default: true
+commands:
+  generatelogs:
+    description: "A command to generate a log file"
+    parameters:
+      path:
+        type: string
+        default: "~/randomfolder"
+    steps:
+      - run: echo "Log file" > <<parameters.path>>/log.txt
+  endMission:
+    description: "Use the parameters of this command to exit this mission with a green build."
+    parameters:
+      exitCode:
+        type: integer
+        default: 1
+    steps:
+      - run: exit <<parameters.exitCode>>
 
 jobs:
-  my-job:
-    docker:
-      - image: cimg/base:stable
+  orb-intro:
+    executor: custom-node
     steps:
-      - checkout
-      - when:
-          condition:
-            equal: [main, << pipeline.git.branch>>]
-          steps:
-            - run: echo "I am on main"
+      - run: echo "console.log('complete')" | node
+      - generatelogs
+      - run:
+          name: Check for logs - DO NOT MODIFY
+          command: |
+            if [ ! -f ~/project/log.txt ]; then
+              echo "The log should exist at ~/project/log.txt after running the 'generatelogs' command"
+              exit 1
+            fi
+      - endMission
 
-  conditional-job:
-    docker:
-      - image: cimg/base:stable
-    steps:
-      - checkout
-      - run: echo "This ran on a pipeline parameter"
+
 
 workflows:
   version: 2
-  my-workflow:
+  orb-intro-workflow:
     jobs:
-      - my-job
-
-  conditional-workflow:
-    when:
-      and:
-        [<< pipeline.parameters.condition-workflow >>]
-    jobs:
-      - conditional-job
+      - orb-intro
