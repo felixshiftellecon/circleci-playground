@@ -1,66 +1,38 @@
 version: 2.1
+
+parameters:
+  condition-workflow:
+    type: boolean
+    default: true
+
 jobs:
-  build-linux:
+  my-job:
     docker:
-      - image: node
+      - image: cimg/base:stable
     steps:
-        - run: mkdir -p app/linux
-        - run:
-            name: Generate app
-            command: echo app >> app/linux/app.linux
-        - run: cd ~/project/app && pwd && ls
-          # Edit below here
-        - persist_to_workspace: 
-            root: app
-            paths: linux
+      - checkout
+      - when:
+          condition:
+            # Add condition to execute this step when the github branch is equal to 'main'
+          steps:
+            - run: echo "I am on main"
 
-  build-windows:
+  conditional-job:
     docker:
-      - image: node # use your imagination, using all linux/docker for ease-of-use
+      - image: cimg/base:stable
     steps:
-        - run: mkdir -p app/windows
-        - run:
-            name: Generate app
-            command: echo app >> app/windows/app.windows
-        - run: cd ~/project/app && pwd && ls
-          # Edit below here
-        - persist_to_workspace: 
-            root: app
-            paths: windows
-
-  build-mac:
-      docker:
-        - image: node # use your imagination, using all linux/docker for ease-of-use
-      steps:
-        - run: mkdir -p app/mac
-        - run:
-            name: Generate app
-            command: echo app >> app/mac/app.mac
-        - run: cd ~/project/app && pwd && ls
-          # Edit below here
-        - persist_to_workspace: 
-            root: app
-            paths: mac
-
-  deploy:
-      docker:
-        - image: node
-      steps:
-        - attach_workspace:
-            at: app
-        - store_artifacts: # See circleci.com/docs/2.0/artifacts/ for more details.
-            path: app
-            destination: apps
+      - checkout
+      - run: echo "This ran on a pipeline parameter"
 
 workflows:
   version: 2
-  build_and_deploy:
+  my-workflow:
     jobs:
-      - build-linux
-      - build-mac
-      - build-windows
-      - deploy:
-          requires:
-            - build-linux
-            - build-mac
-            - build-windows
+      - my-job
+
+  conditional-workflow:
+    when:
+      and:
+        # Add condition to execute this workflow when condition-workflow is equal to true
+    jobs:
+      - conditional-job
