@@ -19,7 +19,7 @@ commands:
     parameters:
       exitCode:
         type: integer
-        default: 1
+        default: 0
     steps:
       - run: exit <<parameters.exitCode>>
 
