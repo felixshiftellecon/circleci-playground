@@ -7,7 +7,7 @@ jobs:
     steps:
       - checkout
       - run: echo "Building complete"
-  test-production:
+  test:
     docker:
       - image: circleci/node
     steps:
@@ -25,16 +25,12 @@ workflows:
   build-test-and-deploy:
     jobs:
       - build
-      - test-production:
+      - test:
           requires:
             - build
       - deploy:
           requires:
-            - test-production
+            - test
           filters:
-            branches:
-<<<<<<< HEAD
-              only: production
-=======
-              only: production
->>>>>>> main
+            tags:
+              only: /^beta.*/
