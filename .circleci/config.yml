@@ -30,7 +30,8 @@ jobs:
       - run: echo "console.log('complete')" | node
       - run: mkdir ~/randomfolder
       - generatelogs
-      - run: mv ~/randomfolder/log.txt ~/project/log.txt | rmdir ~/randomfolder
+      - run: mv ~/randomfolder/log.txt ~/project/log.txt
+      - run: rmdir ~/randomfolder
       - run:
           name: Check for logs - DO NOT MODIFY
           command: |
