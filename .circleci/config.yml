@@ -1,38 +1,66 @@
 version: 2.1
-
-executors:
-  linux:
-    docker:
-      - image: cimg/base:2020.01
-  macos:
-    macos:
-      xcode: 11.4
-
-orbs:
-  node: circleci/node@2.0.0
-
 jobs:
-  test:
-    parameters:
-      os:
-        type: executor
-      node-version:
-        type: string
-    executor: << parameters.os >>
+  build-linux:
+    docker:
+      - image: node
     steps:
-      - checkout
-      - node/install:
-          node-version: << parameters.node-version >>
-          install-yarn: true
-      - run:
-          command: echo "running matrix job for << parameters.os >> << parameters.node-version >>"
+        - run: mkdir -p app/linux
+        - run:
+            name: Generate app
+            command: echo app >> app/linux/app.linux
+        - run: cd ~/project/app && pwd && ls
+          # Edit below here
+        - persist_to_workspace: 
+            root: 
+            paths:
+
+  build-windows:
+    docker:
+      - image: node # use your imagination, using all linux/docker for ease-of-use
+    steps:
+        - run: mkdir -p app/windows
+        - run:
+            name: Generate app
+            command: echo app >> app/windows/app.windows
+        - run: cd ~/project/app && pwd && ls
+          # Edit below here
+        - persist_to_workspace: 
+            root: 
+            paths:
+
+  build-mac:
+      docker:
+        - image: node # use your imagination, using all linux/docker for ease-of-use
+      steps:
+        - run: mkdir -p app/mac
+        - run:
+            name: Generate app
+            command: echo app >> app/mac/app.mac
+        - run: cd ~/project/app && pwd && ls
+          # Edit below here
+        - persist_to_workspace: 
+            root:
+            paths:
+
+  deploy:
+      docker:
+        - image: node
+      steps:
+        - attach_workspace:
+            at: <location>
+        - store_artifacts: # See circleci.com/docs/2.0/artifacts/ for more details.
+            path: app
+            destination: apps
 
 workflows:
-  all-tests:
+  version: 2
+  build_and_deploy:
     jobs:
-      - test:
-          matrix:
-            # Add below this line to setup matrix build
-            parameters:
-              node-version: ["10.9.0", "11.9.0", "12.9.1", "13.9.0"]
-              os: ["linux", "macos"]
+      - build-linux
+      - build-mac
+      - build-windows
+      - deploy:
+          requires:
+            - build-linux
+            - build-mac
+            - build-windows
