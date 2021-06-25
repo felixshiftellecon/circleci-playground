@@ -1,5 +1,10 @@
 version: 2.1
 
+executors:
+  custom-node:
+    docker:
+      - image: circleci/node
+
 commands:
   generatelogs:
     description: "A command to generate a log file"
