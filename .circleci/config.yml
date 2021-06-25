@@ -33,8 +33,4 @@ workflows:
             - test-production
           filters:
             branches:
-<<<<<<< HEAD
               only: production
-=======
-              only: production
->>>>>>> main
