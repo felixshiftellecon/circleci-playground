@@ -32,7 +32,7 @@ workflows:
 
   conditional-workflow:
     when:
-      and: 
-        value: << pipeline.parameters.condition-workflow >>
+      and:
+        [<< pipeline.parameters.condition-workflow >>]
     jobs:
       - conditional-job
