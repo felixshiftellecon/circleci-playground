@@ -28,10 +28,11 @@ jobs:
     executor: custom-node
     steps:
       - run: echo "console.log('complete')" | node
-      - run: mkdir ~/randomfolder
-      - generatelogs
-      - run: mv ~/randomfolder/log.txt ~/project/log.txt
-      - run: rmdir ~/randomfolder
+     # - run: mkdir ~/randomfolder
+      - generatelogs:
+          path: ~/project
+     # - run: mv ~/randomfolder/log.txt ~/project/log.txt
+     # - run: rmdir ~/randomfolder
       - run:
           name: Check for logs - DO NOT MODIFY
           command: |
