@@ -11,8 +11,8 @@ jobs:
         - run: cd ~/project/app && pwd && ls
           # Edit below here
         - persist_to_workspace: 
-            root: 
-            paths:
+            root: workspace
+            paths: linux
 
   build-windows:
     docker:
@@ -25,8 +25,8 @@ jobs:
         - run: cd ~/project/app && pwd && ls
           # Edit below here
         - persist_to_workspace: 
-            root: 
-            paths:
+            root: workspace
+            paths: windows
 
   build-mac:
       docker:
@@ -39,15 +39,15 @@ jobs:
         - run: cd ~/project/app && pwd && ls
           # Edit below here
         - persist_to_workspace: 
-            root:
-            paths:
+            root: workspace
+            paths: mac
 
   deploy:
       docker:
         - image: node
       steps:
         - attach_workspace:
-            at: <location>
+            at: /tmp/workspace
         - store_artifacts: # See circleci.com/docs/2.0/artifacts/ for more details.
             path: app
             destination: apps
