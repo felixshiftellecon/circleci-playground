@@ -27,6 +27,7 @@ jobs:
   orb-intro:
     executor: custom-node
     steps:
+      - checkout
       - run: echo "console.log('complete')" | node
       - generatelogs
       - run:
