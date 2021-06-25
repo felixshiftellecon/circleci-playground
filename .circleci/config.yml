@@ -32,5 +32,10 @@ workflows:
           requires:
             - test
           filters:
+<<<<<<< HEAD
             tags:
               only: /^beta.*/
+=======
+            branches:
+              only: production
+>>>>>>> 92f50143af8e9e24ed2b4cd57531f11f00af0fe9
