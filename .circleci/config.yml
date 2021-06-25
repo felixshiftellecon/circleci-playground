@@ -1,41 +1,29 @@
 version: 2.1
 
-parameters:
-  condition-workflow:
-    type: boolean
-    default: true
-
 jobs:
-  my-job:
+  build:
     docker:
-      - image: cimg/base:stable
+      - image: circleci/node
     steps:
       - checkout
-      - when:
-          condition:
-            equal: [main, << pipeline.git.branch>>]
-          steps:
-            - run: echo "I am on main"
-
-  conditional-job:
+      - run: echo "Building complete"
+  test:
     docker:
-      - image: cimg/base:stable
+      - image: circleci/node
     steps:
       - checkout
-      - run: echo "This ran on a pipeline parameter"
+      - run: echo "Testing complete"
+  deploy:
+    docker:
+      - image: circleci/node
+    steps:
+      - checkout
+      - run: echo "Deploy complete"
 
 workflows:
   version: 2
-  my-workflow:
+  build-test-and-deploy:
     jobs:
-      - my-job
-
-  conditional-workflow:
-    when:
-      and:
-        [<< pipeline.parameters.condition-workflow >>]
-    jobs:
-<<<<<<< HEAD
       - build
       - test:
           requires:
@@ -44,13 +32,5 @@ workflows:
           requires:
             - test
           filters:
-<<<<<<< HEAD
             tags:
               only: /^beta.*/
-=======
-            branches:
-              only: production
->>>>>>> 92f50143af8e9e24ed2b4cd57531f11f00af0fe9
-=======
-      - conditional-job
->>>>>>> main
