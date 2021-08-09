@@ -2,8 +2,8 @@ version: 2.1
 
 executors:
   custom-node:
-    machine:
-      #- image: circleci/node
+    docker:
+      - image: circleci/node
 
 commands:
   generatelogs:
@@ -25,7 +25,7 @@ commands:
 
 jobs:
   orb-intro:
-    executor: custom-node
+    machine:
     steps:
       - run: echo "console.log('complete')" | node
      # - run: mkdir ~/randomfolder
