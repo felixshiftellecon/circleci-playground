@@ -25,8 +25,7 @@ commands:
 
 jobs:
   orb-intro:
-    machine:
-      docker_layer_caching: true
+    machine: true
     steps:
       - run: echo "console.log('complete')" | node
      # - run: mkdir ~/randomfolder
