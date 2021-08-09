@@ -25,7 +25,8 @@ commands:
 
 jobs:
   orb-intro:
-    machine: true
+    machine:
+      resource_class: medium
     steps:
       - run: echo "console.log('complete')" | node
      # - run: mkdir ~/randomfolder
