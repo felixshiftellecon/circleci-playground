@@ -42,6 +42,10 @@ jobs:
               exit 1
             fi
       - endmission
+  three_workflow_test:
+    machine: true
+    steps:
+      - run: echo "The third workflow"
 
 
 
@@ -50,3 +54,6 @@ workflows:
   orb-intro-workflow:
     jobs:
       - orb-intro
+  three_workflow_test:
+    jobs:
+      - three_workflow_test
