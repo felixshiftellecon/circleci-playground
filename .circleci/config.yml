@@ -54,6 +54,6 @@ workflows:
   orb-intro-workflow:
     jobs:
       - orb-intro
-  three_workflow_test:
+  three-workflow-test:
     jobs:
       - three_workflow_test
