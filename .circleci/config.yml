@@ -54,11 +54,11 @@ workflows:
   orb-intro-workflow:
     jobs:
       - orb-intro
-  tag-test:
+  tag-test-workflow:
     jobs:
-      - tag-test
-      filters:
-        tags: 
-          only: /^a-tag.*/
-        branches:
-          ignore: /.*/
+      - tag-test:
+          filters:
+            tags: 
+              only: /^a-tag.*/
+            branches:
+              ignore: /.*/
