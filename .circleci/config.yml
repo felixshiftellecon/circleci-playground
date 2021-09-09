@@ -37,10 +37,10 @@ workflows:
   normal-workflow:
     jobs:
       - build
-      - test
+      - test:
         requires:
           - build
-      - deploy
+      - deploy:
         requires:
           - test
   tag-test-workflow:
