@@ -38,11 +38,11 @@ workflows:
     jobs:
       - build
       - test:
-        requires:
-          - build
+          requires:
+            - build
       - deploy:
-        requires:
-          - test
+          requires:
+            - test
   tag-test-workflow:
     jobs:
       - tag-test:
