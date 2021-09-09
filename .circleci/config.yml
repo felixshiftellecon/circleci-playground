@@ -5,45 +5,27 @@ executors:
     docker:
       - image: circleci/node
 
-commands:
-  generatelogs:
-    description: "A command to generate a log file"
-    parameters:
-      path:
-        type: string
-        default: "~/randomfolder"
-    steps:
-      - run: echo "Log file" > <<parameters.path>>/log.txt
-  endmission:
-    description: "Use the parameters of this command to exit this mission with a green build."
-    parameters:
-      exitCode:
-        type: integer
-        default: 0
-    steps:
-      - run: exit <<parameters.exitCode>>
-
 jobs:
-  orb-intro:
-    machine:
-      docker_layer_caching: true
+  build:
+    docker:
+      - image: circleci/node
     steps:
-      - run: echo "console.log('complete')" | node
-     # - run: mkdir ~/randomfolder
-      - generatelogs:
-          path: ~/project
-     # - run: mv ~/randomfolder/log.txt ~/project/log.txt
-     # - run: rmdir ~/randomfolder
-      - run:
-          name: Check for logs - DO NOT MODIFY
-          command: |
-            if [ ! -f ~/project/log.txt ]; then
-              echo "The log should exist at ~/project/log.txt after running the 'generatelogs' command"
-              exit 1
-            fi
-      - endmission
+      - checkout
+      - run: echo "Building complete"
+  test:
+    docker:
+      - image: circleci/node
+    steps:
+      - checkout
+      - run: echo "Testing complete"
+  deploy:
+    docker:
+      - image: circleci/node
+    steps:
+      - checkout
+      - run: echo "Deploy complete"
   tag-test:
-    machine: true
+    - image: circleci/node
     steps:
       - run: echo "running with the tag :D"
 
@@ -51,9 +33,15 @@ jobs:
 
 workflows:
   version: 2
-  orb-intro-workflow:
+  normal-workflow:
     jobs:
-      - orb-intro
+      - build
+      - test
+        requires:
+          - build
+      - deploy
+        requires:
+          - test
   tag-test-workflow:
     jobs:
       - tag-test:
