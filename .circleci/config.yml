@@ -25,7 +25,8 @@ jobs:
       - checkout
       - run: echo "Deploy complete"
   tag-test:
-    - image: circleci/node
+    docker:
+      - image: circleci/node
     steps:
       - run: echo "running with the tag :D"
 
