@@ -42,10 +42,10 @@ jobs:
               exit 1
             fi
       - endmission
-  three_workflow_test:
+  tag-test:
     machine: true
     steps:
-      - run: echo "The third workflow"
+      - run: echo "running with the tag :D"
 
 
 
@@ -54,6 +54,11 @@ workflows:
   orb-intro-workflow:
     jobs:
       - orb-intro
-  three-workflow-test:
+  tag-test:
     jobs:
-      - three_workflow_test
+      - tag-test
+      filters:
+        tags: 
+          only: /^a-tag.*/
+        branches:
+          ignore: /.*/
