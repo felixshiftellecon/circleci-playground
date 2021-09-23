@@ -1,53 +1,45 @@
 version: 2.1
 
 executors:
-  custom-node:
+  docker-executor:
     docker:
-      - image: circleci/node
+      - image: cimg/base:2021.04
+    working_directory: /tmp
+  machine-executor:
+    machine: 
+      image: ubuntu-2004:202107-02
+    working_directory: /tmp
 
 jobs:
-  build:
-    docker:
-      - image: circleci/node
+  flow:
+    executor: docker-executor
     steps:
-      - checkout
-      - run: echo "Building complete"
-  test:
-    docker:
-      - image: circleci/node
-    steps:
-      - checkout
-      - run: echo "Testing complete"
-  deploy:
-    docker:
-      - image: circleci/node
-    steps:
-      - checkout
-      - run: echo "Deploy complete"
-  tag-test:
-    docker:
-      - image: circleci/node
-    steps:
-      - run: echo "running with the tag :D"
+      - run: mkdir -p workspace
+      - run: echo "Hello, world!" > workspace/echo-output
+      - persist_to_workspace:
+          root: workspace
+          paths:
+            - echo-output
 
+  downstream:
+    executor: machine-executor
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
 
+      - run: |
+          if [[ `cat /tmp/workspace/echo-output` == "Hello, world!" ]]; then
+            echo "It worked!";
+          else
+            echo "Nope!"; exit 1
+          fi
 
 workflows:
   version: 2
-  normal-workflow:
+
+  btd:
     jobs:
-      - build
-      - test:
+      - flow
+      - downstream:
           requires:
-            - build
-      - deploy:
-          requires:
-            - test
-  tag-test-workflow:
-    jobs:
-      - tag-test:
-          filters:
-            tags: 
-              only: /^a-tag.*/
-            branches:
-              ignore: /.*/
+            - flow
