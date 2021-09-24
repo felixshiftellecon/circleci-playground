@@ -29,7 +29,6 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/workspace
-
       - run: |
           if [[ `cat /tmp/workspace/echo-output` == "Hello, world!" ]]; then
             echo "It worked!";
@@ -43,7 +42,6 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/workspace
-
       - run: |
           if [[ `cat /tmp/workspace/echo-output` == "Hello, world!" ]]; then
             echo "It worked!";
@@ -53,6 +51,8 @@ jobs:
   downstream-windows:
     executor: win/default
     steps:
+      - attach_workspace:
+          at: /tmp/workspace
       - run: |
             if [[ `cat /tmp/workspace/echo-output` == "Hello, world!" ]]; then
               echo "It worked!";
