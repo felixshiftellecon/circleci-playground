@@ -11,10 +11,10 @@ jobs:
     steps:
       - run: echo "The tests have started"
       - run: echo "tests complete let's send the complete status" || true
-      - run: |
-              echo "I am caching while the other jobs runs hopefully"
-              sleep 20
-              echo "Done caching!"
+      # - run: |
+      #         echo "I am caching while the other jobs runs hopefully"
+      #         sleep 20
+      #         echo "Done caching!"
   job2:
     executor: custom-node
     steps:
@@ -26,7 +26,13 @@ workflows:
   version: 2
   job-workflow:
     jobs:
-      - job1
+      - job1:
+          post-steps:
+            - run: 
+                command: |
+                  echo "I am caching while the other jobs runs hopefully"
+                  sleep 20
+                  echo "Done caching!"
       - job2:
           requires:
             - job1
