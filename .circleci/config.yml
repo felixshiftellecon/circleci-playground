@@ -5,60 +5,28 @@ executors:
     docker:
       - image: circleci/node
 
-commands:
-  generatelogs:
-    description: "A command to generate a log file"
-    parameters:
-      path:
-        type: string
-        default: "~/randomfolder"
-    steps:
-      - run: echo "Log file" > <<parameters.path>>/log.txt
-  endmission:
-    description: "Use the parameters of this command to exit this mission with a green build."
-    parameters:
-      exitCode:
-        type: integer
-        default: 0
-    steps:
-      - run: exit <<parameters.exitCode>>
-
 jobs:
-  orb-intro:
-    machine:
-      docker_layer_caching: true
+  job1:
+    executor: custom-node
     steps:
-      - run: echo "console.log('complete')" | node
-     # - run: mkdir ~/randomfolder
-      - generatelogs:
-          path: ~/project
-     # - run: mv ~/randomfolder/log.txt ~/project/log.txt
-     # - run: rmdir ~/randomfolder
-      - run:
-          name: Check for logs - DO NOT MODIFY
-          command: |
-            if [ ! -f ~/project/log.txt ]; then
-              echo "The log should exist at ~/project/log.txt after running the 'generatelogs' command"
-              exit 1
-            fi
-      - endmission
-  tag-test:
-    machine: true
+      - run: echo "The tests have started"
+      - run: echo "tests complete let's send the complete status" || true
+      - run: |
+              echo "I am caching while the other jobs runs hopefully"
+              sleep 20
+              echo "Done caching!"
+  job2:
+    executor: custom-node
     steps:
-      - run: echo "running with the tag :D"
+      - run: echo "I should run before the caching is complete"
 
 
 
 workflows:
   version: 2
-  orb-intro-workflow:
+  job-workflow:
     jobs:
-      - orb-intro
-  tag-test-workflow:
-    jobs:
-      - tag-test:
-          filters:
-            tags: 
-              only: /^a-tag.*/
-            branches:
-              ignore: /.*/
+      - job1
+      - job2:
+          requires:
+            - job1
