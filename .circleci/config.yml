@@ -1,3 +1,5 @@
+version: 2.1
+
 executors:
   custom-node:
     docker:
@@ -48,7 +50,6 @@ jobs:
 
 
 workflows:
-  version: 2
   orb-intro-workflow:
     jobs:
       - orb-intro
