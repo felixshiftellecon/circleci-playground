@@ -48,6 +48,7 @@ jobs:
 
 
 workflows:
+  version: 2
   orb-intro-workflow:
     jobs:
       - orb-intro
