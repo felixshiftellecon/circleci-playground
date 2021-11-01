@@ -9,27 +9,15 @@ jobs:
   job1:
     executor: custom-node
     steps:
-      - run: echo "The tests have started"
-      - run: echo "tests complete let's send the complete status" || true
-      - run:
-          name: start job2
-          command: |
-            curl -u ${CIRCLECI_TOKEN}: \
-            -d build_parameters[CIRCLE_JOB]=job2 \
-            https://circleci.com/api/v1.1/project/github/felixshiftellecon/circleci-playground/tree/$CIRCLE_BRANCH
-      - run: |
-              echo "I am caching while the other jobs runs hopefully"
-              sleep 20
-              echo "Done caching!"
+      - run: echo "Running job 1"
   job2:
     executor: custom-node
     steps:
-      - run: echo "I should run before the caching is complete"
+      - run: echo "running job 2"
 
 
 
 workflows:
-  version: 2
   job-workflow:
     jobs:
       - job1
