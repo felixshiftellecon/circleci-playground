@@ -10,7 +10,7 @@ jobs:
     machine: true
     resource_class: felixshiftellecon/runner1
     steps:
-      - run: echo "Running job 1"
+      - run: echo "Running job 1 on runner"
   job2:
     executor: custom-node
     steps:
