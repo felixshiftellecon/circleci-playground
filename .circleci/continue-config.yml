@@ -32,7 +32,7 @@ workflows:
     when: << pipeline.parameters.run-path-a >>
     jobs:
       - job_a
-  workflows-b:
+  workflow-b:
     when: << pipeline.parameters.run-path-b >>
     jobs:
       - job_b
