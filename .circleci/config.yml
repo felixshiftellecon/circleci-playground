@@ -1,26 +1,26 @@
 version: 2.1
 
 executors:
-  custom-node:
+  base:
     docker:
-      - image: circleci/node
+      - image: cimg/base:stable
 
 jobs:
-  job1:
-    executor: custom-node
+  job_a:
+    executor: base
     steps:
-      - run: echo "Running job 1"
-  job2:
-    executor: custom-node
+      - checkout
+      - run: echo "Running job a"
+      - run: cat path_a/README.txt
+  job_b:
+    executor: base
     steps:
-      - run: echo "running job 2"
-
-
+      - checkout
+      - run: echo "running job b"
+      - run: cat path_b/README.txt
 
 workflows:
   job-workflow:
     jobs:
-      - job1
-      - job2:
-          requires:
-            - job1
+      - job_a
+      - job_b
