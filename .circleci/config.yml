@@ -9,7 +9,7 @@ jobs:
   job1:
     executor: custom-node
     steps:
-      - 'run: echo "The tests have started"'
+      - run: echo "The tests have started"
       - run: echo "tests complete let's send the complete status" || true
       - run:
           name: start job2
