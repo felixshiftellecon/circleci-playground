@@ -2,7 +2,7 @@ version: 2.1
 executors:
   go:
     docker:
-    - image: cimg/go:stable
+    - image: cimg/go:1.17.3
 jobs:
   job_a:
     executor: go
