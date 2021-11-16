@@ -2,7 +2,7 @@ version: 2.1
 
 setup: true
 
-orbs: circleci/continuation
+orbs: circleci/continuation@0.2.0
 
 executors:
   custom-node:
