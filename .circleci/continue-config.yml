@@ -10,15 +10,15 @@ executors:
       - image: circleci/node
 
 jobs:
-  setup_job:
+  continue_job:
     executor: custom-node
     steps:
       - continuation/continue:
-          configuration_path: ./continue-config.yml
+          configuration_path: ./config.yml
 
 
 
 workflows:
-  setup:
-    jobs:
-      - setup_job
+  jobs:
+    continue:
+    - continue_job
