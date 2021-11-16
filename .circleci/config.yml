@@ -16,7 +16,7 @@ jobs:
     steps:
       - checkout
       - continuation/continue:
-          configuration_path: ./continue-config.yml
+          configuration_path: .circleci/continue-config.yml
 
 
 
