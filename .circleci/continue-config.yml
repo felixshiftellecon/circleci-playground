@@ -21,6 +21,6 @@ jobs:
 
 
 workflows:
-  jobs:
-    continue:
-    - continue_job
+  continue:
+    jobs:
+      - continue_job
