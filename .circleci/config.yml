@@ -14,6 +14,7 @@ jobs:
   setup_job:
     executor: custom-node
     steps:
+      - checkout
       - continuation/continue:
           configuration_path: ./continue-config.yml
 
