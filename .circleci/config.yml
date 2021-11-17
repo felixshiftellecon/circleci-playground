@@ -1,26 +1,27 @@
 version: 2.1
-
-setup: true
-
-orbs: 
-  continuation: circleci/continuation@0.2.0
-
 executors:
-  custom-node:
+  go:
     docker:
-      - image: circleci/node
-
+    - image: cimg/go:1.17.3
 jobs:
-  setup_job:
-    executor: custom-node
+  job_a:
     steps:
-      - checkout
-      - continuation/continue:
-          configuration_path: .circleci/continue-config.yml
-
-
-
+    - run:
+        command: checkout
+    - run:
+        command: echo Running job a
+    - run:
+        command: cat path_a/README.md
+    executor: go
+  job_b:
+    steps:
+    - run:
+        command: echo Running job b
+    - run:
+        command: cat path_b/README.md
+    executor: go
 workflows:
-  setup:
+  job-workflow:
     jobs:
-      - setup_job
+    - job_a
+    - job_b
