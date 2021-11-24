@@ -7,7 +7,7 @@ jobs:
     parameters:
       path: 
         type: string
-        default: ~/project
+        default: ./
       quiet:
         type: string
         default: --quiet
