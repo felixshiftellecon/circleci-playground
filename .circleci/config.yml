@@ -13,8 +13,7 @@ jobs:
         default: --quiet
     steps:
       - checkout
-      - run: |
-              sudo apt update ; sudo apt install cloc
+      - run: sudo npm install -g cloc
       - run: | 
               echo "$PATH" 
               echo "$QUIET"
