@@ -20,7 +20,7 @@ jobs:
               echo "$QUIET"
       - run: |
               clc="${PATH} ${QUIET}"
-              export CLOC_PARAMS=$clc" >> $BASH_ENV
+              export CLOC_PARAMS=$clc >> $BASH_ENV
               source $BASH_ENV
   test:
     docker:
