@@ -4,9 +4,24 @@ jobs:
   build:
     docker:
       - image: circleci/node
+    parameters:
+      path: 
+        type: string
+        default: ~/project
+      quiet:
+        type: string
+        default: --quiet
     steps:
       - checkout
-      - run: echo "Building complete"
+      - run: |
+              sudo apt update ; sudo apt install cloc
+      - run: | 
+              echo "$PATH" 
+              echo "$QUIET"
+      - run: |
+              clc="${PATH} ${QUIET}"
+              export CLOC_PARAMS=$clc" >> $BASH_ENV
+              source $BASH_ENV
   test:
     docker:
       - image: circleci/node
