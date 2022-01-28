@@ -14,7 +14,7 @@ jobs:
   job2:
     executor: custom-node
     steps:
-      - run: echo "running job 2"
+      - run: echo "running job 2 on the cloud"
 
 
 
