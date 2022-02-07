@@ -7,16 +7,23 @@ executors:
 
 jobs:
   job1:
-    machine: true
-    resource_class: felixshiftellecon/runner1
+    executor: custom-node
     steps:
-      - run: echo "Running job 1 on runner"
+      - run: echo "Running job 1"
+      - run: |
+          mkdir file
+          echo "sent to job 2" >> file/cache.txt
+      - save_cache:
+          paths:
+            - file/cache.txt
+          key: cloud-cache-v1
   job2:
     executor: custom-node
     steps:
-      - run: echo "running job 2 on the cloud"
-
-
+      - restore_cache:
+          keys:
+            - cloud-cache-v1
+      - run: cat ./file/cache.txt
 
 workflows:
   job-workflow:
