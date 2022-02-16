@@ -10,8 +10,7 @@ jobs:
     executor: base
     steps:
       - checkout
-      - run: echo "Running job a"
-      - run: cat path_a/README.md
+      - run: echo $hello_env_var
   job_b:
     executor: base
     steps:
@@ -22,5 +21,7 @@ jobs:
 workflows:
   job-workflow:
     jobs:
-      - job_a
+      - job_a:
+          context:
+            - hello-context
       - job_b
