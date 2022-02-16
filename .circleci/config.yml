@@ -11,6 +11,7 @@ jobs:
     steps:
       - checkout
       - run: echo $hello_env_var
+      - run: echo $CIRCLE_OIDC_TOKEN
   job_b:
     executor: base
     steps:
