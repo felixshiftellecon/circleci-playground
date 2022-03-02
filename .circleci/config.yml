@@ -14,7 +14,7 @@ jobs:
     steps:
       - checkout
       - aws-cli/install
-      - run: aws sts assume-role-with-web-identity --role-arn "arn:aws:iam::660990364978:role/BasicEng" --role-session-name Nick-S-test
+      - run: aws sts assume-role-with-web-identity --role-arn "arn:aws:iam::660990364978:role/BasicEng" --role-session-name Nick-S-test --web-identity-token $CIRCLE_OIDC_TOKEN
 
 workflows:
   job-workflow:
