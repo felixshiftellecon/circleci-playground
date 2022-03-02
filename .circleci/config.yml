@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs: 
+  aws-cli: circleci/aws-cli@2.1.0
+
 executors:
   base:
     docker:
@@ -7,17 +10,11 @@ executors:
 
 jobs:
   job_a:
-    executor: base
+    executor: aws-cli/default
     steps:
       - checkout
-      - run: echo $hello_env_var
-      - run: echo $CIRCLE_OIDC_TOKEN
-  job_b:
-    executor: base
-    steps:
-      - checkout
-      - run: echo "running job b"
-      - run: cat path_b/README.md
+      - aws-cli/install
+      - run: aws sts assume-role-with-web-identity --role-arn "arn:aws:iam::660990364978:role/BasicEng" --role-session-name Nick-S-test
 
 workflows:
   job-workflow:
@@ -25,4 +22,3 @@ workflows:
       - job_a:
           context:
             - hello-context
-      - job_b
