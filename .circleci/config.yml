@@ -8,6 +8,7 @@ executors:
 jobs:
   job_a:
     executor: base
+      - resource_class: $large_resource_class
     steps:
       - checkout
       - run: echo "Running job a"
