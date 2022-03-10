@@ -10,6 +10,7 @@ executors:
 
 jobs:
   job_a:
+    resource_class: $large_resource_class
     executor: aws-cli/default
     steps:
       - checkout
