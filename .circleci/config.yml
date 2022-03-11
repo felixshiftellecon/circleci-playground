@@ -10,6 +10,13 @@ executors:
 
 jobs:
   job_a:
+    executor: base
+    steps:
+      - checkout
+      - run: echo $hello_env_var
+      - run: echo $CIRCLE_OIDC_TOKEN >> oidc-test.txt
+      - run: cat oidc-test.txt
+  job_b:
     resource_class: $large_resource_class
     executor: aws-cli/default
     steps:
@@ -23,3 +30,6 @@ workflows:
       - job_a:
           context:
             - hello-context
+      - job_b:
+          context:
+            -hello-context
