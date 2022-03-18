@@ -1,5 +1,3 @@
-version: 2.1
-
 executors:
   base:
     docker:
@@ -24,3 +22,5 @@ workflows:
     jobs:
       - job_a
       - job_b
+
+version: 2.1
