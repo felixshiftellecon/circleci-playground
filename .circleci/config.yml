@@ -20,9 +20,7 @@ jobs:
       - checkout
       - aws-cli/install
       - run: docker build -t nicks-testing .
-      - run: |
-              export AWS_WEB_IDENTITY_TOKEN_FILE="$(mktemp -u)"
-              echo $CIRCLE_OIDC_TOKEN > "$AWS_WEB_IDENTITY_TOKEN_FILE"
+      - run: aws sts assume-role-with-web-identity --role-arn "$AWS_ROLE_ARN" --role-session-name Nick-S-test --web-identity-token $CIRCLE_OIDC_TOKEN
       - run: aws sts get-caller-identity
       - run: docker tag nicks-testing:latest 660990364978.dkr.ecr.us-east-2.amazonaws.com/nicks-testing:latest
       - run: docker push 660990364978.dkr.ecr.us-east-2.amazonaws.com/nicks-testing:latest
