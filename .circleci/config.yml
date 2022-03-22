@@ -6,21 +6,16 @@ executors:
       - image: cimg/base:stable
 
 jobs:
-  job_a:
+  build-deploy:
     executor: base
     steps:
       - checkout
-      - run: echo "Running job a"
-      - run: cat path_a/README.md
-  job_b:
-    executor: base
-    steps:
-      - checkout
-      - run: echo "running job b"
-      - run: cat path_b/README.md
+      - run: docker build -t nicks-testing .
+      - run: aws sts assume-role-with-web-identity --role-arn "arn:aws:iam::660990364978:role/BasicEng" --role-session-name Nick-S-test --web-identity-token $CIRCLE_OIDC_TOKEN
+      - run: docker tag nicks-testing:latest 660990364978.dkr.ecr.us-east-2.amazonaws.com/nicks-testing:latest
+      - run: docker push 660990364978.dkr.ecr.us-east-2.amazonaws.com/nicks-testing:latest
 
 workflows:
   job-workflow:
     jobs:
-      - job_a
-      - job_b
+      - build-deploy
