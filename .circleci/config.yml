@@ -2,8 +2,9 @@ version: 2.1
 
 executors:
   base:
-    docker:
-      - image: cimg/base:stable
+    machine:
+      image: ubuntu-2004:202111-02
+    resource_class: large
 
 jobs:
   build-deploy:
