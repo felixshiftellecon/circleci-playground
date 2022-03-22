@@ -1,18 +1,29 @@
 version: 2.1
 
+orbs:
+  aws-cli: circleci/aws-cli@2.1.0
+
 executors:
   base:
     machine:
       image: ubuntu-2004:202111-02
+      docker_layer_caching: true
     resource_class: large
 
 jobs:
   build-deploy:
     executor: base
+    environment:
+      AWS_DEFAULT_REGION: us-east2
+      AWS_ROLE_ARN: arn:aws:iam::660990364978:role/BasicEng
     steps:
       - checkout
+      - aws-cli/install
       - run: docker build -t nicks-testing .
-      - run: aws sts assume-role-with-web-identity --role-arn "arn:aws:iam::660990364978:role/BasicEng" --role-session-name Nick-S-test --web-identity-token $CIRCLE_OIDC_TOKEN
+      - run: |
+              export AWS_WEB_IDENTITY_TOKEN_FILE="$(mktemp -u)"
+              echo $CIRCLE_OIDC_TOKEN > "$AWS_WEB_IDENTITY_TOKEN_FILE"
+      - run: aws sts get-caller-identity
       - run: docker tag nicks-testing:latest 660990364978.dkr.ecr.us-east-2.amazonaws.com/nicks-testing:latest
       - run: docker push 660990364978.dkr.ecr.us-east-2.amazonaws.com/nicks-testing:latest
 
