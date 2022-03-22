@@ -26,6 +26,7 @@ jobs:
               export AWS_WEB_IDENTITY_TOKEN_FILE="$(mktemp -u)"
               echo $CIRCLE_OIDC_TOKEN > "$AWS_WEB_IDENTITY_TOKEN_FILE"
               aws sts get-caller-identity
+              docker login -u AWS -p $(aws ecr get-login-password --region us-east-1) $ECR_REPO
               docker tag nicks-testing:latest $ECR_REPO/nicks-testing:latest
               docker push $ECR_REPO/nicks-testing:latest
       # - run: docker tag nicks-testing:latest $ECR_REPO/nicks-testing:latest
