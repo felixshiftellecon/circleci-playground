@@ -36,3 +36,4 @@ workflows:
       - aws-ecr/build-and-push-image:
           context: hello-context
           repo: 660990364978.dkr.ecr.us-east-2.amazonaws.com
+          region: us-east-2
