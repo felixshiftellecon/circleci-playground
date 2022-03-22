@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   aws-cli: circleci/aws-cli@2.1.0
+  aws-ecr: circleci/aws-ecr@8.0.0
 
 executors:
   base:
@@ -11,29 +12,27 @@ executors:
     resource_class: large
 
 jobs:
-  build-deploy:
-    executor: base
-    environment:
-      AWS_DEFAULT_REGION: us-east-2
-      AWS_ROLE_ARN: arn:aws:iam::660990364978:role/BasicEng
-      ECR_REPO: 660990364978.dkr.ecr.us-east-2.amazonaws.com
-    steps:
-      - checkout
-      - aws-cli/install
-      - run: docker build -t nicks-testing .
-      # - run: aws sts assume-role-with-web-identity --role-arn "$AWS_ROLE_ARN" --role-session-name Nick-S-test --web-identity-token $CIRCLE_OIDC_TOKEN
-      - run: |
-              export AWS_WEB_IDENTITY_TOKEN_FILE="$(mktemp -u)"
-              echo $CIRCLE_OIDC_TOKEN > "$AWS_WEB_IDENTITY_TOKEN_FILE"
-              aws sts get-caller-identity
-              aws ecr get-login --region us-east-2
-              docker tag nicks-testing:latest 660990364978.dkr.ecr.us-east-2.amazonaws.com/nicks-testing:latest
-              docker push 660990364978.dkr.ecr.us-east-2.amazonaws.com/nicks-testing:latest
-      # - run: docker tag nicks-testing:latest $ECR_REPO/nicks-testing:latest
-      # - run: docker push $ECR_REPO/nicks-testing:latest
+  # build-deploy:
+  #   executor: base
+  #   environment:
+  #     AWS_DEFAULT_REGION: us-east-2
+  #     AWS_ROLE_ARN: arn:aws:iam::660990364978:role/BasicEng
+  #     ECR_REPO: 660990364978.dkr.ecr.us-east-2.amazonaws.com
+  #   steps:
+  #     - checkout
+  #     # - aws-cli/install
+  #     # - run: docker build -t nicks-testing .
+  #     # - run: aws sts assume-role-with-web-identity --role-arn "$AWS_ROLE_ARN" --role-session-name Nick-S-test --web-identity-token $CIRCLE_OIDC_TOKEN
+  #     # - run: |
+  #     #         export AWS_WEB_IDENTITY_TOKEN_FILE="$(mktemp -u)"
+  #     #         echo $CIRCLE_OIDC_TOKEN > "$AWS_WEB_IDENTITY_TOKEN_FILE"
+  #     #         aws sts get-caller-identity
+  #     #         docker tag nicks-testing:latest 660990364978.dkr.ecr.us-east-2.amazonaws.com/nicks-testing:latest
+  #     #         docker push 660990364978.dkr.ecr.us-east-2.amazonaws.com/nicks-testing:latest
 
 workflows:
   job-workflow:
     jobs:
-      - build-deploy:
+      - aws-ecr/build-and-push-image:
           context: hello-context
+          repo: 660990364978.dkr.ecr.us-east-2.amazonaws.com
