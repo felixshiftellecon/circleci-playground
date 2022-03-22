@@ -21,10 +21,15 @@ jobs:
       - checkout
       - aws-cli/install
       - run: docker build -t nicks-testing .
-      - run: aws sts assume-role-with-web-identity --role-arn "$AWS_ROLE_ARN" --role-session-name Nick-S-test --web-identity-token $CIRCLE_OIDC_TOKEN
-      - run: aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REPO
-      - run: docker tag nicks-testing:latest $ECR_REPO/nicks-testing:latest
-      - run: docker push $ECR_REPO/nicks-testing:latest
+      # - run: aws sts assume-role-with-web-identity --role-arn "$AWS_ROLE_ARN" --role-session-name Nick-S-test --web-identity-token $CIRCLE_OIDC_TOKEN
+      - run: |
+              export AWS_WEB_IDENTITY_TOKEN_FILE="$(mktemp -u)"
+              echo $CIRCLE_OIDC_TOKEN > "$AWS_WEB_IDENTITY_TOKEN_FILE"
+              aws sts get-caller-identity
+              docker tag nicks-testing:latest $ECR_REPO/nicks-testing:latest
+              docker push $ECR_REPO/nicks-testing:latest
+      # - run: docker tag nicks-testing:latest $ECR_REPO/nicks-testing:latest
+      # - run: docker push $ECR_REPO/nicks-testing:latest
 
 workflows:
   job-workflow:
