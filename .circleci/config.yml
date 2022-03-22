@@ -19,4 +19,5 @@ jobs:
 workflows:
   job-workflow:
     jobs:
-      - build-deploy
+      - build-deploy:
+          context: hello-context
