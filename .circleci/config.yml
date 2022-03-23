@@ -1,39 +1,102 @@
 version: 2.1
 
-orbs:
-  aws-cli: circleci/aws-cli@2.1.0
+commands:
+  configure-oidc-for-aws-cli:
+    parameters:
+      file-pointer-var:
+        type: string
+        default: AWS_WEB_IDENTITY_TOKEN_FILE
+      aws-role-arn:
+        type: string
+    steps:
+      - run:
+          name: Make a temp file for << parameters.file-pointer-var >>
+          command: echo "export ${FILE_POINTER_VAR}='$(mktemp -u)'" | tee -a "${BASH_ENV}"
+          environment:
+            FILE_POINTER_VAR: << parameters.file-pointer-var >>
+      - run: 
+          name: Write CIRCLE_OIDC_TOKEN to the file pointed by << parameters.file-pointer-var >>
+          command: printenv CIRCLE_OIDC_TOKEN > "$(eval printenv "${FILE_POINTER_VAR}")"
+          environment:
+            FILE_POINTER_VAR: << parameters.file-pointer-var >>
+      - run:
+          name: set AWS_ROLE_ARN
+          command: echo "export AWS_ROLE_ARN='${AWS_ROLE_ARN}"
+          environment:
+            AWS_ROLE_ARN: << parameters.aws-role-arn >>
+  
+  configure-ecr-credentials:
+    parameters:
+      aws-account-id:
+        type: string
+      aws-region:
+        type: string
+      aws-role-arn:
+        type: string
+    steps:
+      - configure-oidc-for-aws-cli:
+          aws-role-arn: << parameters.aws-role-arn >>
+      - run:
+          name: Get token for ECR and pass it to the Docker CIRCLE_OIDC_TOKEN
+          command: |
+            aws ecr get-login-password --region "${ECR_REGION}" | docker login -u AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${ECR_REGION}.amazon.com"
+          environment:
+            AWS_ACCOUNT_ID: << parameters.aws-account-id >>
+            ECR_REGION: << parameters.aws-region >>
 
 executors:
-  base:
+  machine-dlc:
     machine:
       image: ubuntu-2004:202111-02
       docker_layer_caching: true
     resource_class: large
 
 jobs:
-  build-deploy:
-    executor: base
+  publish-to-ecr-with-oidc:
+    executor: machine-dlc
+    parameters:
+      aws-account-id:
+        type: string
+      aws-region:
+        type: string
+      image-name:
+        type: string
+      aws-role-arn:
+        type: string
     environment:
-      AWS_DEFAULT_REGION: us-east-2
-      AWS_ROLE_ARN: arn:aws:iam::660990364978:role/BasicEng
-      ECR_REPO: 660990364978.dkr.ecr.us-east-2.amazonaws.com
+      IMAGE_FULL_NAME_TEMPLATE: << parameters.aws-account-id >>.dkr.ecr.<< parameters.aws-region >>.amazonaws.com/<< parameters.image-name >>:${__BUILD_VERSION}
+      # AWS_DEFAULT_REGION: us-east-2
+      # AWS_ROLE_ARN: arn:aws:iam::660990364978:role/BasicEng
+      # ECR_REPO: 660990364978.dkr.ecr.us-east-2.amazonaws.com
     steps:
       - checkout
-      - aws-cli/install
-      - run: docker build -t nicks-testing .
+      # - aws-cli/install
+      # - run: docker build -t nicks-testing .
       # - run: aws sts assume-role-with-web-identity --role-arn "$AWS_ROLE_ARN" --role-session-name Nick-S-test --web-identity-token $CIRCLE_OIDC_TOKEN
-      - run: |
-              export AWS_WEB_IDENTITY_TOKEN_FILE="$(mktemp -u)"
-              echo $CIRCLE_OIDC_TOKEN > "$AWS_WEB_IDENTITY_TOKEN_FILE"
-              aws sts get-caller-identity
-              aws ecr get-login --region us-east-2
-              docker tag nicks-testing:latest 660990364978.dkr.ecr.us-east-2.amazonaws.com/nicks-testing:latest
-              docker push 660990364978.dkr.ecr.us-east-2.amazonaws.com/nicks-testing:latest
-      # - run: docker tag nicks-testing:latest $ECR_REPO/nicks-testing:latest
-      # - run: docker push $ECR_REPO/nicks-testing:latest
+      - configure-ecr-credentials:
+          aws-account-id: << parameters.aws-account-id >>
+          aws-region: << parameters.aws-region >>
+          aws-role-arn: << parameters.aws-role-arn >>
+      - run:
+          name: Set build version
+          command: |
+            echo "export export __BUILD_VERSION='$(cat version.txt)'" | tee -a $BASH_ENV
+      # - run: |
+      #         export AWS_WEB_IDENTITY_TOKEN_FILE="$(mktemp -u)"
+      #         echo $CIRCLE_OIDC_TOKEN > "$AWS_WEB_IDENTITY_TOKEN_FILE"
+      #         aws sts get-caller-identity
+      #         aws ecr get-login --region us-east-2
+      #         docker tag nicks-testing:latest 660990364978.dkr.ecr.us-east-2.amazonaws.com/nicks-testing:latest
+      #         docker push 660990364978.dkr.ecr.us-east-2.amazonaws.com/nicks-testing:latest
+      - run: docker build -t "$(eval echo "${IMAGE_FULL_NAME_TEMPLATE}")" .
+      - run: docker push "$(eval echo "${IMAGE_FULL_NAME_TEMPLATE}")"
 
 workflows:
   job-workflow:
     jobs:
       - build-deploy:
           context: hello-context
+          aws-account-id: ""
+          aws-region: us-east-2
+          image-name: nicks-testing
+          aws-role-arn: arn:aws:iam::660990364978:role/BasicEng
