@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs: 
+  orb-test: felixshiftellecon/orb-test@1.0.0
+
 executors:
   base:
     docker:
@@ -9,18 +12,9 @@ jobs:
   job_a:
     executor: base
     steps:
-      - checkout
-      - run: echo "Running job a"
-      - run: cat path_a/README.md
-  job_b:
-    executor: base
-    steps:
-      - checkout
-      - run: echo "running job b"
-      - run: cat path_b/README.md
+      - orb-test/hello
 
 workflows:
   job-workflow:
     jobs:
       - job_a
-      - job_b
