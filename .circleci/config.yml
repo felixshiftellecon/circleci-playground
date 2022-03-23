@@ -12,7 +12,7 @@ jobs:
   job_a:
     executor: base
     steps:
-      - orb-test/hello
+      - orb-test/greet
 
 workflows:
   job-workflow:
