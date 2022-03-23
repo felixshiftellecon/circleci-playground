@@ -96,7 +96,7 @@ workflows:
     jobs:
       - publish-to-ecr-with-oidc:
           context: hello-context
-          aws-account-id: ""
+          aws-account-id: "660990364978"
           aws-region: us-east-2
           image-name: nicks-testing
           aws-role-arn: arn:aws:iam::660990364978:role/BasicEng
