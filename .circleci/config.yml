@@ -21,7 +21,7 @@ commands:
             FILE_POINTER_VAR: << parameters.file-pointer-var >>
       - run:
           name: set AWS_ROLE_ARN
-          command: echo "export AWS_ROLE_ARN='${AWS_ROLE_ARN}"
+          command: echo "export AWS_ROLE_ARN='${AWS_ROLE_ARN}'"
           environment:
             AWS_ROLE_ARN: << parameters.aws-role-arn >>
   
