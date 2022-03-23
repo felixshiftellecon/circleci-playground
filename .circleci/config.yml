@@ -94,7 +94,7 @@ jobs:
 workflows:
   job-workflow:
     jobs:
-      - aws-ecr/build-and-push-image:
+      - publish-to-ecr-with-oidc:
           context: hello-context
           aws-account-id: ""
           aws-region: us-east-2
