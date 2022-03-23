@@ -1,5 +1,6 @@
 version: 2.1
 
+<<<<<<< HEAD
 commands:
   configure-oidc-for-aws-cli:
     parameters:
@@ -43,6 +44,11 @@ commands:
           environment:
             AWS_ACCOUNT_ID: << parameters.aws-account-id >>
             ECR_REGION: << parameters.aws-region >>
+=======
+orbs:
+  aws-cli: circleci/aws-cli@2.1.0
+  aws-ecr: circleci/aws-ecr@8.0.0
+>>>>>>> 235339a70a170bfd7f253d187725728a30a8da0d
 
 executors:
   machine-dlc:
@@ -52,6 +58,7 @@ executors:
     resource_class: large
 
 jobs:
+<<<<<<< HEAD
   publish-to-ecr-with-oidc:
     executor: machine-dlc
     parameters:
@@ -90,13 +97,37 @@ jobs:
       #         docker push 660990364978.dkr.ecr.us-east-2.amazonaws.com/nicks-testing:latest
       - run: docker build -t "$(eval echo "${IMAGE_FULL_NAME_TEMPLATE}")" .
       - run: docker push "$(eval echo "${IMAGE_FULL_NAME_TEMPLATE}")"
+=======
+  # build-deploy:
+  #   executor: base
+  #   environment:
+  #     AWS_DEFAULT_REGION: us-east-2
+  #     AWS_ROLE_ARN: arn:aws:iam::660990364978:role/BasicEng
+  #     ECR_REPO: 660990364978.dkr.ecr.us-east-2.amazonaws.com
+  #   steps:
+  #     - checkout
+  #     # - aws-cli/install
+  #     # - run: docker build -t nicks-testing .
+  #     # - run: aws sts assume-role-with-web-identity --role-arn "$AWS_ROLE_ARN" --role-session-name Nick-S-test --web-identity-token $CIRCLE_OIDC_TOKEN
+  #     # - run: |
+  #     #         export AWS_WEB_IDENTITY_TOKEN_FILE="$(mktemp -u)"
+  #     #         echo $CIRCLE_OIDC_TOKEN > "$AWS_WEB_IDENTITY_TOKEN_FILE"
+  #     #         aws sts get-caller-identity
+  #     #         docker tag nicks-testing:latest 660990364978.dkr.ecr.us-east-2.amazonaws.com/nicks-testing:latest
+  #     #         docker push 660990364978.dkr.ecr.us-east-2.amazonaws.com/nicks-testing:latest
+>>>>>>> 235339a70a170bfd7f253d187725728a30a8da0d
 
 workflows:
   job-workflow:
     jobs:
-      - build-deploy:
+      - aws-ecr/build-and-push-image:
           context: hello-context
+<<<<<<< HEAD
           aws-account-id: ""
           aws-region: us-east-2
           image-name: nicks-testing
           aws-role-arn: arn:aws:iam::660990364978:role/BasicEng
+=======
+          repo: 660990364978.dkr.ecr.us-east-2.amazonaws.com
+          region: us-east-2
+>>>>>>> 235339a70a170bfd7f253d187725728a30a8da0d
