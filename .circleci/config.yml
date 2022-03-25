@@ -39,7 +39,7 @@ commands:
       - run:
           name: Get token for ECR and pass it to the Docker CIRCLE_OIDC_TOKEN
           command: |
-            aws ecr get-login-password --region "${ECR_REGION}" | docker login -u AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${ECR_REGION}.amazon.com"
+            aws ecr get-login-password --region "${ECR_REGION}" | docker login -u AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${ECR_REGION}.amazonaws.com"
           environment:
             AWS_ACCOUNT_ID: << parameters.aws-account-id >>
             ECR_REGION: << parameters.aws-region >>
