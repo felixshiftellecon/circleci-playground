@@ -10,7 +10,9 @@ jobs:
     executor: base
     steps:
       - checkout
-      - run: echo "Running job a"
+      - run: ->
+          echo "Running job a"
+          echo "multi-line"
       - run: cat path_a/README.md
   job_b:
     executor: base
