@@ -37,14 +37,16 @@ workflows:
   workflow:
     jobs:
       - job_a:
-          name: job-a-v-<< matrix.version >>
+          name: job-a-v-<< matrix.version >>-<< matrix.os >>
           matrix:
             parameters:
               version: ["first", "second", "third"]
+              os: ["macOs", "windows", "linux"]
       - job_b:
           name: job-b-v-<< matrix.version >>
           matrix:
             parameters:
-              version: ["1", "2", "3"]
+              version: ["first", "second", "third"]
+              os: ["macOs", "windows", "linux"]
           requires:
-            - job-a-v-<< matrix.version >>
+            - job-a-v-<< matrix.version >>-<< matrix.os >>
