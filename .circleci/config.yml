@@ -45,7 +45,20 @@ workflows:
           matrix:
             parameters:
               version: ["first", "second", "third"]
-              os: ["macOs", "windows", "linux"]
+              os: ["macos", "windows", "linux"]
+      - hold:
+          name: the approval
+          type: approval
+          requires:
+           - job-a-v-first-macos
+           - job-a-v-first-windows
+           - job-a-v-first-linux
+           - job-a-v-second-macos
+           - job-a-v-second-windows
+           - job-a-v-second-linux
+           - job-a-v-third-macos
+           - job-a-v-third-windows
+           - job-a-v-third-linux
       - job_b:
           name: job-b-v-<< matrix.version >>-<< matrix.os >>
           matrix:
