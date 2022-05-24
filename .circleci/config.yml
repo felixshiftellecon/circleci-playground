@@ -23,7 +23,7 @@ jobs:
     executor: base
     steps:
       - checkout
-      - run: echo "Running job a with matrix << matrix.version >>"
+      - run: echo "Running job a with matrix << parameters.version >>"
   job_b:
     parameters:
       version:
@@ -31,7 +31,7 @@ jobs:
     executor: base
     steps:
       - checkout
-      - run: echo "running job b with matrix << matrix.version >>"
+      - run: echo "running job b with matrix << parameters.version >>"
 
 workflows:
   workflow:
@@ -41,10 +41,10 @@ workflows:
           matrix:
             parameters:
               version: ["first", "second", "third"]
-      - job_b:
-          name: job-b-v-<< matrix.version >>
-          matrix:
-            parameters:
-              version: ["un", "deux", "trois"]
-          requires:
-            - job-a-v-<< matrix.version >>
+      # - job_b:
+      #     name: job-b-v-<< matrix.version >>
+      #     matrix:
+      #       parameters:
+      #         version: ["un", "deux", "trois"]
+      #     requires:
+      #       - job-a-v-<< matrix.version >>
