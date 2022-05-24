@@ -45,6 +45,6 @@ workflows:
           name: job-b-v-<< matrix.version >>
           matrix:
             parameters:
-              version: ["first", "second", "third"]
+              version: ["1", "2", "3"]
           requires:
             - job-a-v-<< matrix.version >>
