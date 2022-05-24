@@ -20,12 +20,12 @@ jobs:
     executor: base
     steps:
       - checkout
-      - run: echo "Running job a with version" << matrix.version >>
+      - run: echo "Running job a with matrix"
   job_b:
     executor: base
     steps:
       - checkout
-      - run: echo "running job b with version" << matrix.version >>
+      - run: echo "running job b with matrix"
 
 workflows:
   workflow:
