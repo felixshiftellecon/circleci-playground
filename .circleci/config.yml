@@ -66,4 +66,4 @@ workflows:
               version: ["first", "second", "third"]
               os: ["macos", "windows", "linux"]
           requires:
-            - job-a-v-<< matrix.version >>-<< matrix.os >>
+            - the approval
