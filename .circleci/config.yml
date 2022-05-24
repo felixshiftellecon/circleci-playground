@@ -64,6 +64,6 @@ workflows:
           matrix:
             parameters:
               version: ["first", "second", "third"]
-              os: ["macOs", "windows", "linux"]
+              os: ["macos", "windows", "linux"]
           requires:
             - job-a-v-<< matrix.version >>-<< matrix.os >>
