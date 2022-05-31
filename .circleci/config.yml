@@ -1,15 +1,5 @@
 version: 2.1
 
-# parameters:
-#   first-matrix:
-#     type: enum
-#     enum: ["first", "second", "third"]
-#     default: "first"
-#   second-matrix:
-#     type: enum
-#     enum: ["un", "deux", "trois"]
-#     default: "un"
-
 executors:
   base:
     docker:
