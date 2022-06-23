@@ -1,38 +1,31 @@
 version: 2.1
 
 jobs:
-  get-uuid-and-username:
+  workflow-changing:
     docker:
       - image: cimg/base:2021.04
     steps:
       - checkout
       - run:
-          name: Get User Info
-          command: |
-              user_UUID=$(curl --request GET \
-              --url https://circleci.com/api/v2/workflow/$CIRCLE_WORKFLOW_ID \
-              --header 'Circle-Token: $CIRCLECI_TOKEN' | jq '.started_by')
-
-              user_email=$(git log --pretty=format:"%ce" -1)
-              
-              echo $user_UUID
-              echo $CIRCLE_USERNAME
-              echo $user_email
+          name: Working directory change
+          environment:
+            CIRCLE_WORKING_DIRECTORY: ~/testing
+          command: echo $CIRCLE_WORKING_DIRECTORY
       - run:
-          name: Get Project Info
-          command: |
-              project_UUID=$(curl --request GET \
-              --url https://circleci.com/api/v2/project/gh/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME \
-              --header 'Circle-Token: $CIRCLECI_TOKEN' | jq '.id')
-
-              echo $project_UUID
-              echo $CIRCLE_PROJECT_REPONAME
+          name: Working directory normal
+          command: echo $CIRCLE_WORKING_DIRECTORY
+      - run:
+          name: Working directory bash env change
+          command: echo 'export CIRCLE_WORKING_DIRECTORY=~/testingtwo' >> $BASH_ENV
+      - run:
+          name: Working directory bash env change test
+          command: echo $CIRCLE_WORKING_DIRECTORY
 
 
 
 
 workflows:
   version: 2
-  get-uuid-and-username:
+  workflow-changing:
     jobs:
-      - get-uuid-and-username
+      - workflow-changing
