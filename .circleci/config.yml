@@ -10,10 +10,10 @@ jobs:
           name: Working directory change via step env var
           environment:
             CIRCLE_WORKING_DIRECTORY: ~/testing
-          command: echo $CIRCLE_WORKING_DIRECTORY
+          command: pwd
       - run:
           name: Working directory back to normal
-          command: echo $CIRCLE_WORKING_DIRECTORY
+          command: pwd
       - run:
           name: Working directory change via bash env
           command: echo 'export CIRCLE_WORKING_DIRECTORY=~/testingtwo' >> $BASH_ENV
