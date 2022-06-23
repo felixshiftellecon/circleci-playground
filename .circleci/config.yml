@@ -19,7 +19,7 @@ jobs:
           command: echo 'export CIRCLE_WORKING_DIRECTORY=~/testingtwo' >> $BASH_ENV
       - run:
           name: Working directory matches previous step
-          command: echo $CIRCLE_WORKING_DIRECTORY
+          command: pwd
 
 
 
