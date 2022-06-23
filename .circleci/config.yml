@@ -27,6 +27,22 @@ jobs:
 
               echo $project_UUID
               echo $CIRCLE_PROJECT_REPONAME
+      - run:
+          name: Working directory change
+          environment:
+            CIRCLE_WORKING_DIRECTORY: ~/testing
+          command: echo $CIRCLE_WORKING_DIRECTORY
+      - run:
+          name: Working directory normal
+          command: echo $CIRCLE_WORKING_DIRECTORY
+      - run:
+          name: Working directory bash env change
+          command: echo 'export CIRCLE_WORKING_DIRECTORY=~/testingtwo
+      - run:
+          name: Working directory bash env change test
+          command: echo $CIRCLE_WORKING_DIRECTORY
+
+
 
 
 workflows:
