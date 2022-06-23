@@ -1,18 +1,21 @@
 version: 2.1
 
 jobs:
-  convert-uuid-to-username:
+  get-uuid-and-username:
     docker:
       - image: cimg/base:2021.04
     steps:
       - checkout
       - run: |
-          curl --request GET \
-          --url https://circleci.com/api/v2/me \
-          --header 'Circle-Token: $CIRCLECI_TOKEN'
+          user_UUID=$(curl --request GET \
+          --url https://circleci.com/api/v2/workflow/$CIRCLE_WORKFLOW_ID \
+          --header 'Circle-Token: $CIRCLECI_TOKEN' | jq '.started_by')
+          
+          echo $user_UUID
+          echo $CIRCLE_USERNAME
 
 workflows:
   version: 2
-  convert-via-api:
+  get-uuid-and-username:
     jobs:
-      - convert-uuid-to-username
+      - get-uuid-and-username
