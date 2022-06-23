@@ -6,13 +6,25 @@ jobs:
       - image: cimg/base:2021.04
     steps:
       - checkout
-      - run: |
-          user_UUID=$(curl --request GET \
-          --url https://circleci.com/api/v2/workflow/$CIRCLE_WORKFLOW_ID \
-          --header 'Circle-Token: $CIRCLECI_TOKEN' | jq '.started_by')
-          
-          echo $user_UUID
-          echo $CIRCLE_USERNAME
+      - run:
+          name: Get User Info
+          command: |
+              user_UUID=$(curl --request GET \
+              --url https://circleci.com/api/v2/workflow/$CIRCLE_WORKFLOW_ID \
+              --header 'Circle-Token: $CIRCLECI_TOKEN' | jq '.started_by')
+              
+              echo $user_UUID
+              echo $CIRCLE_USERNAME
+      - run:
+          name: Get Project Info
+          command: |
+              project_UUID=$(curl --request GET \
+              --url https://circleci.com/api/v2/project/gh/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME \
+              --header 'Circle-Token: $CIRCLECI_TOKEN' | jq '.id')
+
+              echo $project_UUID
+              echo $CIRCLE_PROJECT_REPONAME
+
 
 workflows:
   version: 2
