@@ -12,9 +12,12 @@ jobs:
               user_UUID=$(curl --request GET \
               --url https://circleci.com/api/v2/workflow/$CIRCLE_WORKFLOW_ID \
               --header 'Circle-Token: $CIRCLECI_TOKEN' | jq '.started_by')
+
+              user_email=$(git log --pretty=format:"%ce" -1)
               
               echo $user_UUID
               echo $CIRCLE_USERNAME
+              echo $user_email
       - run:
           name: Get Project Info
           command: |
