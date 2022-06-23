@@ -37,7 +37,7 @@ jobs:
           command: echo $CIRCLE_WORKING_DIRECTORY
       - run:
           name: Working directory bash env change
-          command: echo 'export CIRCLE_WORKING_DIRECTORY=~/testingtwo
+          command: echo 'export CIRCLE_WORKING_DIRECTORY=~/testingtwo'
       - run:
           name: Working directory bash env change test
           command: echo $CIRCLE_WORKING_DIRECTORY
