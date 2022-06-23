@@ -16,7 +16,7 @@ jobs:
           command: pwd
       - run:
           name: Working directory change via bash env
-          command: echo 'export cd /testingtwo' >> $BASH_ENV
+          command: echo 'cd /testingtwo' >> $BASH_ENV
       - run:
           name: Working directory matches previous step
           command: pwd
