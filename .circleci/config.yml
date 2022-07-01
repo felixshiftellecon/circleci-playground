@@ -18,7 +18,7 @@ jobs:
           name: Working directory change via bash env
           command: |
                   mkdir testingtwo
-                  echo 'cd /project/testingtwo' >> $BASH_ENV
+                  echo 'cd ~/project/testingtwo' >> $BASH_ENV
       - run:
           name: Change via bash env works!
           command: pwd
