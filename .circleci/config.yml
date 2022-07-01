@@ -12,13 +12,15 @@ jobs:
             CIRCLE_WORKING_DIRECTORY: ~/testing
           command: pwd
       - run:
-          name: Working directory back to normal
+          name: Change via step env var doesn't work
           command: pwd
       - run:
           name: Working directory change via bash env
-          command: echo 'cd /testingtwo' >> $BASH_ENV
+          command: |
+                  mkdir testingtwo
+                  echo 'cd /testingtwo' >> $BASH_ENV
       - run:
-          name: Working directory matches previous step
+          name: Change via bash env works!
           command: pwd
 
 
