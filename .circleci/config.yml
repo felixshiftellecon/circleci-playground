@@ -1,9 +1,7 @@
 version: 2.1
 
-setup: true
-
 orbs:
-  continuation: circleci/circleci-cli@0.1.9
+  circleci-cli: circleci/circleci-cli@0.1.9
 
 jobs:
   job_a:
