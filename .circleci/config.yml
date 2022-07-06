@@ -15,8 +15,6 @@ jobs:
       - when:
           condition:
             not: $CIRCLE_PULL_REQUEST
-      - when:
-          condition: $CIRCLE_PULL_REQUEST
           steps:
             - run:
                 name: Prepare dev workflow parameter
