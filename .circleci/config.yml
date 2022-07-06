@@ -47,18 +47,18 @@ jobs:
                 configuration_path: .circleci/continue_config.yml
                 parameters: temp.json
         - when:
-          condition:
-            equal: [ main, << pipeline.git.branch >>]
-          steps:
-            - run:
-                name: Prepare deploy workflow parameter
-                command: |
-                        jq -n \
-                        --arg run_deploy_workflow "true" \
-                        '{"run_deploy_workflow": true}' > temp.json
-            - continuation/continue:
-                configuration_path: .circleci/continue_config.yml
-                parameters: temp.json
+            condition:
+              equal: [ main, << pipeline.git.branch >>]
+            steps:
+              - run:
+                  name: Prepare deploy workflow parameter
+                  command: |
+                          jq -n \
+                          --arg run_deploy_workflow "true" \
+                          '{"run_deploy_workflow": true}' > temp.json
+              - continuation/continue:
+                  configuration_path: .circleci/continue_config.yml
+                  parameters: temp.json
 
 
 
