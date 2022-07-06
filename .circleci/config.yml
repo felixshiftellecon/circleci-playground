@@ -24,8 +24,7 @@ jobs:
                 parameters: /tmp/temp.json
       - when:
           condition:
-            not: 
-              equal: [null, $CIRCLE_PULL_REQUEST]
+            not: $CIRCLE_PULL_REQUEST
           steps:
             - github-cli/install
             - github-cli/setup
