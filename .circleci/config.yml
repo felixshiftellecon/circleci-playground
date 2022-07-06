@@ -29,18 +29,23 @@ jobs:
           condition: $CIRCLE_PULL_REQUEST
           steps:
             - github-cli/setup
-            - run:
-                name: Prepare pull request workflow parameter
-                command: |
-                        jq -n \
-                        --arg run_pr_workflow "true" \
-                        '{"run_pr_workflow": true}' > temp.json
-                        cat temp.json
+            # - run:
+            #     name: Prepare pull request workflow parameter
+            #     command: |
+            #             jq -n \
+            #             --arg run_pr_workflow "true" \
+            #             '{"run_pr_workflow": true}' > temp.json
+            #             cat temp.json
             - run:
                 name: Grab Branch Name Being Merged Into
                 command: |
                         BRANCH_MERGING_INTO=$(gh pr view $CIRCLE_PULL_REQUEST --json baseRefName --jq .baseRefName)
-                        echo 'BRANCH_MERGING_INTO=$BRANCH_MERGING_INTO jq '. + {"branch_merging_into": env.BRANCH_MERGING_INTO}' temp.json' >> temp.json
+                        
+                        BRANCH_MERGING_INTO=$BRANCH_MERGING_INTO jq - n \
+                        --arg run_pr_workflow "true" \
+                        --arg "branch_merging_into" env.BRANCH_MERGING_INTO \
+                        '{"run_pr_workflow": true, "branch_merging_into": env.BRANCH_MERGING_INTO}' > temp.json
+                        
                         cat temp.json
             - continuation/continue:
                 configuration_path: .circleci/continue_config.yml
