@@ -40,7 +40,7 @@ jobs:
                 name: Grab Branch Name Being Merged Into
                 command: |
                         BRANCH_MERGING_INTO=$(gh pr view $CIRCLE_PULL_REQUEST --json baseRefName --jq .baseRefName)
-                        BRANCH_MERGING_INTO=$BRANCH_MERGING_INTO jq '. |= {"branch_merging_into": env.BRANCH_MERGING_INTO}' temp.json
+                        BRANCH_MERGING_INTO=$BRANCH_MERGING_INTO jq '.run_pr_workflow |= {"branch_merging_into": env.BRANCH_MERGING_INTO}' temp.json
                         cat temp.json
             - continuation/continue:
                 configuration_path: .circleci/continue_config.yml
