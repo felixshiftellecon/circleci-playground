@@ -28,7 +28,7 @@ jobs:
       - run: echo "Running job << parameters.which_job >>"
       - run: 
           name: Branch merging into
-          command: echo << pipeline.parameters.branch_merging_into >>
+          command: echo << parameters.branch_merging_into >>
       - run:
           name: Working branch
           command: echo $CIRCLE_BRANCH
