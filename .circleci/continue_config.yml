@@ -1,0 +1,26 @@
+version: 2.1
+
+parameters:
+  run_dev_workflow:
+    type: boolean
+    default: false
+  run_pr_workflow:
+    type: boolean
+    default: false
+
+executors:
+  base:
+    docker:
+      - image: cimg/base:stable
+
+jobs:
+  job_a:
+    executor: base
+    steps:
+      - checkout
+      - run: echo "Running job a"
+
+workflows:
+  workflow-a:
+    jobs:
+      - job_a

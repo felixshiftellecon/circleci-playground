@@ -1,18 +1,58 @@
 version: 2.1
 
-executors:
-  base:
-    docker:
-      - image: cimg/base:stable
+setup: true
+
+orbs:
+  continuation: circleci/continuation@0.2.0
+  github-cli: circleci/github-cli@2.1.0
 
 jobs:
-  job_a:
-    executor: base
+  set_up_continued_workflow:
+    docker:
+      image: cimg/base:stable
     steps:
-      - checkout
-      - run: echo "Running job a"
+      - when:
+          condition:
+            equal: [null, $CIRCLE_PULL_REQUEST]
+          steps:
+            - run:
+                name: Prepare dev workflow parameter
+                command: |
+                        jq '. + {"run_dev_workflow": true}' > /tmp/temp.json
+            - continuation/continue:
+                configuration_path: .circleci/continue-config.yml
+                parameters: /tmp/temp.json
+      - when:
+          condition:
+            not: 
+              - equal: [null, $CIRCLE_PULL_REQUEST]
+          steps:
+            - github-cli/install
+            - github-cli/setup
+            - run:
+                name: Prepare pull request workflow parameter
+                command: |
+                        jq '. + {"run_dev_workflow": true}' > /tmp/temp.json
+            - run:
+                name: Grab Branch Name Being Merged Into
+                command: |
+                        BRANCH_MERGING_INTO=gh pr view $CIRCLE_PULL_REQUEST --json baseRefName --jq .baseRefName
+                        jq '. + {"branch_merging_into": $BRANCH_MERGING_INTO}' > /tmp/temp.json
+                        cat /tmp/temp.json
+            - continuation/continue:
+                configuration_path: .circleci/continue-config.yml
+                parameters: /tmp/temp.json
+
 
 workflows:
-  workflow-a:
+  setup-workflow:
     jobs:
-      - job_a
+      - set_up_continued_workflow
+      - continuation/continue:
+          name: Moving the workflow along
+          configuration_path: .circleci/continue_config.yml
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
