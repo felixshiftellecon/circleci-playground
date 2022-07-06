@@ -13,6 +13,9 @@ jobs:
     steps:
       - checkout
       - when:
+          condition:
+            not: $CIRCLE_PULL_REQUEST
+      - when:
           condition: $CIRCLE_PULL_REQUEST
           steps:
             - run:
@@ -25,8 +28,7 @@ jobs:
                 configuration_path: .circleci/continue_config.yml
                 parameters: temp.json
       - when:
-          condition:
-            not: $CIRCLE_PULL_REQUEST
+          condition: $CIRCLE_PULL_REQUEST
           steps:
             - github-cli/install
             - github-cli/setup
