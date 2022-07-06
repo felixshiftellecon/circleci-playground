@@ -11,6 +11,7 @@ jobs:
     docker:
       - image: cimg/base:stable
     steps:
+      - checkout
       - when:
           condition: $CIRCLE_PULL_REQUEST
           steps:
