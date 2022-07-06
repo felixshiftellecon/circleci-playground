@@ -41,7 +41,7 @@ jobs:
                 command: |
                         BRANCH_MERGING_INTO=$(gh pr view $CIRCLE_PULL_REQUEST --json baseRefName --jq .baseRefName)
                         
-                        BRANCH_MERGING_INTO=$BRANCH_MERGING_INTO jq - n \
+                        BRANCH_MERGING_INTO=$BRANCH_MERGING_INTO jq -n \
                         --arg run_pr_workflow "true" \
                         --arg branch_merging_into "env.BRANCH_MERGING_INTO" \
                         '{"run_pr_workflow": true, "branch_merging_into": env.BRANCH_MERGING_INTO}' > temp.json
