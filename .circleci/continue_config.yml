@@ -39,7 +39,7 @@ workflows:
     when: << pipeline.parameters.run_dev_workflow >>
     jobs:
       - the_job:
-        which_job: dev_workflow
+          which_job: dev_workflow
   pr_workflow_main_branch:
     when: 
       and:
@@ -49,7 +49,7 @@ workflows:
             value: << pipeline.parameters.branch_merging_into >>
     jobs:
       - the_job:
-        which_job: pr_workflow_main_branch
+          which_job: pr_workflow_main_branch
   pr_workflow_dev_branch:
     when: 
       and:
@@ -60,4 +60,4 @@ workflows:
               value: << pipeline.parameters.branch_merging_into >>
     jobs:
       - the_job:
-        which_job: pr_workflow_dev_branch
+          which_job: pr_workflow_dev_branch
