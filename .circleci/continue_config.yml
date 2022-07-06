@@ -7,6 +7,9 @@ parameters:
   run_pr_workflow:
     type: boolean
     default: false
+  branch_merging_into:
+    type: string
+    default: ""
 
 executors:
   base:
@@ -14,13 +17,47 @@ executors:
       - image: cimg/base:stable
 
 jobs:
-  job_a:
+  the_job:
+    parameters:
+      which_job:
+        type: string
+        default: "default"
     executor: base
     steps:
       - checkout
-      - run: echo "Running job a"
+      - run: echo "Running job << parameters.which_job >>"
+      - run: 
+        name: Branch merging into
+        command: echo << pipeline.parameters.branch_merging_into >>
+      - run:
+        name: Working branch
+        command: echo $CIRCLE_BRANCH
+
 
 workflows:
-  workflow-a:
+  dev_workflow:
+    when: << pipeline.parameters.run_dev_workflow >>
     jobs:
-      - job_a
+      - the_job:
+        which_job: dev_workflow
+  pr_workflow_main_branch:
+    when: 
+      and:
+        - << pipeline.parameters.run_pr_workflow >>
+        - matches:
+            pattern: "^main$"
+            value: << pipeline.parameters.branch_merging_into >>
+    jobs:
+      - the_job:
+        which_job: pr_workflow_main_branch
+  pr_workflow_dev_branch:
+    when: 
+      and:
+        - << pipeline.parameters.run_pr_workflow >>
+        - not:
+          - matches:
+              pattern: "^main$"
+              value: << pipeline.parameters.branch_merging_into >>
+    jobs:
+      - the_job:
+        which_job: pr_workflow_dev_branch

@@ -32,7 +32,7 @@ jobs:
             - run:
                 name: Prepare pull request workflow parameter
                 command: |
-                        jq '. + {"run_dev_workflow": true}' > /tmp/temp.json
+                        jq '. + {"run_pr_workflow": true}' > /tmp/temp.json
             - run:
                 name: Grab Branch Name Being Merged Into
                 command: |
