@@ -12,7 +12,7 @@ jobs:
       - image: cimg/base:stable
     steps:
       - checkout
-      - run: touch temp.json
+      - run: echo "{}" > temp.json
       - when:
           condition: $CIRCLE_PULL_REQUEST
           steps:
