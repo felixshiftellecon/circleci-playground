@@ -12,8 +12,7 @@ jobs:
       - image: cimg/base:stable
     steps:
       - when:
-          condition:
-            equal: [null, $CIRCLE_PULL_REQUEST]
+          condition: $CIRCLE_PULL_REQUEST
           steps:
             - run:
                 name: Prepare dev workflow parameter
