@@ -9,7 +9,7 @@ orbs:
 jobs:
   set_up_continued_workflow:
     docker:
-      image: cimg/base:stable
+      - image: cimg/base:stable
     steps:
       - when:
           condition:
@@ -25,7 +25,7 @@ jobs:
       - when:
           condition:
             not: 
-              - equal: [null, $CIRCLE_PULL_REQUEST]
+              equal: [null, $CIRCLE_PULL_REQUEST]
           steps:
             - github-cli/install
             - github-cli/setup
