@@ -55,7 +55,7 @@ workflows:
       and:
         - << pipeline.parameters.run_pr_workflow >>
         - not:
-          - matches:
+            matches:
               pattern: "^main$"
               value: << pipeline.parameters.branch_merging_into >>
     jobs:
