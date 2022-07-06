@@ -28,7 +28,6 @@ jobs:
       - when:
           condition: $CIRCLE_PULL_REQUEST
           steps:
-            - github-cli/install
             - github-cli/setup
             - run:
                 name: Prepare pull request workflow parameter
