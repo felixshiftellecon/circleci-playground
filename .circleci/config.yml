@@ -39,7 +39,7 @@ jobs:
                         jq '. + {"branch_merging_into": $BRANCH_MERGING_INTO}' > /tmp/temp.json
                         cat /tmp/temp.json
             - continuation/continue:
-                configuration_path: .circleci/continue-config.yml
+                configuration_path: .circleci/continue_config.yml
                 parameters: /tmp/temp.json
 
 
