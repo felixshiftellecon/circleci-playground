@@ -14,7 +14,10 @@ jobs:
       - checkout
       - when:
           condition:
-            not: $CIRCLE_PULL_REQUEST
+            and:
+              - not: $CIRCLE_PULL_REQUEST
+              - not:
+                  equal: [ main, << pipeline.git.branch >>]
           steps:
             - run:
                 name: Prepare dev workflow parameter
@@ -29,15 +32,8 @@ jobs:
           condition: $CIRCLE_PULL_REQUEST
           steps:
             - github-cli/setup
-            # - run:
-            #     name: Prepare pull request workflow parameter
-            #     command: |
-            #             jq -n \
-            #             --arg run_pr_workflow "true" \
-            #             '{"run_pr_workflow": true}' > temp.json
-            #             cat temp.json
             - run:
-                name: Grab Branch Name Being Merged Into
+                name: Prepare PR and branch merging into parameters
                 command: |
                         BRANCH_MERGING_INTO=$(gh pr view $CIRCLE_PULL_REQUEST --json baseRefName --jq .baseRefName)
                         
@@ -50,6 +46,20 @@ jobs:
             - continuation/continue:
                 configuration_path: .circleci/continue_config.yml
                 parameters: temp.json
+        - when:
+          condition:
+            equal: [ main, << pipeline.git.branch >>]
+          steps:
+            - run:
+                name: Prepare deploy workflow parameter
+                command: |
+                        jq -n \
+                        --arg run_deploy_workflow "true" \
+                        '{"run_deploy_workflow": true}' > temp.json
+            - continuation/continue:
+                configuration_path: .circleci/continue_config.yml
+                parameters: temp.json
+
 
 
 workflows:

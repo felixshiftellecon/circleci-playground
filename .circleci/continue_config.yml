@@ -7,6 +7,9 @@ parameters:
   run_pr_workflow:
     type: boolean
     default: false
+  run_deploy_workflow:
+    type: boolean
+    default: false
   branch_merging_into:
     type: string
     default: ""
@@ -37,6 +40,9 @@ jobs:
 workflows:
   dev_workflow:
     when: << pipeline.parameters.run_dev_workflow >>
+    filters:
+      branches:
+        ignore: main
     jobs:
       - the_job:
           which_job: dev_workflow
@@ -61,3 +67,11 @@ workflows:
     jobs:
       - the_job:
           which_job: pr_workflow_dev_branch
+  deploy_workflow:
+    when: << pipeline.parameters.run_deploy_workflow >>
+    filters:
+      branches:
+        only: main
+    jobs:
+      - the_job:
+          which_job: run_deploy_workflow
