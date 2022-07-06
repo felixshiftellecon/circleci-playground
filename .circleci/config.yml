@@ -18,7 +18,7 @@ jobs:
             - run:
                 name: Prepare dev workflow parameter
                 command: |
-                        jq '. + {"run_dev_workflow": true}' > temp.json
+                        jq '. + {"run_dev_workflow": true}' /tmp/pipeline-parameters.json > temp.json
             - continuation/continue:
                 configuration_path: .circleci/continue_config.yml
                 parameters: temp.json
@@ -31,12 +31,12 @@ jobs:
             - run:
                 name: Prepare pull request workflow parameter
                 command: |
-                        jq '. + {"run_pr_workflow": true}' > temp.json
+                        jq '. + {"run_pr_workflow": true}' /tmp/pipeline-parameters.json > temp.json
             - run:
                 name: Grab Branch Name Being Merged Into
                 command: |
                         BRANCH_MERGING_INTO=gh pr view $CIRCLE_PULL_REQUEST --json baseRefName --jq .baseRefName
-                        jq '. + {"branch_merging_into": $BRANCH_MERGING_INTO}' > temp.json
+                        jq '. + {"branch_merging_into": $BRANCH_MERGING_INTO}' /tmp/pipeline-parameters.json > temp.json
                         cat /tmp/temp.json
             - continuation/continue:
                 configuration_path: .circleci/continue_config.yml
