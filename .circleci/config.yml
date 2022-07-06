@@ -46,7 +46,7 @@ jobs:
             - continuation/continue:
                 configuration_path: .circleci/continue_config.yml
                 parameters: temp.json
-        - when:
+      - when:
           condition:
             equal: [ main, << pipeline.git.branch >>]
           steps:
