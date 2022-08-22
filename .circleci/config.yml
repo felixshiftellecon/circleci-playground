@@ -19,4 +19,4 @@ jobs:
 workflows:
   test:
     jobs:
-      - test
+      - job_a
