@@ -14,7 +14,7 @@ jobs:
     steps:
       - checkout
       - gh/setup
-      - run: gh repo clone circleci/CircleCI-Training-Koans
+      - run: gh repo clone felixshiftellecon/dynamic-config-demos
 
 workflows:
   test:
