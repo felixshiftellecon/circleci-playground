@@ -14,7 +14,7 @@ jobs:
     steps:
       - checkout
       - gh/setup
-      - run: gh repo clone felixshiftellecon/circleci-playground
+      - run: gh repo clone circleci/CircleCI-Training-Koans
 
 workflows:
   test:
