@@ -14,7 +14,8 @@ jobs:
     steps:
       - checkout
       - gh/setup
-      - run: gh repo clone felixshiftellecon/cci-runner-demo
+      - gh/clone:
+          repo: felixshiftellecon/cci-runner-demo
 
 workflows:
   test:
