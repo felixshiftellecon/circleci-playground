@@ -12,9 +12,10 @@ jobs:
   job_a:
     executor: base
     steps:
-      - checkout
       - gh/setup
       - run: mkdir theclone
+      - gh/clone:
+          repo: felixshiftellecon/circleci-playground
       - gh/clone:
           repo: felixshiftellecon/cci-runner-demo
           dir: theclone
