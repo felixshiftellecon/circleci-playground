@@ -13,12 +13,13 @@ jobs:
     executor: base
     steps:
       - gh/setup
-      - run: mkdir theclone
+      - run: mkdir clone1 clone2
       - gh/clone:
           repo: felixshiftellecon/circleci-playground
+          dir: clone1
       - gh/clone:
           repo: felixshiftellecon/cci-runner-demo
-          dir: theclone
+          dir: clone2
 
 workflows:
   test:
