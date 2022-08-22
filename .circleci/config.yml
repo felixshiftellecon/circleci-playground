@@ -14,8 +14,10 @@ jobs:
     steps:
       - checkout
       - gh/setup
+      - run: mkdir theclone
       - gh/clone:
           repo: felixshiftellecon/cci-runner-demo
+          dir: theclone
 
 workflows:
   test:
