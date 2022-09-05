@@ -1,3 +1,6 @@
 {
-  "baseUrl":"https://cisco.com"
+  "baseUrl":"https://cisco.com",
+  "env": {
+    "test-env": "qa"
+  }
 }
