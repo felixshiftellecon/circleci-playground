@@ -1,4 +1,8 @@
 describe('Visit A Website', () => {
+  beforeEach(function() {
+    cy.exec('echo $(Cypress.config)')
+  })
+
   it('visits the base url with /', () => {
     cy.visit('/')
   })

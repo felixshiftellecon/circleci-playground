@@ -3,7 +3,7 @@ version: 2.1
 parameters:
   environment:
     type: string
-    default: "cypress/config/dev.config.json"
+    default: "cypress/config/qa.config.json"
 
 orbs:
   cypress: cypress-io/cypress@1.29.0
@@ -14,6 +14,6 @@ workflows:
     jobs:
       - cypress/install
       - cypress/run:
-          #config-file: << pipeline.parameters.environment >>
+          config-file: << pipeline.parameters.environment >>
           requires: 
             - cypress/install
