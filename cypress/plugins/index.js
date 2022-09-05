@@ -34,6 +34,7 @@ function getConfigurationByFile(file) {
 module.exports = (on, config) => {
   // accept a configFile value or use development by default
   const file = config.env.configFile || 'dev'
+  const baseUrl = config.env.baseUrl || null;
 
   on('task', {
     log (message) {
@@ -42,5 +43,9 @@ module.exports = (on, config) => {
     }
   })
 
-  return getConfigurationByFile(file)
+  if (baseUrl) {
+    config.baseUrl = baseUrl;
+  }
+
+  return getConfigurationByFile(file), config
 }
