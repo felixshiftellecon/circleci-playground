@@ -35,5 +35,12 @@ module.exports = (on, config) => {
   // accept a configFile value or use development by default
   const file = config.env.configFile || 'dev'
 
+  on('task', {
+    log (message) {
+      console.log(message)
+      return null
+    }
+  })
+
   return getConfigurationByFile(file)
 }
