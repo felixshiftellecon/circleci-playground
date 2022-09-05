@@ -1,10 +1,21 @@
 describe('Visit A Website', () => {
 
-  Cypress.on('log:added',  (logObject) => console.log(logObject))
-
-  // beforeEach(function() {
-  //   cy.log(Cypress.config)
-  // })
+  beforeEach(function() {
+    Cypress.log({
+      name: 'show config',
+      // shorter name for the Command Log
+      message: `${Object.key}, ${Object.value}`,
+      consoleProps: () => {
+        // return an object which will
+        // print to dev tools console on click
+        return {
+          Key: Object.key,
+          Value: Object.value,
+          'Config': Cypress.config(),
+        }
+      }
+    })
+  })
 
   it('visits the base url with /', () => {
     cy.visit('/')
