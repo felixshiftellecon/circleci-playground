@@ -16,7 +16,7 @@ executors:
 
 jobs:
   macos:
-    executor: base
+    executor: macos
     parallelism: 2
     steps:
       - checkout
