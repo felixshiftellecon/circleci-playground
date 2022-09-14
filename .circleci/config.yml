@@ -9,6 +9,7 @@ executors:
 jobs:
   job_a:
     executor: base
+    parallelism: 10
     steps:
       - checkout
       - run: echo "Running job a"
