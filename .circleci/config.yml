@@ -4,7 +4,7 @@ executors:
   base:
     docker:
       - image: cimg/base:stable
-      resource_class: felixshiftellecon/container-runner-1
+    resource_class: felixshiftellecon/container-runner-1
 
 jobs:
   job_a:
