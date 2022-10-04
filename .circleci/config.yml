@@ -10,7 +10,7 @@ jobs:
     executor: base
     steps:
       - checkout
-      - run: echo $CIRCLE_PULL_REQUEST3*/
+      - run: echo $CIRCLE_PULL_REQUEST
 
 workflows:
   workflow-a:
