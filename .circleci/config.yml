@@ -6,7 +6,7 @@ orbs:
       cat_file:
         parameters:
           file_path:
-            default: path_a/README.md
+            default: "path_a/README.md"
             type: string
         steps:
           - run: cat << parameters.file_path >>
@@ -28,8 +28,8 @@ jobs:
     steps:
       - checkout
       - run: echo "running job b"
-      - cat-orb/cat_file
-          file_path: path_b/README.md
+      - cat-orb/cat_file:
+          file_path: "path_b/README.md"
 
 workflows:
   workflow-a:
