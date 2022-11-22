@@ -17,7 +17,7 @@ jobs:
   job_a:
     executor: base
     steps:
-      - run: circleci step halt
+      - run: echo "I'm in the middle"
 
 workflows:
   workflow-a:
