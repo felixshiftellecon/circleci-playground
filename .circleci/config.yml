@@ -25,7 +25,7 @@ workflows:
       - job_a:
           pre-steps:
             - run:
-              command: echo "I'm a pre step"
+                command: echo "I'm a pre step"
           post-steps:
             - run:
                 command: echo "I'm a post step"
