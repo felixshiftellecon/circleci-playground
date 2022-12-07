@@ -8,13 +8,7 @@ executors:
     docker:
       - image: cimg/base:stable
 
-jobs:
-  job_a:
-    executor: base
-    steps:
-      - sumologic/workflow-collector
-
 workflows:
   workflow-a:
     jobs:
-      - job_a
+      - sumologic/workflow-collector
