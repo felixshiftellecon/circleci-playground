@@ -4,7 +4,6 @@ executors:
   base:
     docker:
       - image: cimg/base:stable
-    working_directory: /path_a
 
 jobs:
   job_a:
