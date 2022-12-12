@@ -10,9 +10,13 @@ jobs:
   job_a:
     executor: base
     steps:
-      - run: rm -r /path_a
-      - checkout
-      - run: echo "Running job a"
+      - run:
+          command: |
+                    pwd
+                    mkdir test_folder/
+                    cd test_folder/
+                    pwd
+      - run: pwd
 
 workflows:
   workflow-a:
