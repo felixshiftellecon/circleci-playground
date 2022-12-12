@@ -10,6 +10,7 @@ jobs:
   job_a:
     executor: base
     steps:
+      - checkout
       - run:
           command: |
                     pwd
