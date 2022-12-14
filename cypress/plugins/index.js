@@ -16,24 +16,24 @@
  * @type {Cypress.PluginConfig}
  */
 // eslint-disable-next-line no-unused-vars
-module.exports = (on, config) => {
-  // `on` is used to hook into various events Cypress emits
-  // `config` is the resolved Cypress config
-}
+// module.exports = (on, config) => {
+//   // `on` is used to hook into various events Cypress emits
+//   // `config` is the resolved Cypress config
+// }
 
-const fs = require('fs-extra')
-const path = require('path')
+// const fs = require('fs-extra')
+// const path = require('path')
 
-function getConfigurationByFile(file) {
-  const pathToConfigFile = path.resolve('cypress', 'config', `${file}.config.json`)
+// function getConfigurationByFile(file) {
+//   const pathToConfigFile = path.resolve('cypress', 'config', `${file}.config.json`)
 
-  return fs.readJson(pathToConfigFile)
-}
+//   return fs.readJson(pathToConfigFile)
+// }
 
 // plugins file
 module.exports = (on, config) => {
   // accept a configFile value or use development by default
-  // const file = config.env.configFile || 'dev'
+  const file = config.env.configFile || 'dev'
   const baseUrl = config.env.baseUrl || null;
 
   on('task', {
@@ -47,6 +47,5 @@ module.exports = (on, config) => {
     config.baseUrl = baseUrl;
   }
 
-  // return getConfigurationByFile(file), config
-  return getConfigurationByFile(env)
+  return getConfigurationByFile(file), config
 }
