@@ -21,14 +21,14 @@
 //   // `config` is the resolved Cypress config
 // }
 
-// const fs = require('fs-extra')
-// const path = require('path')
+const fs = require('fs-extra')
+const path = require('path')
 
-// function getConfigurationByFile(file) {
-//   const pathToConfigFile = path.resolve('cypress', 'config', `${file}.config.json`)
+function getConfigurationByFile(file) {
+  const pathToConfigFile = path.resolve('cypress', 'config', `${file}.config.json`)
 
-//   return fs.readJson(pathToConfigFile)
-// }
+  return fs.readJson(pathToConfigFile)
+}
 
 // plugins file
 module.exports = (on, config) => {
