@@ -10,7 +10,8 @@ jobs:
     executor: base
     steps:
       - checkout
-      - run: (exit 1) || I'm a failure
+      - run:
+          command: (exit 1) || I'm a failure
           background: true
       - run: echo "Running job a"
 
