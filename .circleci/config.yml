@@ -11,7 +11,7 @@ jobs:
     steps:
       - checkout
       - run:
-          command: (exit 1) || echo Im a failure
+          command: exit 1 || echo Im a failure
           background: true
       - run: echo "Running job a"
 
