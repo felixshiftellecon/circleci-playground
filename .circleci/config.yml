@@ -13,7 +13,7 @@ jobs:
       - checkout
       - run:
           name: I'm a failure
-          command: touch background_status.txt # || exit 1
+          command: exit 1 || touch background_status.txt
           background: true
       - run: echo "Running job a"
       - run: 
