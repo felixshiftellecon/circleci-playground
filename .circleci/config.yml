@@ -8,13 +8,17 @@ executors:
 jobs:
   job_a:
     executor: base
+    resource_class: small
     steps:
       - checkout
       - run:
-          command: exit 1
           name: I'm a failure
+          command: touch background_status.txt # || exit 1
           background: true
       - run: echo "Running job a"
+      - run: 
+          name: Background Step Failed
+          command: "[ -f background_status.txt ]"
 
 workflows:
   workflow-a:
