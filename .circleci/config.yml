@@ -16,6 +16,7 @@ jobs:
               cat new_env_vars >> "$BASH_ENV"
               source "$BASH_ENV"
               echo $PR_number
+              echo $test
 
 workflows:
   workflow-a:
