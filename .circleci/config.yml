@@ -12,6 +12,7 @@ jobs:
       CODEPUSH_DEPLOYMENT_NAME: $CIRCLE_PULL_REQUEST
     steps:
       - run: echo $CODEPUSH_DEPLOYMENT_NAME
+      - run: echo $CIRCLE_PULL_REQUEST
 
 workflows:
   workflow-a:
