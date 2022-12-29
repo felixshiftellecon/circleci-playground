@@ -9,8 +9,7 @@ jobs:
   job_a:
     executor: base
     steps:
-      - run: |
-              echo "${CIRCLE_PULL_REQUEST##*/}
+      - run: echo "${CIRCLE_PULL_REQUEST##*/}"
       - run: echo $PR_number
 
 workflows:
