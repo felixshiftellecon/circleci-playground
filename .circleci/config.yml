@@ -11,7 +11,7 @@ jobs:
     steps:
       - run: echo "export PR_number=${CIRCLE_PULL_REQUEST##*/}" >> new-env-vars
       - run: |
-              cat new-env-vars >> "BASH_ENV"
+              cat new-env-vars >> "$BASH_ENV"
               echo $PR_number
 
 workflows:
