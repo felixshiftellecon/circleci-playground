@@ -9,7 +9,7 @@ jobs:
   job_a:
     executor: base
     environment:
-      CODEPUSH_DEPLOYMENT_NAME: pr${CIRCLE_PR_NUMBER}
+      CODEPUSH_DEPLOYMENT_NAME: pr${CIRCLE_PULL_REQUEST}
     steps:
       - run: echo $CODEPUSH_DEPLOYMENT_NAME
 
