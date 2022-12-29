@@ -9,9 +9,11 @@ jobs:
   job_a:
     executor: base
     steps:
-      - run: echo "export PR_number=${CIRCLE_PULL_REQUEST##*/}" >> new-env-vars
       - run: |
-              cat new-env-vars >> "$BASH_ENV"
+              echo "export test='testing'" >> new_env_vars
+              echo "export PR_number=${CIRCLE_PULL_REQUEST##*/}" >> new_env_vars
+      - run: |
+              cat new_env_vars >> "$BASH_ENV"
               source "$BASH_ENV"
               echo $PR_number
 
