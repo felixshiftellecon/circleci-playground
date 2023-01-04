@@ -10,23 +10,23 @@ jobs:
     executor: base
     steps:
       - run: |
-              echo "export test='testing'" >> new_env_vars
-              echo "export PR_number=${CIRCLE_PULL_REQUEST##*/}" >> new_env_vars
+              echo "export test='testing'" >> tmp/workspace/new_env_vars
+              echo "export PR_number=${CIRCLE_PULL_REQUEST##*/}" >> tmp/workspace/new_env_vars
       - run: |
-              cat new_env_vars >> "$BASH_ENV"
+              cat tmp/workspace/new_env_vars >> "$BASH_ENV"
               source "$BASH_ENV"
               echo $PR_number
               echo $test
       - persist_to_workspace:
-          root: .
+          root: tmp/workspace/
           paths: new_env_vars
   job_b:
     executor: base
     steps:
       - attach_workspace:
-          at: .
+          at: tmp/workspace/
       - run: |
-              cat new_env_vars >> "$BASH_ENV"
+              cat tmp/workspace/new_env_vars >> "$BASH_ENV"
               source "$BASH_ENV"
               echo $PR_number
               echo $test
