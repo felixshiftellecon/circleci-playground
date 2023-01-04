@@ -18,8 +18,7 @@ jobs:
               source "$BASH_ENV"
               echo $PR_number
               echo $test
-      - run: zip tmp/workspace/
-      - run: unzip tmp/workspace/
+      - run: unzip -v
       - persist_to_workspace:
           root: tmp/workspace/
           paths: new_env_vars
