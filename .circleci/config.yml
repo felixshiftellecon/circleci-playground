@@ -17,8 +17,25 @@ jobs:
               source "$BASH_ENV"
               echo $PR_number
               echo $test
+      - persist_to_workspace:
+          root: .
+          paths: new_env_vars
+  job_b:
+    executor: base
+    steps:
+      - attach_workspace:
+          at: .
+      - run: |
+              cat new_env_vars >> "$BASH_ENV"
+              source "$BASH_ENV"
+              echo $PR_number
+              echo $test
+
 
 workflows:
   workflow-a:
     jobs:
       - job_a
+      - job_b:
+          requires:
+            - job_a
