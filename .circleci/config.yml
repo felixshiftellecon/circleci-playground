@@ -31,7 +31,37 @@ jobs:
               source "$BASH_ENV"
               echo $PR_number
               echo $test
-
+      - run: echo "export job_b='Im from job_b'" >> tmp/workspace/new_env_vars
+      - persist_to_workspace:
+          root: tmp/workspace/
+          paths: new_env_vars
+  job_c:
+    executor: base
+    steps:
+      - attach_workspace:
+          at: tmp/workspace/
+      - run: |
+              cat tmp/workspace/new_env_vars >> "$BASH_ENV"
+              source "$BASH_ENV"
+              echo $PR_number
+              echo $test
+      - run: echo "export job_c='Im from job_c'" >> tmp/workspace/new_env_vars
+      - persist_to_workspace:
+          root: tmp/workspace/
+          paths: new_env_vars
+  job_d:
+    executor: base
+    steps:
+      - attach_workspace:
+          at: tmp/workspace/
+      - run: |
+              cat tmp/workspace/new_env_vars >> "$BASH_ENV"
+              source "$BASH_ENV"
+              echo $PR_number
+              echo $test
+              echo $job_b
+              echo $job_c
+      
 
 workflows:
   workflow-a:
@@ -40,3 +70,10 @@ workflows:
       - job_b:
           requires:
             - job_a
+      - job_c:
+          requires:
+            - job_a
+      - job_d:
+          requires:
+            - job_b
+            - job_c
