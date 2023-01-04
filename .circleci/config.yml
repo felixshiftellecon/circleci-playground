@@ -10,7 +10,7 @@ jobs:
     executor: base
     steps:
       - run: |
-              mkdir tmp/workspace/
+              mkdir -p tmp/workspace/
               echo "export test='testing'" >> tmp/workspace/new_env_vars
               echo "export PR_number=${CIRCLE_PULL_REQUEST##*/}" >> tmp/workspace/new_env_vars
       - run: |
