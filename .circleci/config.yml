@@ -5,14 +5,14 @@ orbs:
 
 jobs:
   build:
-    docker:
-      - image: cimg/base:2022.10
-    resource_class: small
+    machine:
+      image: ubuntu-2004:2022.07.1
+    resource_class: large
     steps:
       - checkout
 
       - ruby/install:
-          version: '3'
+          version: '2.7'
       
       - run: ruby -v
 
