@@ -5,8 +5,8 @@ orbs:
 
 jobs:
   build:
-    machine:
-      image: ubuntu-2004:2022.07.1
+    docker:
+      - image: cimg/base:latest
     resource_class: large
     steps:
       - checkout
