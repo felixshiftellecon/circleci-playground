@@ -6,7 +6,7 @@ orbs:
 jobs:
   build:
     docker:
-      - image: cimg/base:latest
+      - image: cimg/base:2023.02
     resource_class: large
     steps:
       - checkout
