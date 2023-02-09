@@ -56,7 +56,7 @@ workflows:
           name: Deploy s3
           service: s3
           requires:
-            - hold
+            - deploy_s3_hold
       - deploy_ec2_hold:
           type: approval
           requires:
@@ -65,7 +65,7 @@ workflows:
           name: Deploy ec2
           service: ec2
           requires:
-            - hold
+            - deploy_ec2_hold
   testing_something:
     when: << pipeline.parameters.testing-required >>
     jobs:
