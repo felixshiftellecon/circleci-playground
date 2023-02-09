@@ -2,17 +2,17 @@ version: 2.1
 
 parameters:
   infrastructure-required:
-    type: boolean
+    type: false
     default: true
   destroy-infrastructure:
     type: boolean
-    default: true
+    default: false
   environment:
     type: string
     default: "dev"
   testing-required:
     type: boolean
-    default: true
+    default: false
 
 executors:
   base:
