@@ -1,38 +1,76 @@
 version: 2.1
 
 parameters:
-  run-path-a:
+  infrastructure-required:
     type: boolean
-    default: false
-  run-path-b:
+    default: true
+  destroy-infrastructure:
     type: boolean
-    default: false
+    default: true
+  environment:
+    type: string
+    default: "dev"
+  testing-required:
+    type: boolean
+    default: true
 
 executors:
   base:
     docker:
       - image: cimg/base:stable
+    resource_class: small
 
 jobs:
-  job_a:
+  setup_terraform:
     executor: base
     steps:
-      - checkout
-      - run: echo "Running job a"
-      - run: cat path_a/README.md
-  job_b:
+      - run: echo "setting up terraform"
+  deploy_terraform:
+    executor: base
+    parameters:
+      service:
+        description: "Service to spin up"
+        type: string
+        default: "s3"
+    steps:
+      - run: echo "deploying terraform service << parameters.service >>"
+  destroy_terraform:
     executor: base
     steps:
-      - checkout
-      - run: echo "running job b"
-      - run: cat path_b/README.md
+      - run: echo "destroy terraform infrastructure"
+  tests_or_something:
+    executor: base
+    steps:
+      - run: echo "use << pipeline.parameters.environment >>"
 
 workflows:
-  workflow-a:
-    when: << pipeline.parameters.run-path-a >>
+  deploy_infrastructure:
+    when: << pipeline.parameters.infrastructure-required >>
     jobs:
-      - job_a
-  workflow-b:
-    when: << pipeline.parameters.run-path-b >>
+      - setup_terraform
+      - deploy_s3_hold:
+          type: approval
+          requires:
+            - setup_terraform
+      - deploy_terraform:
+          name: Deploy s3
+          service: s3
+          requires:
+            - hold
+      - deploy_ec2_hold:
+          type: approval
+          requires:
+            - setup_terraform
+      - deploy_terraform:
+          name: Deploy ec2
+          service: ec2
+          requires:
+            - hold
+  testing_something:
+    when: << pipeline.parameters.testing-required >>
     jobs:
-      - job_b
+      - tests_or_something
+  destroy_infrastructure:
+    when: << pipeline.parameters.destroy-infrastructure >>
+    jobs:
+      - destroy_terraform
