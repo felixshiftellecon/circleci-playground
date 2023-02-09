@@ -29,7 +29,8 @@ jobs:
               echo  "then we put that into the setup_parameters.json file"
       - continuation/continue:
           configuration_path: .circleci/continue-config.yml
-          parameters: setup_parameters.json
+          # you'd pass the parameter file here
+          #parameters: setup_parameters.json
 
 workflows:
   setup-workflow:
