@@ -31,7 +31,7 @@ jobs:
       - continuation/continue:
           configuration_path: .circleci/continue-config.yml
           # you'd pass the parameter file here
-          parameters: '{ "infrastructure-required": true, "destroy-infrastructure": true, "testing-required": true}'
+          parameters: '{ "infrastructure-required": true, "destroy-infrastructure": true, "testing-required": true }'
 
 workflows:
   setup-workflow:
