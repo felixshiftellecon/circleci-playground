@@ -2,8 +2,8 @@ version: 2.1
 
 parameters:
   infrastructure-required:
-    type: false
-    default: true
+    type: boolean
+    default: false
   destroy-infrastructure:
     type: boolean
     default: false
