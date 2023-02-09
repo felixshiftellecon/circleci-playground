@@ -15,6 +15,7 @@ jobs:
   upstream_workflow_triggerer:
     executor: base
     steps:
+      - checkout
       - run: |
               echo "Here we run some conditional to check if a terraform deployment is needed"
               echo "This can be done by appending the commit with something like [deploy tf] and checking for it"
