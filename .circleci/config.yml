@@ -26,11 +26,25 @@ jobs:
       - checkout
       - run: echo "running job b"
       - run: cat path_b/README.md
+  job_c:
+    executor: base
+    steps:
+      - checkout
+      - run: echo "running job c"
+      - run: cat path_b/README.md
 
 job_a: &job_a
   name: job_a
+
 job_b: &job_b
   name: job_b
+  requires:
+    - job_a
+
+job_c: &job_c
+  name: job_c
+  requires:
+    - job_a
 
 workflows:
   workflow:
@@ -39,3 +53,5 @@ workflows:
           <<: *job_a
       - job_b: 
           <<: *job_b
+      - job_c:
+          <<: *job_c
