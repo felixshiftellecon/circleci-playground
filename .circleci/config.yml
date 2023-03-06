@@ -22,28 +22,20 @@ jobs:
       - run: cat path_a/README.md
   job_b:
     executor: base
-    parameters:
-      env:
-        type: enum
-        enum: ["dev", "test"]
     steps:
       - checkout
       - run: echo "running job b"
       - run: cat path_b/README.md
 
-name-anchor: &name-anchor
-  name: anchor-named
+name-anchor-a: &name-anchor-a
+  name: anchor-named-job-a
+name-anchor-b: &name-anchor-b
+  name: anchor-named-job-b
 
 workflows:
   workflow:
     jobs:
       - job_a:
-          name: non-anchor named
+          <<: *name-anchor-a
       - job_b: 
-          env: dev
-          <<: *name-anchor
-  # workflow-two:
-  #   jobs:
-  #     - job_b:
-  #         env: dev
-  #         <<: *name-anchor
+          <<: *name-anchor-b
