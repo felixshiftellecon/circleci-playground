@@ -27,15 +27,15 @@ jobs:
       - run: echo "running job b"
       - run: cat path_b/README.md
 
-name-anchor-a: &name-anchor-a
-  name: anchor-named-job-a
-name-anchor-b: &name-anchor-b
-  name: anchor-named-job-b
+job_a: &job_a
+  name: job_a
+job_b: &job_b
+  name: job_b
 
 workflows:
   workflow:
     jobs:
       - job_a:
-          <<: *name-anchor-a
+          <<: *job_a
       - job_b: 
-          <<: *name-anchor-b
+          <<: *job_b
