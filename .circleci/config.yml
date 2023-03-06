@@ -42,3 +42,7 @@ workflows:
       - job_b: 
           env: dev
           <<: *name-anchor
+  workflow-two:
+    jobs:
+      - job_b:
+          <<: *name-anchor
