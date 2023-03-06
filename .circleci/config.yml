@@ -24,8 +24,8 @@ jobs:
     executor: base
     parameters:
       env:
-        type: string
-        default: test
+        type: enum
+        enum: ["dev", "test"]
     steps:
       - checkout
       - run: echo "running job b"
@@ -42,7 +42,8 @@ workflows:
       - job_b: 
           env: dev
           <<: *name-anchor
-  workflow-two:
-    jobs:
-      - job_b:
-          <<: *name-anchor
+  # workflow-two:
+  #   jobs:
+  #     - job_b:
+  #         env: dev
+  #         <<: *name-anchor
