@@ -14,6 +14,10 @@ executors:
       - image: cimg/base:stable
 
 jobs:
+  setup:
+    executor: base
+    steps:
+      - run: echo "Running setup"
   job_a:
     executor: base
     parameters:
@@ -21,9 +25,7 @@ jobs:
        type: enum
        enum: ["dev", "test"]
     steps:
-      - checkout
       - run: echo "Running job a"
-      - run: cat path_a/README.md
   job_b:
     executor: base
     parameters:
@@ -31,9 +33,7 @@ jobs:
        type: enum
        enum: ["dev", "test"]
     steps:
-      - checkout
       - run: echo "running job b"
-      - run: cat path_b/README.md
   job_c:
     executor: base
     parameters:
@@ -41,12 +41,12 @@ jobs:
        type: enum
        enum: ["dev", "test"]
     steps:
-      - checkout
       - run: echo "running job c"
-      - run: cat path_b/README.md
 
 job_a: &job_a
   name: job_a
+  requires:
+    - setup
 
 job_b: &job_b
   name: job_b
@@ -56,10 +56,12 @@ job_b: &job_b
 job_c: &job_c
   requires:
     - job_a
+    - setup
 
 workflows:
   workflow:
     jobs:
+      - setup
       - job_a:
           env: test
           <<: *job_a
