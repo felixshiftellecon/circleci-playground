@@ -16,18 +16,30 @@ executors:
 jobs:
   job_a:
     executor: base
+    parameters:
+      env:
+       type: enum
+       enum: ["dev", "test"]
     steps:
       - checkout
       - run: echo "Running job a"
       - run: cat path_a/README.md
   job_b:
     executor: base
+    parameters:
+      env:
+       type: enum
+       enum: ["dev", "test"]
     steps:
       - checkout
       - run: echo "running job b"
       - run: cat path_b/README.md
   job_c:
     executor: base
+    parameters:
+      env:
+       type: enum
+       enum: ["dev", "test"]
     steps:
       - checkout
       - run: echo "running job c"
@@ -50,8 +62,11 @@ workflows:
   workflow:
     jobs:
       - job_a:
+          env: test
           <<: *job_a
-      - job_b: 
+      - job_b:
+          env: test 
           <<: *job_b
       - job_c:
+          env: test
           <<: *job_c
