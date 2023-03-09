@@ -25,7 +25,7 @@ module.exports.basicConfig = function () {
   //config.writeFile('basic_workflow.yml')
   
   // Generate JSON config
-  config = config.generate();
+  config.writeFile('basic_workflow.yml');
 
   return config;
 
