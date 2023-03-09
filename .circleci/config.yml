@@ -3,35 +3,19 @@ version: 2.1
 setup: true
 
 orbs:
-  path-filtering: circleci/path-filtering@0.1.0
   continuation: circleci/continuation@0.2.0
+
+jobs:
+  setup:
+    docker: 
+      - image: cimg/node:19.7.0
+    resource_class: small
+    steps:
+      - run: node .circleci/generated/generated.index.js
+      - continuation/continue:
+          configuration_path: basic_workflow.yml
 
 workflows:
   setup-workflow:
     jobs:
-      - path-filtering/filter:
-          name: check path
-          mapping: |
-            path_a/.* run-path-a true
-            path_b/.* run-path-b true
-          base-revision: main
-          config-path: .circleci/continue-config.yml
-          filters:
-            tags:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from Tag
-          configuration_path: .circleci/continue_config.yml
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from API
-          configuration_path: ./.circleci/continue_config.yml
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              ignore: /.*/
+      - setup
