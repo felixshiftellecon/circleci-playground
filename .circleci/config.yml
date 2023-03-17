@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  orb-test: felixshiftellecon/orb-test@1.0.0
+
 parameters:
   run-path-a:
     type: boolean
@@ -62,9 +65,8 @@ workflows:
   workflow:
     jobs:
       - setup
-      - job_a:
-          env: test
-          <<: *job_a
+      - orb-test/hello:
+          to: John
       - job_b:
           env: test 
           <<: *job_b
@@ -74,9 +76,8 @@ workflows:
   workflow-2:
     jobs:
       - setup
-      - job_a:
-          env: dev
-          <<: *job_a
+      - orb-test/hello:
+          to: Will
       - job_b:
           env: dev 
           <<: *job_b
