@@ -58,7 +58,7 @@ job_b: &job_b
 
 job_c: &job_c
   requires:
-    - job_a
+    - orb-test/hello
     - setup
 
 workflows:
