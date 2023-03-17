@@ -78,9 +78,3 @@ workflows:
       - setup
       - orb-test/hello:
           to: Will
-      - job_b:
-          env: dev 
-          <<: *job_b
-      - job_c:
-          env: dev
-          <<: *job_c
