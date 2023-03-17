@@ -71,7 +71,8 @@ workflows:
       - job_c:
           env: test
           <<: *job_c
-    workflow-2:
+  workflow-2:
+    jobs:
       - setup
       - job_a:
           env: dev
