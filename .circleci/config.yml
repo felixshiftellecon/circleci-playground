@@ -22,8 +22,8 @@ jobs:
     executor: base
     parameters:
       env:
-       type: enum
-       enum: ["dev", "test"]
+       type: string
+       default: "dev"
     steps:
       - run: echo "Running job <<parameters.env>>"
   job_b:
