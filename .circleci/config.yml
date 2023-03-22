@@ -57,6 +57,7 @@ job_b: &job_b
     - job_a
 
 job_c: &job_c
+  name: job_c
   requires:
     - job_a
 
@@ -93,5 +94,4 @@ workflows:
             - job_a
       - job_c:
           env: dev
-          requires:
-            - job_a
+          <<: *job_c 
