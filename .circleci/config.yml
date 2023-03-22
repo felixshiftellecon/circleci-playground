@@ -21,7 +21,7 @@ jobs:
     executor: base
     steps:
       - run: echo "Running setup"
-  job_1:
+  job_a:
     executor: base
     parameters:
       env:
@@ -29,7 +29,7 @@ jobs:
        default: "dev"
     steps:
       - run: echo "Running job <<parameters.env>>"
-  job_2:
+  job_b:
     executor: base
     parameters:
       env:
@@ -37,7 +37,7 @@ jobs:
        enum: ["dev", "test"]
     steps:
       - run: echo "running job b"
-  job_3:
+  job_c:
     executor: base
     parameters:
       env:
@@ -57,41 +57,41 @@ job_b: &job_b
     - job_a
 
 job_c: &job_c
-  name: job_c
+  name: job_3
   requires:
-    - job_a
+    - job_1
 
 workflows:
   workflow:
     jobs:
       - setup
-      - job_1:
+      - job_a:
           env: test
-          name: job_a
+          name: job_1
           requires:
             - setup
-      - job_2:
+      - job_b:
           env: test 
-          name: job_b
+          name: job_2
           requires:
-            - job_a
-      - job_3:
+            - job_1
+      - job_c:
           env: test
           requires:
-            - job_a
+            - job_1
   workflow-2:
     jobs:
       - setup
-      - job_1:
+      - job_a:
           env: dev
-          name: job_a
+          name: job_1
           requires:
             - setup
-      - job_2:
+      - job_b:
           env: dev 
-          name: job_b
+          name: job_2
           requires:
-            - job_a
+            - job_1
       - job_c:
           env: dev
           <<: *job_c 
