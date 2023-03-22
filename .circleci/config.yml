@@ -44,7 +44,7 @@ jobs:
        type: enum
        enum: ["dev", "test"]
     steps:
-      - run: echo "running job c"
+      - run: echo "Running job <<parameters.env>>"
 
 job_a: &job_a
   name: job_a
@@ -54,33 +54,44 @@ job_a: &job_a
 job_b: &job_b
   name: job_b
   requires:
-    - orb-test/hello
+    - job_a
 
 job_c: &job_c
   requires:
-    - orb-test/hello
-    - setup
+    - job_a
 
 workflows:
   workflow:
     jobs:
       - setup
-      - orb-test/hello:
-          to: John
+      - job_a:
+          env: test
+          name: job_a
+          requires:
+            - setup
       - job_b:
           env: test 
-          <<: *job_b
+          name: job_b
+          requires:
+            - job_a
       - job_c:
           env: test
-          <<: *job_c
+          requires:
+            - job_a
   workflow-2:
     jobs:
       - setup
-      - orb-test/hello:
-          to: Will
+      - job_a:
+          env: test
+          name: job_a
+          requires:
+            - setup
       - job_b:
           env: dev 
-          <<: *job_b
+          name: job_b
+          requires:
+            - job_a
       - job_c:
           env: dev
-          <<: *job_c
+          requires:
+            - job_a
