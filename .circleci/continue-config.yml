@@ -36,3 +36,12 @@ workflows:
     when: << pipeline.parameters.run-path-b >>
     jobs:
       - job_b
+  workflow-all:
+    when:
+      and:
+        - or:
+          - << pipeline.parameters.run-path-a >>
+          - << pipeline.parameters.run-path-b >>
+    jobs:
+      - job_a
+      - job_b
