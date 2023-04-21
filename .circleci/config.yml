@@ -15,9 +15,7 @@ commands:
 
 jobs:
   testing:
-      docker:
-          - image: cimg/base:latest
-      resource_class: small
+      executor: node/default
       steps:
         - node-install
 
