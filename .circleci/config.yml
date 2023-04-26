@@ -1,10 +1,14 @@
 version: 2.1
 
+orbs:
+  aws-cli: circleci/aws-cli@3.1
+
 jobs:
   test:
     docker:
       - image: cimg/base:2023.04
     steps:
+      - aws-cli/setup
       - run: |
           echo "export CODEPUSH_DEPLOYMENT_NAME=pr${CIRCLE_PULL_REQUEST##*/}" >> "$BASH_ENV"
           source "$BASH_ENV"
