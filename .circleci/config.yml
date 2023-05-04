@@ -11,14 +11,9 @@ jobs:
       - aws-cli/setup
       - run: |
           echo "export CODEPUSH_DEPLOYMENT_NAME=\"pr${CIRCLE_PULL_REQUEST##*/}\"" >> "$BASH_ENV"
-          source "$BASH_ENV"
           echo "$CODEPUSH_DEPLOYMENT_NAME"
-          echo "export NATIVE_BUILD=$(aws s3 ls s3://nick-smith-server-4/action-logs/"$CODEPUSH_DEPLOYMENT_NAME")" >> "$BASH_ENV"
-          echo "$NATIVE_BUILD"
       - run: |
-          echo -e "export NEW_LINE=$\"\n\"" >> "$BASH_ENV"
-          source "$BASH_ENV"
-          echo "$NEW_LINE"
+          echo "$CODEPUSH_DEPLOYMENT_NAME"
 
 workflows:
   setup-workflow:
