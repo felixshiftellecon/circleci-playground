@@ -10,10 +10,10 @@ jobs:
     steps:
       - aws-cli/setup
       - run: |
-          echo 'export CODEPUSH_DEPLOYMENT_NAME=\"pr${CIRCLE_PULL_REQUEST##*/}\"' >> "$BASH_ENV"
-          echo '$CODEPUSH_DEPLOYMENT_NAME'
+          echo 'export CODEPUSH_DEPLOYMENT_NAME=pr${CIRCLE_PULL_REQUEST##*/}' >> "$BASH_ENV"
+          echo "$CODEPUSH_DEPLOYMENT_NAME"
       - run: |
-          echo '$CODEPUSH_DEPLOYMENT_NAME'
+          echo "$CODEPUSH_DEPLOYMENT_NAME"
 
 workflows:
   setup-workflow:
