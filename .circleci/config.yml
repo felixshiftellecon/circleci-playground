@@ -14,18 +14,22 @@ executors:
       - image: cimg/base:stable
 
 jobs:
-  job_a:
+  job:
     executor: base
+    parameters:
+        names:
+          default: "john"
+          type: string
     steps:
-      - run: echo "I'm in the middle"
+      - run: echo "I'm in <<parameters.names>>"
 
 workflows:
   workflow-a:
     jobs:
-      - job_a:
+      - job:
+          matrix:
+            parameters:
+              names: ["john", "phil"]
           pre-steps:
             - run:
-                command: echo "I'm from a pre step" >> prestep.txt
-          post-steps:
-            - run:
-                command: cat prestep.txt
+                command: echo "I'm from a pre step"
