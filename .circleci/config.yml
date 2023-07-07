@@ -35,11 +35,11 @@ jobs:
             import yaml
 
             yaml.safe_load("""
-            ... - Hesperiidae
-            ... - Papilionidae
-            ... - Apatelodidae
-            ... - Epiplemidae
-            ... """)
+            - Hesperiidae
+            - Papilionidae
+            - Apatelodidae
+            - Epiplemidae
+            """)
   docker_job:
     executor: docker
     steps:
@@ -56,11 +56,11 @@ jobs:
             import yaml
 
             yaml.safe_load("""
-            ... - Hesperiidae
-            ... - Papilionidae
-            ... - Apatelodidae
-            ... - Epiplemidae
-            ... """)
+            - Hesperiidae
+            - Papilionidae
+            - Apatelodidae
+            - Epiplemidae
+            """)
 
 workflows:
   workflow-a:
