@@ -9,6 +9,10 @@ executors:
     macos:
       xcode: "14.2.0"
     resource_class: macos.x86.medium.gen2
+  oldxcode:
+    macos:
+      xcode: "14.0.1"
+    resource_class: macos.m1.medium.gen1
   docker:
     docker:
       - image: cimg/python:3.11.4
@@ -42,6 +46,10 @@ jobs:
       - pyyaml
   macgen2_job:
     executor: macgen2
+    steps:
+      - pyyaml
+  olderxcode_job:
+    executor: oldxcode
     steps:
       - pyyaml
   docker_job:
