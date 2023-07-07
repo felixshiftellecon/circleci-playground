@@ -34,7 +34,7 @@ jobs:
             
             import yaml
 
-            yaml.load("""
+            yaml.safe_load("""
             ... - Hesperiidae
             ... - Papilionidae
             ... - Apatelodidae
@@ -55,7 +55,7 @@ jobs:
             
             import yaml
 
-            yaml.load("""
+            yaml.safe_load("""
             ... - Hesperiidae
             ... - Papilionidae
             ... - Apatelodidae
