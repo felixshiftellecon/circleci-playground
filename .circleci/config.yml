@@ -26,7 +26,7 @@ jobs:
           name: Use pyyaml in python3 shell
           shell: python3
           command: |
-            #!/usr/bin/env python
+            #!/usr/bin/env python3
             
             import yaml
 
