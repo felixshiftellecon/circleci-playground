@@ -1,37 +1,44 @@
 version: 2.1
 
-setup: true
+parameters:
+  run-path-a:
+    type: boolean
+    default: false
+  run-path-b:
+    type: boolean
+    default: false
 
-orbs:
-  path-filtering: circleci/path-filtering@0.1.0
-  continuation: circleci/continuation@0.2.0
+executors:
+  base:
+    macos:
+      xcode: "14.2.0"
+    resource_class: macos.m1.medium.gen1
+
+jobs:
+  job_a:
+    executor: base
+    steps:
+      - checkout
+      - run:
+          name: Install pyyaml
+          command: pip3 install pyyaml
+      - run:
+          name: Use pyyaml in python3 shell
+          shell: python3
+          command: |
+            #!/usr/bin/env python
+            
+            import yaml
+
+            document = """
+              a: 1
+              b:
+                c: 3
+                d: 4
+            """
+            print yaml.dump(yaml.load(document))
 
 workflows:
-  setup-workflow:
+  workflow-a:
     jobs:
-      - path-filtering/filter:
-          name: check path
-          mapping: |
-            path_a/.* run-path-a true
-            path_b/.* run-path-b true
-          base-revision: main
-          config-path: .circleci/continue-config.yml
-          filters:
-            tags:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from Tag
-          configuration_path: .circleci/continue_config.yml
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from API
-          configuration_path: ./.circleci/continue_config.yml
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              ignore: /.*/
+      - job_a
