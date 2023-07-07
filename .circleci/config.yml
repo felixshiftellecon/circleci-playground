@@ -62,4 +62,5 @@ workflows:
     jobs:
       - macgen1_job
       - macgen2_job
+      - olderxcode_job
       - docker_job
