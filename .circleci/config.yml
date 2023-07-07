@@ -9,14 +9,39 @@ parameters:
     default: false
 
 executors:
-  base:
+  mac:
     macos:
       xcode: "14.2.0"
     resource_class: macos.m1.medium.gen1
+  docker:
+    docker:
+      - image: cimg/python:3.11.4
+
 
 jobs:
-  job_a:
-    executor: base
+  mac_job:
+    executor: mac
+    steps:
+      - checkout
+      - run:
+          name: Install pyyaml
+          command: pip3 install pyyaml
+      - run:
+          name: Use pyyaml in python3 shell
+          shell: python3
+          command: |
+            #!/usr/bin/env python3
+            
+            import yaml
+
+            yaml.load("""
+            ... - Hesperiidae
+            ... - Papilionidae
+            ... - Apatelodidae
+            ... - Epiplemidae
+            ... """)
+  docker_job:
+    executor: docker
     steps:
       - checkout
       - run:
@@ -40,4 +65,5 @@ jobs:
 workflows:
   workflow-a:
     jobs:
-      - job_a
+      - mac_job
+      - docker_job
