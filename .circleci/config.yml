@@ -1,31 +1,25 @@
 version: 2.1
 
-parameters:
-  run-path-a:
-    type: boolean
-    default: false
-  run-path-b:
-    type: boolean
-    default: false
-
 executors:
-  mac:
+  macgen1:
     macos:
       xcode: "14.2.0"
     resource_class: macos.m1.medium.gen1
+  macgen2:
+    macos:
+      xcode: "14.2.0"
+    resource_class: macos.x86.medium.gen2
   docker:
     docker:
       - image: cimg/python:3.11.4
 
-
-jobs:
-  mac_job:
-    executor: mac
+commands:
+  pyyaml:
+    description: install pyyaml and use it
     steps:
-      - checkout
       - run:
-          name: Install pyyaml
-          command: pip3 install pyyaml
+            name: Install pyyaml
+            command: pip3 install pyyaml
       - run:
           name: Use pyyaml in python3 shell
           shell: python3
@@ -40,30 +34,24 @@ jobs:
             - Apatelodidae
             - Epiplemidae
             """)
+
+jobs:
+  macgen1_job:
+    executor: macgen1
+    steps:
+      - pyyaml
+  macgen2_job:
+    executor: macgen2
+    steps:
+      - pyyaml
   docker_job:
     executor: docker
     steps:
-      - checkout
-      - run:
-          name: Install pyyaml
-          command: pip3 install pyyaml
-      - run:
-          name: Use pyyaml in python3 shell
-          shell: python3
-          command: |
-            #!/usr/bin/env python3
-            
-            import yaml
-
-            yaml.safe_load("""
-            - Hesperiidae
-            - Papilionidae
-            - Apatelodidae
-            - Epiplemidae
-            """)
+      - pyyaml
 
 workflows:
   workflow-a:
     jobs:
-      - mac_job
+      - macgen1_job
+      - macgen2_job
       - docker_job
