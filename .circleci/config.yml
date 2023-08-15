@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   buildah:
     docker:
-     - image: quay.io/buildah/stable:v1.31.2
+     - image: quay.io/buildah/stable:v1.31.0
     steps:
       - checkout
       - run:
