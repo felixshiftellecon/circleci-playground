@@ -3,19 +3,17 @@ version: 2.1
 jobs:
   buildah:
     docker:
-     - image: quay.io/buildah/stable:v1.31.0
+      - image: gcr.io/kaniko-project/executor:debug
     steps:
       - checkout
       - run:
-          name: sanity-test
-          command: |
-            buildah version
-      - run:
           name: Building-a-container
           command: |
-            buildah bud -f ./Dockerfile -t hello-world-test:0.1
+            /kaniko/executor \
+                --context "$(pwd)" \
+                --dockerfile "$(pwd)/Dockerfile"
 
 workflows:
   buildah:
     jobs:
-      - buildah
+      - kaniko
