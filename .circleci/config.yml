@@ -11,7 +11,8 @@ jobs:
           command: |
             /kaniko/executor \
                 --context "$(pwd)" \
-                --dockerfile "$(pwd)/Dockerfile"
+                --dockerfile "$(pwd)/Dockerfile" \
+                --no-push
 
 workflows:
   kaniko:
