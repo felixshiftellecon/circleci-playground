@@ -1,3 +1,3 @@
-FROM ubuntu:20.04
+FROM nginx:1.20
 
-RUN echo "Hello John"
+COPY index.html /usr/share/nginx/html/index.html
