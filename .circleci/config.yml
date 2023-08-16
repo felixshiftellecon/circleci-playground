@@ -4,6 +4,7 @@ jobs:
   kaniko:
     docker:
       - image: gcr.io/kaniko-project/executor:debug
+        entrypoint: ""
     steps:
       - checkout
       - run:
