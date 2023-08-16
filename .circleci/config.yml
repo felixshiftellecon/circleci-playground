@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   kaniko:
     docker:
-      - image: gcr.io/kaniko-project/executor:debug-v0.17.1
+      - image: gcr.io/kaniko-project/executor:debug-v0.16
         entrypoint: ""
     steps:
       - checkout
