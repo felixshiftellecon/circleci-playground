@@ -1,14 +1,14 @@
 version: 2.1
 
 executors:
-  macos:
+  apple-large:
     macos:
         xcode: "14.2.0"
-      resource_class: macos.m1.large.gen1
+    resource_class: macos.m1.large.gen1
     
 jobs:
   job_a:
-    executor: macos
+    executor: apple-large
     steps:
       - run: echo "Running job a"
 
