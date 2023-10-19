@@ -12,10 +12,14 @@ executors:
   base:
     docker:
       - image: cimg/base:stable
-
+  macos:
+    macos:
+      xcode: "14.2.0"
+    resource_class: macos.m1.large.gen1
+    
 jobs:
   job_a:
-    executor: base
+    executor: macos
     steps:
       - checkout
       - run: echo "Running job a"
