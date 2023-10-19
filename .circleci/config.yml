@@ -4,7 +4,7 @@ jobs:
   job_a:
     macos:
       xcode: "15.0.0"
-      resource_class: macos.m1.large.gen1
+    resource_class: macos.m1.large.gen1
     steps:
       - run: echo "Running job a"
 
