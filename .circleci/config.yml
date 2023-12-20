@@ -9,8 +9,10 @@ jobs:
     steps:
       - run: |
               setx TEST "testing"
-              Write-Host $Env:TEST
-      - run: Write-Host $Env:TEST
+              refreshenv
+              $Env:TEST
+      - run: Get-ItemPropertyValue 'registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' TEST
+      - run: $Env:TEST
 
 workflows:
   workflow-a:
