@@ -8,8 +8,7 @@ jobs:
     executor: win/default
     steps:
       - run: |
-              setx TEST "testing"
-              refreshenv
+              setx TEST "testing" /m
               $Env:TEST
       - run: Get-ItemPropertyValue 'registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' TEST
       - run: $Env:TEST
