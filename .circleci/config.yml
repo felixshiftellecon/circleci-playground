@@ -7,8 +7,10 @@ jobs:
   job_a:
     executor: win/default
     steps:
-      - run: setx TEST "testing"
-      - run: echo $TEST
+      - run: |
+              setx TEST "testing"
+              echo $Env:TEST
+      - run: echo $Env:TEST
 
 workflows:
   workflow-a:
