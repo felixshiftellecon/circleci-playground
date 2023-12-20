@@ -9,8 +9,8 @@ jobs:
     steps:
       - run: |
               setx TEST "testing"
-              Write-Host $Env:TEST
-      - run: Write-Host $Env:TEST
+              Write-Host '$Env:TEST'
+      - run: Write-Host '$Env:TEST'
 
 workflows:
   workflow-a:
