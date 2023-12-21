@@ -7,9 +7,12 @@ jobs:
   job_a:
     executor: win/default
     steps:
-      - run: setx TEST "testing" /m
+      - run: |
+              setx TEST "testing" /m
+              echo $env:TEST
       - run: Get-ItemPropertyValue 'registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' TEST
-
+      - run: echo $env:TEST
+      
 workflows:
   workflow-a:
     jobs:
