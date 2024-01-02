@@ -12,15 +12,15 @@ jobs:
       - image: cimg/base:stable
     resource_class: small
     steps:
-      run: echo hello john 
+      - run: echo hello john 
 
 workflows:
   setup-workflow:
     jobs:
       - place_holder:
           filters:
-            only:
-              branches:
+            branches:
+              only:
                 - main
       - path-filtering/filter:
           name: check path
