@@ -13,7 +13,7 @@ jobs:
       - run: echo "Running job a"
       - run: mkdir test_results_a
       - store_test_results:
-          path: /test_*/
+          path: / test.* /
 
 workflows:
   workflow-a:
