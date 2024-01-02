@@ -10,7 +10,7 @@ jobs:
   place_holder:
     docker:
       - image: cimg/base:stable
-      resource_class: small
+    resource_class: small
     steps:
       run: echo hello john 
 
