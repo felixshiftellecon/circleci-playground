@@ -6,9 +6,22 @@ orbs:
   path-filtering: circleci/path-filtering@0.1.0
   continuation: circleci/continuation@0.2.0
 
+jobs:
+  place_holder:
+    docker:
+      - image: cimg/base:stable
+      resource_class: small
+    steps:
+      run: echo hello john 
+
 workflows:
   setup-workflow:
     jobs:
+      - place_holder:
+          filters:
+            only:
+              branches:
+                - main
       - path-filtering/filter:
           name: check path
           mapping: |
@@ -19,19 +32,5 @@ workflows:
           filters:
             tags:
               ignore: /.*/
-      - continuation/continue:
-          name: Continue from Tag
-          configuration_path: .circleci/continue_config.yml
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from API
-          configuration_path: ./.circleci/continue_config.yml
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              ignore: /.*/
+          requires:
+            - place_holder
