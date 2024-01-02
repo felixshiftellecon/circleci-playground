@@ -1,36 +1,21 @@
 version: 2.1
 
-setup: true
-
-orbs:
-  path-filtering: circleci/path-filtering@0.1.0
-  continuation: circleci/continuation@0.2.0
-
-jobs:
-  place_holder:
+executors:
+  base:
     docker:
       - image: cimg/base:stable
-    resource_class: small
+
+jobs:
+  job_a:
+    executor: base
     steps:
-      - run: echo hello john 
+      - checkout
+      - run: echo "Running job a"
+      - run: mkdir test_results_a
+      - store_test_results:
+          path: /test_*/
 
 workflows:
-  setup-workflow:
+  workflow-a:
     jobs:
-      - place_holder:
-          filters:
-            branches:
-              only:
-                - main
-      - path-filtering/filter:
-          name: check path
-          mapping: |
-            path_a/.* run-path-a true
-            path_b/.* run-path-b true
-          base-revision: main
-          config-path: .circleci/continue-config.yml
-          filters:
-            tags:
-              ignore: /.*/
-          requires:
-            - place_holder
+      - job_a
