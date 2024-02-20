@@ -19,7 +19,7 @@ jobs:
       - checkout
       - path-filtering/set-parameters:
           mapping: |
-            ^[.] no_workflow true
+            ^\..* no_workflow true
             path_a/.* path_a_workflow true
             path_b/.* path_b_workflow true
           output-path: /tmp/pipeline-parameters.json
