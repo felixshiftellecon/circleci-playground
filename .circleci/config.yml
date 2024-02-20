@@ -29,12 +29,13 @@ jobs:
             eval $(jq -r 'to_entries | .[] | "export \(.key)=\(.value)"' /tmp/pipeline-parameters.json)
 
             # Continue job or halt based on parameters set above
-            if ["$no-workflow" = "true" && "$yes-workflow" = "true"]
+            if [  "$no-workflow" = "true" ] && [ "$yes-workflow" = "true" ]; then
               echo "Commit has both utility and code changes, starting the next workflow"
-            else [ "$no-workflow" = "true" ]; then
+            elseif [ "$no-workflow" = "true" ]; then
                 circleci-agent step halt
             else
               echo "Commit has code changes, starting the next workflow"
+            fi
       - continuation/continue:
           configuration_path: .circleci/continue_config.yml
           parameters: /tmp/pipeline-parameters.json
