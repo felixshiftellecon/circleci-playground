@@ -34,7 +34,7 @@ jobs:
             # Continue job or halt based on parameters set above
             if [  "$no_workflow" = "true" ] && [ "$yes_workflow" = "true" ]; then
               echo "Commit has both utility and code changes, starting the next workflow"
-            elseif [ "$no_workflow" = "true" ]; then
+            elif [ "$no_workflow" = "true" ]; then
                 circleci-agent step halt
             else
               echo "Commit has code changes, starting the next workflow"
