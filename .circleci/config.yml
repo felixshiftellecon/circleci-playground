@@ -28,6 +28,8 @@ jobs:
             # Pull parameters set in the previous step into bash
             eval $(jq -r 'to_entries | .[] | "export \(.key)=\(.value)"' /tmp/pipeline-parameters.json)
 
+            source $BASH_ENV
+
             # Continue job or halt based on parameters set above
             if [  "$no-workflow" = "true" ] && [ "$yes-workflow" = "true" ]; then
               echo "Commit has both utility and code changes, starting the next workflow"
