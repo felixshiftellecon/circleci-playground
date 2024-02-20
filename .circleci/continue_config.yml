@@ -7,6 +7,9 @@ parameters:
   path_b_workflow:
     type: boolean
     default: false
+  no_workflow:
+    type: boolean
+    default: false
 
 executors:
   base:
