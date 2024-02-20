@@ -28,9 +28,13 @@ jobs:
             # Pull parameters set in the previous step into bash
             eval $(jq -r 'to_entries | .[] | "export \(.key)=\(.value)"' /tmp/pipeline-parameters.json)
 
-            echo 
+            echo $no_workflow
+            echo $yes_workflow
 
             source $BASH_ENV
+
+            echo $no_workflow
+            echo $yes_workflow
 
             # Continue job or halt based on parameters set above
             if [  "$no_workflow" = "true" ] && [ "$yes_workflow" = "true" ]; then
