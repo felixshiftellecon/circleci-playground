@@ -1,0 +1,25 @@
+version: 2.1
+
+parameters:
+  run-job:
+    type: boolean
+    default: false
+
+executors:
+  base:
+    docker:
+      - image: cimg/base:stable
+
+jobs:
+  job_a:
+    executor: base
+    steps:
+      - checkout
+      - run: echo "Running job a"
+      - run: cat path_a/README.md
+
+workflows:
+  workflow-a:
+    when: << pipeline.parameters.run-job >>
+    jobs:
+      - job_a
