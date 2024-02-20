@@ -19,8 +19,8 @@ jobs:
       - checkout
       - path-filtering/set-parameters:
           mapping: |
-            .* no-workflow true
-            path_*/ yes-workflow true
+            .* no_workflow true
+            path_*/ yes_workflow true
           output-path: /tmp/pipeline-parameters.json
       - run:
           name: Check if utility file was changed and stop workflow
@@ -28,12 +28,14 @@ jobs:
             # Pull parameters set in the previous step into bash
             eval $(jq -r 'to_entries | .[] | "export \(.key)=\(.value)"' /tmp/pipeline-parameters.json)
 
+            echo 
+
             source $BASH_ENV
 
             # Continue job or halt based on parameters set above
-            if [  "$no-workflow" = "true" ] && [ "$yes-workflow" = "true" ]; then
+            if [  "$no_workflow" = "true" ] && [ "$yes_workflow" = "true" ]; then
               echo "Commit has both utility and code changes, starting the next workflow"
-            elseif [ "$no-workflow" = "true" ]; then
+            elseif [ "$no_workflow" = "true" ]; then
                 circleci-agent step halt
             else
               echo "Commit has code changes, starting the next workflow"
