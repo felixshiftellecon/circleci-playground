@@ -33,13 +33,12 @@ jobs:
             echo "path_a_workflow: " $path_a_workflow
 
             # Continue job or halt based on parameters set above
-            if [  "$no_workflow" = "true" ] && [ "$path_a_workflow" = "true" ] && [ "$path_b_workflow" = "true" ]; then
+            if [  "$no_workflow" = "true" ] && [ "$path_a_workflow" = "true" ] || [ "$path_b_workflow" = "true" ]; then
               echo "Commit has both utility and code changes, starting the next workflow"
             elif [ "$no_workflow" = "true" ]; then
               echo "Commit only has utility changes, halting workflow."
               circleci-agent step halt
-            else
-              # Not sure why you'd want this option but it's there
+            elif [ "$path_a_workflow" = "true" ] || [ "$path_b_workflow" = "true" ]; then
               echo "Commit has code changes, starting the next workflow"
             fi
       - continuation/continue:
