@@ -1,7 +1,10 @@
 version: 2.1
 
 parameters:
-  yes_workflow:
+  path_a_workflow:
+    type: boolean
+    default: false
+  path_b_workflow:
     type: boolean
     default: false
 
@@ -15,10 +18,20 @@ jobs:
   job_a:
     executor: base
     steps:
-      - run: echo "Hello John, I can run"
+      - checkout
+      - run: cat path_a/README.md
+  job_b:
+    executor: base
+    steps:
+      - checkout
+      - run: cat path_b/README.md
 
 workflows:
   workflow-a:
-    when: << pipeline.parameters.yes_workflow >>
+    when: << pipeline.parameters.path_a_workflow >>
     jobs:
       - job_a
+  workflow-b:
+    when: << pipeline.parameters.path_b_workflow >>
+    jobs:
+      - job_b

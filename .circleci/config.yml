@@ -20,7 +20,8 @@ jobs:
       - path-filtering/set-parameters:
           mapping: |
             .* no_workflow true
-            path_*/ yes_workflow true
+            path_a/* path_a_workflow true
+            path_b/* path_b_workflow true
           output-path: /tmp/pipeline-parameters.json
       - run:
           name: Check if utility file was changed and stop workflow
@@ -29,15 +30,16 @@ jobs:
             eval $(jq -r 'to_entries | .[] | "export \(.key)=\(.value)"' /tmp/pipeline-parameters.json)
 
             echo "no_workflow: " $no_workflow
-            echo "yes_workflow: " $yes_workflow
+            echo "path_a_workflow: " $path_a_workflow
 
             # Continue job or halt based on parameters set above
-            if [  "$no_workflow" = "true" ] && [ "$yes_workflow" = "true" ]; then
+            if [  "$no_workflow" = "true" ] && [ "$path_a_workflow" = "true" ] && [ "$path_b_workflow" = "true" ]; then
               echo "Commit has both utility and code changes, starting the next workflow"
             elif [ "$no_workflow" = "true" ]; then
               echo "Commit only has utility changes, halting workflow."
               circleci-agent step halt
             else
+              # Not sure why you'd want this option but it's there
               echo "Commit has code changes, starting the next workflow"
             fi
       - continuation/continue:
