@@ -35,7 +35,8 @@ jobs:
             if [  "$no_workflow" = "true" ] && [ "$yes_workflow" = "true" ]; then
               echo "Commit has both utility and code changes, starting the next workflow"
             elif [ "$no_workflow" = "true" ]; then
-                circleci-agent step halt
+              echo "Commit only has utility changes, halting workflow."
+              circleci-agent step halt
             else
               echo "Commit has code changes, starting the next workflow"
             fi

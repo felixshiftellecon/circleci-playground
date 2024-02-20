@@ -1,7 +1,7 @@
 version: 2.1
 
 parameters:
-  run-job:
+  yes_workflow:
     type: boolean
     default: false
 
@@ -9,17 +9,16 @@ executors:
   base:
     docker:
       - image: cimg/base:stable
+    resource_class: small
 
 jobs:
   job_a:
     executor: base
     steps:
-      - checkout
-      - run: echo "Running job a"
-      - run: cat path_a/README.md
+      - run: echo "Hello John, I can run"
 
 workflows:
   workflow-a:
-    when: << pipeline.parameters.run-job >>
+    when: << pipeline.parameters.yes_workflow >>
     jobs:
       - job_a
