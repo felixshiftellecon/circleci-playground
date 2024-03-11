@@ -37,6 +37,8 @@ workflows:
             branches:
               ignore: 
                 - main
+          requires:
+            - job_a
       - job_b:
           requires:
             - hold
