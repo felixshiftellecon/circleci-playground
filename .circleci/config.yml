@@ -30,7 +30,7 @@ jobs:
 workflows:
   workflow-a:
     jobs:
-      - job_a:
+      - job_a
       - hold:
           type: approval
           filters:
