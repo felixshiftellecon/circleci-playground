@@ -34,7 +34,8 @@ workflows:
           type: approval
           filters:
             branches:
-              ignore: main
+              ignore: 
+                - main
       - job_a:
           requires:
             - hold
