@@ -30,15 +30,13 @@ jobs:
 workflows:
   workflow-a:
     jobs:
+      - job_a:
       - hold:
           type: approval
           filters:
             branches:
               ignore: 
                 - main
-      - job_a:
-          requires:
-            - hold
       - job_b:
           requires:
             - hold
