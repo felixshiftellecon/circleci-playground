@@ -1,4 +1,9 @@
 version: 2.1
+
+parameters:
+  is-false:
+    type: boolean
+    default: false
     
     
 jobs:
@@ -11,5 +16,6 @@ jobs:
 
 workflows:
   workflow-a:
+    when: << pipeline.parameters.is-false >>
     jobs:
       - job_a
