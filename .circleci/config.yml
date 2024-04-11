@@ -16,10 +16,7 @@ jobs:
 
 workflows:
   workflow-a:
-    when: << pipeline.parameters.is-false >>
-    jobs:
-      - job_a
-  workflow-b:
-    when: << pipeline.parameters.is-false >>
+    when: 
+      and: << pipeline.parameters.is-false >>
     jobs:
       - job_a
