@@ -1,37 +1,33 @@
 version: 2.1
 
-setup: true
-
-orbs:
-  path-filtering: circleci/path-filtering@0.1.0
-  continuation: circleci/continuation@0.2.0
+parameters:
+  is-false:
+    type: boolean
+    default: false
+    
+    
+jobs:
+  job_a:
+    macos:
+      xcode: 14.3.1
+    resource_class: macos.m1.large.gen1
+    steps:
+      - run: echo "Running job a"
 
 workflows:
-  setup-workflow:
+  workflow-a:
+    when: 
+      and: 
+        - << pipeline.parameters.is-false >>
+        - or:
+          - equal: [true, << pipeline.parameters.is-false >>]
     jobs:
-      - path-filtering/filter:
-          name: check path
-          mapping: |
-            path_a/.* run-path-a true
-            path_b/.* run-path-b true
-          base-revision: main
-          config-path: .circleci/continue-config.yml
-          filters:
-            tags:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from Tag
-          configuration_path: .circleci/continue_config.yml
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from API
-          configuration_path: ./.circleci/continue_config.yml
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              ignore: /.*/
+      - job_a
+  workflow-b:
+    when: 
+      and: 
+        - << pipeline.parameters.is-false >>
+        - or:
+          - equal: [true, << pipeline.parameters.is-false >>]
+    jobs:
+      - job_a
