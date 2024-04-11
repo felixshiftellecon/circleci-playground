@@ -23,3 +23,11 @@ workflows:
           - equal: [true, << pipeline.parameters.is-false >>]
     jobs:
       - job_a
+  workflow-b:
+    when: 
+      and: 
+        - << pipeline.parameters.is-false >>
+        - or:
+          - equal: [true, << pipeline.parameters.is-false >>]
+    jobs:
+      - job_a
