@@ -12,6 +12,12 @@ executors:
   base:
     docker:
       - image: cimg/base:stable
+  iterable-runner:
+    docker:
+      - image: 203113165317.dkr.ecr.us-east-1.amazonaws.com/circleci-runner
+        aws_auth:
+          oidc_role_arn: arn:aws:iam::203113165317:role/circleci-oidc
+    resource_class: runners-namespace/selfhosted-runners-resource-class
 
 jobs:
   job_a:
