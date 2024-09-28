@@ -1,37 +1,80 @@
 version: 2.1
 
-setup: true
+executors:
+  base:
+    docker:
+      - image: cimg/base:stable
 
-orbs:
-  path-filtering: circleci/path-filtering@0.1.0
-  continuation: circleci/continuation@0.2.0
+jobs:
+  job_a:
+    executor: base
+    steps:
+      - run: |
+              mkdir -p tmp/workspace/
+              echo "export test='testing'" >> tmp/workspace/new_env_vars
+              echo "export PR_number=${CIRCLE_PULL_REQUEST##*/}" >> tmp/workspace/new_env_vars
+      - run: |
+              cat tmp/workspace/new_env_vars >> "$BASH_ENV"
+              source "$BASH_ENV"
+              echo $PR_number
+              echo $test
+      - run: unzip -v
+      - persist_to_workspace:
+          root: tmp/workspace/
+          paths: new_env_vars
+  job_b:
+    executor: base
+    steps:
+      - attach_workspace:
+          at: tmp/workspace/
+      - run: |
+              cat tmp/workspace/new_env_vars >> "$BASH_ENV"
+              source "$BASH_ENV"
+              echo $PR_number
+              echo $test
+      - run: echo "export job_b='Im from job_b'" >> tmp/workspace/new_env_vars
+      - persist_to_workspace:
+          root: tmp/workspace/
+          paths: new_env_vars
+  job_c:
+    executor: base
+    steps:
+      - attach_workspace:
+          at: tmp/workspace/
+      - run: |
+              cat tmp/workspace/new_env_vars >> "$BASH_ENV"
+              source "$BASH_ENV"
+              echo $PR_number
+              echo $test
+      - run: echo "export job_c='Im from job_c'" >> tmp/workspace/new_env_vars
+      - persist_to_workspace:
+          root: tmp/workspace/
+          paths: new_env_vars
+  job_d:
+    executor: base
+    steps:
+      - attach_workspace:
+          at: tmp/workspace/
+      - run: |
+              cat tmp/workspace/new_env_vars >> "$BASH_ENV"
+              source "$BASH_ENV"
+              echo $PR_number
+              echo $test
+              echo $job_b
+              echo $job_c
+      
 
 workflows:
-  setup-workflow:
+  workflow-a:
     jobs:
-      - path-filtering/filter:
-          name: check path
-          mapping: |
-            path_a/.* run-path-a true
-            path_b/.* run-path-b true
-          base-revision: main
-          config-path: .circleci/continue-config.yml
-          filters:
-            tags:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from Tag
-          configuration_path: .circleci/continue_config.yml
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from API
-          configuration_path: ./.circleci/continue_config.yml
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              ignore: /.*/
+      - job_a
+      - job_b:
+          requires:
+            - job_a
+      - job_c:
+          requires:
+            - job_a
+      - job_d:
+          requires:
+            - job_b
+            - job_c
