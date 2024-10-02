@@ -39,7 +39,7 @@ jobs:
       - run_and_log:
           cmd: echo "testing orb command"
       - run_and_log:
-          cmd: build-tools/env-info
+          cmd: 'build-tools/env-info'
       - store_build_logs
 workflows:
   workflow-a:
