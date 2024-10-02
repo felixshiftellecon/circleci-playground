@@ -15,6 +15,7 @@ commands:
               command: |
                 set -x
                 mkdir -p /tmp/logs/
+                echo "----------------------------------------" | tee -a /tmp/logs/build_output.txt
                 echo "<< parameters.cmd >>" | tee -a /tmp/logs/build_output.txt
                 eval "<< parameters.cmd >>" | tee -a /tmp/logs/build_output.txt
       store_build_logs:
