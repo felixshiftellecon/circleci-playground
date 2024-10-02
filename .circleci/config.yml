@@ -20,7 +20,7 @@ commands:
                 mkdir -p /tmp/logs/
                 echo "----------------------------------------" | tee -a /tmp/logs/build_output.txt
                 echo "<< parameters.cmd >>" | tee -a /tmp/logs/build_output.txt
-                (<< parameters.cmd >>) 2>&1 | tee -a /tmp/logs/build_output.txt
+                eval "<< parameters.cmd >>" | tee -a /tmp/logs/build_output.txt
               name: << parameters.cmd >>
       store_build_logs:
         steps:
@@ -37,9 +37,7 @@ jobs:
       - run_and_log:
           cmd: cat path_a/README.md
       - run_and_log:
-          cmd: echo "testing orb command"
-      - run_and_log:
-          cmd: build-tools/env-info
+          cmd: echo "orb command will not work"
       - store_build_logs
 workflows:
   workflow-a:
