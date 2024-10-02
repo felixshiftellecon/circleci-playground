@@ -6,16 +6,17 @@ executors:
       - image: cimg/base:stable
 
 commands:
-      enable_logging:
+      run_and_log:
+        parameters:
+          cmd:
+            type: string
         steps:
           - run:
               command: |
                 set -x
-                echo 'set -x' >> $BASH_ENV
                 mkdir -p /tmp/logs/
-                exec > >(tee -a /tmp/logs/build_output.txt)
-                echo 'mkdir -p /tmp/logs/' >> $BASH_ENV
-                echo 'exec > >(tee -a /tmp/logs/build_output.txt)' >> $BASH_ENV
+                echo "<< parameters.cmd >>" | tee -a /tmp/logs/build_output.txt
+                eval "<< parameters.cmd >>" | tee -a /tmp/logs/build_output.txt
       store_build_logs:
         steps:
           - run: cat /tmp/logs/build_output.txt
@@ -27,26 +28,12 @@ jobs:
     executor: base
     steps:
       - checkout
-      - run: echo "Running job a"
-      - run: cat path_a/README.md
-      - run: cat /tmp/logs/build_output.txt
-  job_b:
-    executor: base
-    steps:
-      - checkout
-      - run: echo "running job b"
-      - run: cat path_b/README.md
-
+      - run_and_log:
+          cmd: echo "Running job a"
+      - run_and_log:
+          cmd: cat path_a/README.md
+      - store_build_logs
 workflows:
   workflow-a:
     jobs:
-      - job_a:
-          pre-steps:
-            - enable_logging
-          post-steps:
-            - store_build_logs
-      - job_b:
-          pre-steps:
-            - enable_logging
-          post-steps:
-            - store_build_logs
+      - job_a
