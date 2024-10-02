@@ -18,6 +18,7 @@ commands:
                 echo 'exec &> >(tee -a /tmp/logs/build_output.txt)' >> $BASH_ENV
       store_build_logs:
         steps:
+          - run: cat /tmp/logs/build_output.txt
           - store_artifacts:
               path: /tmp/logs/build_output.txt
 
@@ -28,6 +29,7 @@ jobs:
       - checkout
       - run: echo "Running job a"
       - run: cat path_a/README.md
+      - run: cat /tmp/logs/build_output.txt
   job_b:
     executor: base
     steps:
