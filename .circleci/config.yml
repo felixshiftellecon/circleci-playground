@@ -11,11 +11,11 @@ commands:
           - run:
               command: |
                 mkdir -p /tmp/logs/
-                exec &> >(tee -a /tmp/logs/build_output.txt)
+                exec > >(tee -a /tmp/logs/build_output.txt)
                 set -x
                 echo 'set -x' >> $BASH_ENV
                 echo 'mkdir -p /tmp/logs/' >> $BASH_ENV
-                echo 'exec &> >(tee -a /tmp/logs/build_output.txt)' >> $BASH_ENV
+                echo 'exec > >(tee -a /tmp/logs/build_output.txt)' >> $BASH_ENV
       store_build_logs:
         steps:
           - run: cat /tmp/logs/build_output.txt
