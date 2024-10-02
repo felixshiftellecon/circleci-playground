@@ -38,11 +38,11 @@ workflows:
     jobs:
       - job_a:
           pre-steps:
-            - run: enable_logging
+            - enable_logging
           post-steps:
-            - run: store_build_logs
+            - store_build_logs
       - job_b:
           pre-steps:
-            - run: enable_logging
+            - enable_logging
           post-steps:
-            - run: store_build_logs
+            - store_build_logs
