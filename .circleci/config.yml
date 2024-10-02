@@ -5,6 +5,9 @@ executors:
     docker:
       - image: cimg/base:stable
 
+orbs:
+  build-tools: circleci/build-tools@3.0.0
+
 commands:
       run_and_log:
         parameters:
@@ -21,7 +24,6 @@ commands:
               name: << parameters.cmd >>
       store_build_logs:
         steps:
-          - run: cat /tmp/logs/build_output.txt
           - store_artifacts:
               path: /tmp/logs/build_output.txt
 
@@ -34,6 +36,10 @@ jobs:
           cmd: echo "Running job a"
       - run_and_log:
           cmd: cat path_a/README.md
+      - run_and_log:
+          cmd: echo "testing orb command"
+      - run_and_log:
+          cmd: build-tools/env-info
       - store_build_logs
 workflows:
   workflow-a:
