@@ -18,6 +18,7 @@ commands:
                 echo "----------------------------------------" | tee -a /tmp/logs/build_output.txt
                 echo "<< parameters.cmd >>" | tee -a /tmp/logs/build_output.txt
                 eval "<< parameters.cmd >>" | tee -a /tmp/logs/build_output.txt
+              name: << parameters.cmd >>
       store_build_logs:
         steps:
           - run: cat /tmp/logs/build_output.txt
