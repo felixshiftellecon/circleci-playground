@@ -8,7 +8,7 @@ jobs:
       - run:
           name: Start User Session
           environment:
-            USER: "nick"
+            USER: "CircleCI"
           command: |
             sudo loginctl enable-linger $USER
             dbus-launch --exit-with-session /bin/bash
