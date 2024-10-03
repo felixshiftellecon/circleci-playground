@@ -16,6 +16,13 @@ jobs:
             sudo loginctl enable-linger $USER
             dbus-launch --exit-with-session /bin/bash -c 'whoami && who'
       - run:
+          name: Run commands in D-Bus session
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y dbus-user-session
+            dbus-run-session -- bash -c "whoami && who"
+      
+      - run:
           name: Verify Session
           command: |
             echo "Current User: $(whoami)"
