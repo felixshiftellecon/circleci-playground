@@ -6,6 +6,9 @@ jobs:
       image: ubuntu-2204:2024.05.1
     steps:
       - run:
+          name: Install dbus-x11
+          command: sudo apt-get -y install dbus-x11
+      - run:
           name: Start User Session
           environment:
             USER: "circleci"
