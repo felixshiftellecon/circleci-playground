@@ -1,44 +1,22 @@
 version: 2.1
 
-executors:
-  base:
-    docker:
-      - image: cimg/base:stable
-
-orbs:
-  build-tools: circleci/build-tools@3.0.0
-
-commands:
-      run_and_log:
-        parameters:
-          cmd:
-            type: string
-        steps:
-          - run:
-              command: |
-                set -x
-                mkdir -p /tmp/logs/
-                echo "----------------------------------------" | tee -a /tmp/logs/build_output.txt
-                echo "<< parameters.cmd >>" | tee -a /tmp/logs/build_output.txt
-                eval "<< parameters.cmd >>" | tee -a /tmp/logs/build_output.txt
-              name: << parameters.cmd >>
-      store_build_logs:
-        steps:
-          - store_artifacts:
-              path: /tmp/logs/build_output.txt
-
 jobs:
   job_a:
-    executor: base
+    machine:
+      image: ubuntu-2204:2024.05.1
     steps:
-      - checkout
-      - run_and_log:
-          cmd: echo "Running job a"
-      - run_and_log:
-          cmd: cat path_a/README.md
-      - run_and_log:
-          cmd: echo "orb command will not work"
-      - store_build_logs
+      - run:
+          name: Start User Session
+          environment:
+            USER: "nick"
+          command: |
+            sudo loginctl enable-linger $USER
+            dbus-launch --exit-with-session /bin/bash
+      - run:
+          name: Verify Session
+          command: |
+            echo "Current User: $(whoami)"
+            echo "Active Sessions: $(who)"
 workflows:
   workflow-a:
     jobs:
