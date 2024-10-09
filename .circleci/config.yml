@@ -1,33 +1,10 @@
 version: 2.1
 
-jobs:
-  job_a:
-    machine:
-      image: ubuntu-2204:2024.05.1
-    steps:
-      - run:
-          name: Install dbus-x11
-          command: sudo apt-get -y install dbus-x11
-      - run:
-          name: Start User Session
-          environment:
-            USER: "circleci"
-          command: |
-            sudo loginctl enable-linger $USER
-            dbus-launch --exit-with-session /bin/bash -c 'whoami && who'
-      - run:
-          name: Run commands in D-Bus session
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y dbus-user-session
-            dbus-run-session -- bash -c "whoami && who"
-      
-      - run:
-          name: Verify Session
-          command: |
-            echo "Current User: $(whoami)"
-            echo "Active Sessions: $(who)"
+orbs: 
+  private-orb-test: felixshiftellecon/private-orb-test@1.0.1
 workflows:
   workflow-a:
     jobs:
-      - job_a
+      - private-orb-test/hello:
+          parameters:
+            to: "Adam"
