@@ -6,5 +6,4 @@ workflows:
   workflow-a:
     jobs:
       - private-orb-test/hello:
-          parameters:
-            to: "Adam"
+          to: "Adam"
