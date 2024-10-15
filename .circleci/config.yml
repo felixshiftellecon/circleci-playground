@@ -1,16 +1,19 @@
 version: 2.1
 
-orbs:
-  vault: awesomecicd/vault@0.0.2
+parameters:
+  ip-ranges:
+    type: boolean
+    default: true
+
+executors:
+  default:
+    docker:
+      - image: cimg/base:stable
 
 jobs:
-  job_a:
-    docker:
-      image: cimg/base@latest
+  build:
+    executor: default
+    circleci_ip_ranges: << parameters.ip-ranges >> 
     steps:
-      - checkout
-      - vault/load-credentials
-workflows:
-  workflow-a:
-    jobs:
-      - job_a
+      - run: curl http://checkip.amazonaws.com/
+      - run: echo “Hello World”
