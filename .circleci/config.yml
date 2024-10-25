@@ -28,7 +28,7 @@ workflows:
           type: approval
           requires:
             - job_a
-          filter: pipeline.git.branch == "main"
+          filters: pipeline.git.branch == "main"
       - job_b:
           requires:
             - hold
