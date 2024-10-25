@@ -42,7 +42,7 @@ workflows:
       - job_a        
       - job_b:
           requires:
-            - hold
+            - job_a
           filters: pipeline.git.branch == "main"
       - job_c:
           requires:
