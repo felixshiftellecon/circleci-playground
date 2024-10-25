@@ -37,6 +37,7 @@ workflows:
       - job_b:
           requires:
             - hold
+          filters: pipeline.git.branch != "main"
   workflow-b:
     jobs:
       - job_a        
@@ -47,3 +48,4 @@ workflows:
       - job_c:
           requires:
             - job_b
+          filters: pipeline.git.branch != "main"
