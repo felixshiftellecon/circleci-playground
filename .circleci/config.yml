@@ -12,13 +12,18 @@ jobs:
     steps:
       - checkout
       - run: echo "Running job a"
-      - run: cat path_a/README.md
+
   job_b:
     executor: base
     steps:
       - checkout
       - run: echo "running job b"
-      - run: cat path_b/README.md
+
+  job_c:
+    executor: base
+    steps:
+      - checkout
+      - run: echo "running job c"
 
 workflows:
   workflow-a:
@@ -32,3 +37,13 @@ workflows:
       - job_b:
           requires:
             - hold
+  workflow-b:
+    jobs:
+      - job_a        
+      - job_b:
+          requires:
+            - hold
+          filters: pipeline.git.branch == "main"
+      - job_c:
+          requires:
+            - job_b
