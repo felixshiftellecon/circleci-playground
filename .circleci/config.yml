@@ -47,7 +47,7 @@ workflows:
           filters: 
             branches:
               only: stage
-            - pipeline.git.branch == "main"
+            - pipeline.git.branch.is_default
       - job_c:
           requires:
             - job_b
