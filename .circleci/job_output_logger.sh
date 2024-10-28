@@ -39,7 +39,7 @@ do
     echo "Step Name: ${STEP_NAME}"
     echo "Build Log URL: ${OUTPUT_URL}"
 
-    LOGS=$(curl $OUTPUT_URL -H "Circle-Token: ${CIRCLE_TOKEN}"
+    LOGS=$(curl $OUTPUT_URL -H "Circle-Token: ${CIRCLE_TOKEN}")
 
     echo "Step logs: ${LOGS}"
 
