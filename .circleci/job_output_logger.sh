@@ -36,11 +36,19 @@ do
     echo "Step Name: ${STEP_NAME}"
     echo "Build Log URL: ${OUTPUT_URL}"
 
-    LOGS=$(curl $OUTPUT_URL -H "Circle-Token: ${CIRCLE_TOKEN}") || { echo "Failed to fetch logs"; exit 1; }
-
-    echo "Step logs: ${LOGS}"
-
-    JSON_OUTPUT=$(echo $JSON_OUTPUT | jq --arg stepName "$STEP_NAME" --arg outputUrl "$OUTPUT_URL" --arg logs "$LOGS" '. + [{"stepName": $stepName, "outputUrl": $outputUrl, "logs": $logs}]') || { echo "Failed to update JSON output"; exit 1; }
+    if [ "$OUTPUT_URL" == "null" ]; then
+      if [ "$JOB_NUMBER" == "${JOB_NUMBERS[-1]}" ]; then
+        echo "This is the last job in the workflow and it hasn't completed yet."
+        JSON_OUTPUT=$(echo $JSON_OUTPUT | jq --arg stepName "$STEP_NAME" '. + [{"stepName": $stepName, "outputUrl": "Not available", "logs": "Not available"}]')
+      else
+        echo "Something went wrong. The job doesn't have a log URL."
+        exit 1
+      fi
+    else
+      LOGS=$(curl $OUTPUT_URL -H "Circle-Token: ${CIRCLE_TOKEN}") || { echo "Failed to fetch logs"; exit 1; }
+      echo "Step logs: ${LOGS}"
+      JSON_OUTPUT=$(echo $JSON_OUTPUT | jq --arg stepName "$STEP_NAME" --arg outputUrl "$OUTPUT_URL" --arg logs "$LOGS" '. + [{"stepName": $stepName, "outputUrl": $outputUrl, "logs": $logs}]') || { echo "Failed to update JSON output"; exit 1; }
+    fi
   done
 
   echo "Gathered build logs for job: ${JOB_NUMBER}"
