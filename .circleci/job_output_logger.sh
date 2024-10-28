@@ -34,6 +34,8 @@ do
   
   echo "Job Output for ${JOB_NUMBER}: \n ${JOB_OUTPUT}"
 
+  JOB_JSON_OUTPUT="[]"
+
   echo $JOB_OUTPUT | jq -c '.steps[]' | while read -r STEP; do
     STEP_NAME=$(echo $STEP | jq -r '.name') || { echo "Failed to parse step name"; exit 1; }
     OUTPUT_URL=$(echo $STEP | jq -r '.actions[].output_url') || { echo "Failed to parse output URL"; exit 1; }
@@ -44,8 +46,8 @@ do
     if [ "$OUTPUT_URL" == "null" ]; then
       if [ "$JOB_NUMBER" == "${JOB_NUMBERS[-1]}" ]; then
         echo "This is the last job in the workflow and it hasn't completed yet."
-        JSON_OUTPUT=$(echo $JSON_OUTPUT | jq --arg stepName "$STEP_NAME" '. + [{"stepName": $stepName, "outputUrl": "Not available", "logs": "Not available"}]')
-        echo "Adding step name to build logs: \n ${JSON_OUTPUT}"
+        JOB_JSON_OUTPUT=$(echo $JOB_JSON_OUTPUT | jq --arg stepName "$STEP_NAME" '. + [{"stepName": $stepName, "outputUrl": "Not available", "logs": "Not available"}]')
+        echo "Adding step name to build logs: \n ${JOB_JSON_OUTPUT}"
       else
         echo "Something went wrong. The job doesn't have a log URL."
         exit 1
@@ -53,12 +55,12 @@ do
     else
       LOGS=$(curl $OUTPUT_URL -H "Circle-Token: ${CIRCLE_TOKEN}") || { echo "Failed to fetch logs"; exit 1; }
       echo "Step logs: ${LOGS}"
-      JSON_OUTPUT=$(echo $JSON_OUTPUT | jq --arg stepName "$STEP_NAME" --arg outputUrl "$OUTPUT_URL" --arg logs "$LOGS" '. + [{"stepName": $stepName, "outputUrl": $outputUrl, "logs": $logs}]') || { echo "Failed to update JSON output"; exit 1; }
-      echo "Adding step logs to build logs: \n ${JSON_OUTPUT}"
-      echo $JSON_OUTPUT >> $JSON_OUTPUT_TEMPFILE
+      JOB_JSON_OUTPUT=$(echo $JOB_JSON_OUTPUT | jq --arg stepName "$STEP_NAME" --arg outputUrl "$OUTPUT_URL" --arg logs "$LOGS" '. + [{"stepName": $stepName, "outputUrl": $outputUrl, "logs": $logs}]') || { echo "Failed to update JSON output"; exit 1; }
+      echo "Adding step logs to build logs: \n ${JOB_JSON_OUTPUT}"
     fi
   done
 
+  JSON_OUTPUT=$(echo $JSON_OUTPUT | jq --arg jobNumber "$JOB_NUMBER" --argjson jobData "$JOB_JSON_OUTPUT" '. + [{"jobNumber": $jobNumber, "steps": $jobData}]')
   echo "Gathered build logs for job: ${JOB_NUMBER}"
 done
 
