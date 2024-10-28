@@ -29,7 +29,24 @@ do
   
   echo "Job Output for ${JOB_NUMBER}: \n ${JOB_OUTPUT}"
 
-  JSON_OUTPUT=$(echo $JOB_OUTPUT | jq -c '.steps[] | {stepName: .name, outputUrl: .actions[].output_url, logs: (try (curl -s .actions[].output_url -H "Circle-Token: ${CIRCLE_TOKEN}") catch "Failed to fetch logs")}') || { echo "Failed to parse job output"; exit 1; }
+  STEPS=$(echo $JOB_OUTPUT | jq -c '.steps[]') || { echo "Failed to parse job output"; exit 1; }
+
+  echo "Steps for ${JOB_NUMBER}: \n ${STEPS}"
+
+  for STEP in $STEPS
+  do
+    STEP_NAME=$(echo $STEP | jq -r '.name') || { echo "Failed to parse step name"; exit 1; }
+    OUTPUT_URL=$(echo $STEP | jq -r '.actions[].output_url') || { echo "Failed to parse output URL"; exit 1; }
+
+    echo "Step Name: ${STEP_NAME}"
+    echo "Build Log URL: ${OUTPUT_URL}"
+
+    LOGS=$(curl $OUTPUT_URL -H "Circle-Token: ${CIRCLE_TOKEN}") || { echo "Failed to fetch logs"; exit 1; }
+
+    echo "Step logs: ${LOGS}"
+
+    JSON_OUTPUT=$(echo $JSON_OUTPUT | jq --arg stepName "$STEP_NAME" --arg outputUrl "$OUTPUT_URL" --arg logs "$LOGS" '. + [{"stepName": $stepName, "outputUrl": $outputUrl, "logs": $logs}]') || { echo "Failed to update JSON output"; exit 1; }
+  done
 
   echo "Gathered build logs for job: ${JOB_NUMBER}"
 done
