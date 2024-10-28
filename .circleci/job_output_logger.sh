@@ -28,8 +28,8 @@ do
 
   JOB_OUTPUT=$(curl https://circleci.com/api/v1.1/project/${VCS_TYPE}/${USERNAME}/${PROJECT}/${JOB_NUMBER}/output -H "Circle-Token: ${CIRCLE_TOKEN}")
   JSON_OUTPUT=$(echo $JSON_OUTPUT | jq --arg jobOutput "$JOB_OUTPUT" '. + [{"type": "jobUrl", "content": $jobOutput}]')
-  OUTPUT_URLS=$(echo $JOB_OUTPUT | jq -r '.steps[].actions[].output_url')
-  STEP_NAMES=$(echo $JOB_OUTPUT | jq -r '.steps[].name')
+  OUTPUT_URLS=$(echo $JOB_OUTPUT | jq -r '.[].steps[].actions[].output_url')
+  STEP_NAMES=$(echo $JOB_OUTPUT | jq -r '.[].steps[].name')
 
   for OUTPUT_URL in $OUTPUT_URLS
   do
