@@ -36,7 +36,7 @@ do
 
   JOB_JSON_OUTPUT="[]"
 
-  echo $JOB_OUTPUT | jq -c '.steps[]' | while read -r STEP; do
+  while read -r STEP; do
     STEP_NAME=$(echo $STEP | jq -r '.name') || { echo "Failed to parse step name"; exit 1; }
     OUTPUT_URL=$(echo $STEP | jq -r '.actions[].output_url') || { echo "Failed to parse output URL"; exit 1; }
 
@@ -58,7 +58,7 @@ do
       JOB_JSON_OUTPUT=$(echo $JOB_JSON_OUTPUT | jq --arg stepName "$STEP_NAME" --arg outputUrl "$OUTPUT_URL" --arg logs "$LOGS" '. + [{"stepName": $stepName, "outputUrl": $outputUrl, "logs": $logs}]') || { echo "Failed to update JSON output"; exit 1; }
       echo "Adding step logs to build logs: \n ${JOB_JSON_OUTPUT}"
     fi
-  done
+  done < <(echo $JOB_OUTPUT | jq -c '.steps[]')
 
   JSON_OUTPUT=$(echo $JSON_OUTPUT | jq --arg jobNumber "$JOB_NUMBER" --argjson jobData "$JOB_JSON_OUTPUT" '. + [{"jobNumber": $jobNumber, "steps": $jobData}]')
   echo "Gathered build logs for job: ${JOB_NUMBER}"
