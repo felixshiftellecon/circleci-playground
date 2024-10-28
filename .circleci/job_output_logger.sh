@@ -18,6 +18,7 @@ JOBS=$(curl https://circleci.com/api/v2/workflow/${WORKFLOW_ID}/job -H "Circle-T
 JOB_NUMBERS=$(echo $JOBS | jq -r '.items[].job_number')
 
 JSON_OUTPUT="[]"
+JSON_OUTPUT_TEMPFILE="[]"
 
 echo "Creating build log folder"
 
