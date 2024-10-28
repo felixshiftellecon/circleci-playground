@@ -34,3 +34,5 @@ workflows:
           requires:
             - job_a
             - job_b
+          context:
+            - orb-publishing
