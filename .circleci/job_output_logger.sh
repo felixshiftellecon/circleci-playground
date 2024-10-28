@@ -43,10 +43,10 @@ do
     echo "Step Name: ${STEP_NAME}"
     echo "Build Log URL: ${OUTPUT_URL}"
 
-    if [ "$OUTPUT_URL" == "null" ]; then
+    if [ -z "$OUTPUT_URL" ] || [ "$OUTPUT_URL" == "null" ]; then
       if [ "$JOB_NUMBER" == "${JOB_NUMBERS[-1]}" ]; then
         echo "This is the last job in the workflow and it hasn't completed yet."
-        JOB_JSON_OUTPUT=$(echo $JOB_JSON_OUTPUT | jq --arg stepName "$STEP_NAME" '. + [{"stepName": $stepName, "outputUrl": "Not available", "logs": "Not available"}]')
+        JOB_JSON_OUTPUT=$(echo $JOB_JSON_OUTPUT | jq --arg stepName "$STEP_NAME" '. + [{"stepName": $stepName, "outputUrl": "Logging job", "logs": "Logging job"}]')
         echo "Adding step name to build logs: \n ${JOB_JSON_OUTPUT}"
       else
         echo "Something went wrong. The job doesn't have a log URL."
