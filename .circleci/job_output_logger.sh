@@ -40,6 +40,7 @@ do
       if [ "$JOB_NUMBER" == "${JOB_NUMBERS[-1]}" ]; then
         echo "This is the last job in the workflow and it hasn't completed yet."
         JSON_OUTPUT=$(echo $JSON_OUTPUT | jq --arg stepName "$STEP_NAME" '. + [{"stepName": $stepName, "outputUrl": "Not available", "logs": "Not available"}]')
+        echo "Adding step name to build logs: \n ${JSON_OUTPUT}"
       else
         echo "Something went wrong. The job doesn't have a log URL."
         exit 1
@@ -48,12 +49,17 @@ do
       LOGS=$(curl $OUTPUT_URL -H "Circle-Token: ${CIRCLE_TOKEN}") || { echo "Failed to fetch logs"; exit 1; }
       echo "Step logs: ${LOGS}"
       JSON_OUTPUT=$(echo $JSON_OUTPUT | jq --arg stepName "$STEP_NAME" --arg outputUrl "$OUTPUT_URL" --arg logs "$LOGS" '. + [{"stepName": $stepName, "outputUrl": $outputUrl, "logs": $logs}]') || { echo "Failed to update JSON output"; exit 1; }
+      echo "Adding step logs to build logs: \n ${JSON_OUTPUT}"
     fi
   done
 
   echo "Gathered build logs for job: ${JOB_NUMBER}"
 done
 
+echo "Creating build log folder"
+
 mkdir -p build_logs
+
+echo "Adding compiling build logs"
 
 echo $JSON_OUTPUT > build_logs/workflow_${CIRCLE_WORKFLOW_ID}_build_logs.json
