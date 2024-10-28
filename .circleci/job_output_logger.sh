@@ -19,6 +19,10 @@ JOB_NUMBERS=$(echo $JOBS | jq -r '.items[].job_number')
 
 JSON_OUTPUT="[]"
 
+echo "Creating build log folder"
+
+mkdir -p build_logs
+
 echo "Accessing build data for job numbers: ${JOB_NUMBERS}"
 
 for JOB_NUMBER in $JOB_NUMBERS
@@ -50,16 +54,13 @@ do
       echo "Step logs: ${LOGS}"
       JSON_OUTPUT=$(echo $JSON_OUTPUT | jq --arg stepName "$STEP_NAME" --arg outputUrl "$OUTPUT_URL" --arg logs "$LOGS" '. + [{"stepName": $stepName, "outputUrl": $outputUrl, "logs": $logs}]') || { echo "Failed to update JSON output"; exit 1; }
       echo "Adding step logs to build logs: \n ${JSON_OUTPUT}"
+      echo $JSON_OUTPUT >> $JSON_OUTPUT_TEMPFILE
     fi
   done
 
   echo "Gathered build logs for job: ${JOB_NUMBER}"
 done
 
-echo "Creating build log folder"
-
-mkdir -p build_logs
-
 echo "Adding compiling build logs"
 
-echo $JSON_OUTPUT > build_logs/workflow_${CIRCLE_WORKFLOW_ID}_build_logs.json
+jq -s '.' $JSON_OUTPUT_TEMPFILE > build_logs/workflow_${CIRCLE_WORKFLOW_ID}_build_logs.json
