@@ -15,7 +15,7 @@ PROJECT=$CIRCLE_PROJECT_REPONAME
 
 echo "Gathering job_numbers for workflow: ${CIRCLE_WORKFLOW_ID}"
 
-JOBS=$(curl -s -u ${CIRCLECI_TOKEN}: https://circleci.com/api/v2/workflow/${WORKFLOW_ID}/job)
+JOBS=$(curl -s -H "Circle-Token: $CIRCLECI_TOKEN" https://circleci.com/api/v2/workflow/${WORKFLOW_ID}/job)
 JOB_NUMBERS=$(echo $JOBS | jq -r '.items[].job_number')
 
 JSON_OUTPUT="[]"
@@ -25,22 +25,20 @@ echo "Accessing build data for job numbers: ${JOB_NUMBERS}"
 for JOB_NUMBER in $JOB_NUMBERS
 do
 
-  echo "Gathering build logs for job: ${JOB_NUMBER}"
+  echo "Gathering build outputs for job: ${JOB_NUMBER}"
 
-  JOB_OUTPUT=$(curl -s -u ${CIRCLECI_TOKEN}: "https://circleci.com/api/v1.1/project/${VCS_TYPE}/${USERNAME}/${PROJECT}/${JOB_NUMBER}/output")
+  JOB_OUTPUT=$(curl -s -H "Circle-Token: $CIRCLECI_TOKEN" "https://circleci.com/api/v1.1/project/${VCS_TYPE}/${USERNAME}/${PROJECT}/${JOB_NUMBER}/output")
   JSON_OUTPUT=$(echo $JSON_OUTPUT | jq --arg jobOutput "$JOB_OUTPUT" '. + [{"type": "jobUrl", "content": $jobOutput}]')
   OUTPUT_URLS=$(echo $JOB_OUTPUT | jq -r '.[].url')
   STEP_NAMES=$(echo $JOB_OUTPUT | jq -r '.[].name')
 
   for OUTPUT_URL in $OUTPUT_URLS
   do
-    LOGS=$(curl -s -u ${CIRCLECI_TOKEN}: "$OUTPUT_URL")
+    LOGS=$(curl -s -H "Circle-Token: $CIRCLECI_TOKEN" "$OUTPUT_URL")
     JSON_OUTPUT=$(echo $JSON_OUTPUT | jq --arg logs "$LOGS" '. + [{"type": "stepLogs", "content": $logs}]')
     STEP_NAME=$(echo $STEP_NAMES | jq -r '.[]')
-    echo "Gathering build logs for step: ${STEP_NAME}"
+    echo "Processing step: ${STEP_NAME}"
   done
 done
 
-mkdir build_logs
-
-echo $JSON_OUTPUT > build_logs/workflow_${CIRCLE_WORKFLOW_ID}build_logs.json
+echo $JSON_OUTPUT > build_logs.json
