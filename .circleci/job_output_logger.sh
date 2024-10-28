@@ -27,6 +27,8 @@ do
 
   JOB_OUTPUT=$(curl https://circleci.com/api/v1.1/project/${VCS_TYPE}/${USERNAME}/${PROJECT}/${JOB_NUMBER}/output -H "Circle-Token: ${CIRCLE_TOKEN}")
   
+  echo "Job Output for ${JOB_NUMBER}: \n ${JOB_OUTPUT}"
+
   STEPS=$(echo $JOB_OUTPUT | jq -c '.steps[]')
 
   for STEP in $STEPS
@@ -34,7 +36,14 @@ do
     STEP_NAME=$(echo $STEP | jq -r '.name')
     OUTPUT_URL=$(echo $STEP | jq -r '.actions[].output_url')
 
-    JSON_OUTPUT=$(echo $JSON_OUTPUT | jq --arg stepName "$STEP_NAME" --arg outputUrl "$OUTPUT_URL" '. + [{"stepName": $stepName, "outputUrl": $outputUrl}]')
+    echo "Step Name: ${STEP_NAME}"
+    echo "Build Log URL: ${OUTPUT_URL}"
+
+    LOGS=$(curl $OUTPUT_URL -H "Circle-Token: ${CIRCLE_TOKEN}"
+
+    echo "Step logs: ${LOGS}"
+
+    JSON_OUTPUT=$(echo $JSON_OUTPUT | jq --arg stepName "$STEP_NAME" --arg outputUrl "$OUTPUT_URL" --arg logs "$LOGS" '. + [{"stepName": $stepName, "outputUrl": $outputUrl, "logs": $logs}]')
   done
 
   echo "Gathered build logs for job: ${JOB_NUMBER}"
