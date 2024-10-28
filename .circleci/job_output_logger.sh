@@ -66,4 +66,4 @@ done
 
 echo "Adding compiling build logs"
 
-jq -s '.' $JSON_OUTPUT_TEMPFILE > build_logs/workflow_${CIRCLE_WORKFLOW_ID}_build_logs.json
+jq -s '.' $JSON_OUTPUT > build_logs/workflow_${CIRCLE_WORKFLOW_ID}_build_logs.json
