@@ -29,12 +29,7 @@ do
   
   echo "Job Output for ${JOB_NUMBER}: \n ${JOB_OUTPUT}"
 
-  STEPS=$(echo $JOB_OUTPUT | jq -c '.steps[]') || { echo "Failed to parse job output"; exit 1; }
-
-  echo "Steps for ${JOB_NUMBER}: \n ${STEPS}"
-
-  for STEP in $STEPS
-  do
+  echo $JOB_OUTPUT | jq -c '.steps[]' | while read -r STEP; do
     STEP_NAME=$(echo $STEP | jq -r '.name') || { echo "Failed to parse step name"; exit 1; }
     OUTPUT_URL=$(echo $STEP | jq -r '.actions[].output_url') || { echo "Failed to parse output URL"; exit 1; }
 
