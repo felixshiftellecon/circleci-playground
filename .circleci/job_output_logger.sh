@@ -25,7 +25,7 @@ for JOB_NUMBER in $JOB_NUMBERS
 do
   echo "Gathering build logs for job: ${JOB_NUMBER}"
 
-  JOB_OUTPUT=$(curl https://circleci.com/api/v1.1/project/${VCS_TYPE}/${USERNAME}/${PROJECT}/${JOB_NUMBER}/output -H "Circle-Token: ${CIRCLE_TOKEN}")
+  JOB_OUTPUT=$(curl https://circleci.com/api/v1.1/project/${VCS_TYPE}/${USERNAME}/${PROJECT}/${JOB_NUMBER} -H "Circle-Token: ${CIRCLE_TOKEN}")
   
   echo "Job Output for ${JOB_NUMBER}: \n ${JOB_OUTPUT}"
 
