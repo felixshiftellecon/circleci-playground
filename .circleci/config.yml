@@ -22,7 +22,7 @@ jobs:
     steps:
       - checkout
       - run: bash .circleci/job_output_logger.sh
-      - save_artifacts:
+      - store_artifacts:
           path: build_logs/
 
 workflows:
