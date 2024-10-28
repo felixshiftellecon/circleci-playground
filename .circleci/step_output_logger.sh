@@ -45,7 +45,7 @@ do
 
     if [ -z "$OUTPUT_URL" ] || [ "$OUTPUT_URL" == "null" ]; then
       echo "Output URL not available for this step. It might be the last step in the last job and hasn't completed yet."
-      JOB_JSON_OUTPUT=$(echo $JOB_JSON_OUTPUT | jq --arg stepName "$STEP_NAME" '. + [{"stepName": $stepName, "outputUrl": "Not available", "logs": "Not available"}]')
+      JOB_JSON_OUTPUT=$(echo $JOB_JSON_OUTPUT | jq --arg stepName "$STEP_NAME" '. + [{"stepName": $stepName, "outputUrl": "Output URL not available for this step. It might be the last step in the last job and hasnt completed yet", "logs": "Logs not available for this step. It might be the last step in the last job and hasnt completed yet"}]')
       echo "Adding step name to build logs: \n ${JOB_JSON_OUTPUT}"
     else
       LOGS=$(curl $OUTPUT_URL -H "Circle-Token: ${CIRCLE_TOKEN}") || { echo "Failed to fetch logs"; exit 1; }
