@@ -22,7 +22,9 @@ JSON_OUTPUT_TEMPFILE="[]"
 
 echo "Creating build log folder"
 
-mkdir -p build_logs
+LOG_PATH=$(circleci env subst "${PARAM_LOG_PATH}")
+
+mkdir -p ${LOG_PATH:-build_logs}
 
 echo "Accessing build data for job numbers: ${JOB_NUMBERS}"
 
@@ -63,4 +65,4 @@ echo $JSON_OUTPUT > $JSON_OUTPUT_TEMPFILE
 
 echo "Adding compiling build logs"
 
-jq -s '.' $JSON_OUTPUT_TEMPFILE > build_logs/workflow_${CIRCLE_WORKFLOW_ID}_build_logs.json
+jq -s '.' $JSON_OUTPUT_TEMPFILE > ${LOG_PATH:-build_logs}/workflow_${CIRCLE_WORKFLOW_ID}_build_logs.json

@@ -19,8 +19,12 @@ jobs:
       - run: echo "running job b"
   get_step_logs:
     executor: base
+    parameters:
+      test:
+        type: string
     steps:
       - checkout
+      - run: echo <<parameters.test>>
       - run: bash .circleci/step_output_logger.sh
       - store_artifacts:
           path: build_logs/
