@@ -13,7 +13,7 @@ executors:
 jobs:
   job_a:
     executor: base
-    circleci_ip_ranges: << parameters.ip_ranges >>
+    circleci_ip_ranges: << pipeline.parameters.ip_ranges >>
     steps:
       - run: echo "Running job a"
 
