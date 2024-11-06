@@ -13,17 +13,21 @@ jobs:
       - checkout
       - when:
           condition:
-            matches: { pattern: "^hotfix-.$", value: << pipeline.git.branch >> }
+            matches: { pattern: "^hotfix-.*", value: << pipeline.git.branch >> }
           steps:
-            - run: |
-                jq -n '. + {"executor_being_used": "big_boy"}' > /tmp/pipeline-parameters.json
+            - run: 
+                name: Use Big Boy
+                command: |
+                        jq -n '. + {"executor_being_used": "big_boy"}' > /tmp/pipeline-parameters.json
       - when:
           condition:
             not:
-              matches: { pattern: "^hotfix-.$", value: << pipeline.git.branch >> }
+              matches: { pattern: "^hotfix-.*", value: << pipeline.git.branch >> }
           steps:
-            - run: |
-                jq -n '. + {"executor_being_used": "small_boy"}' > /tmp/pipeline-parameters.json
+            - run: 
+                name: Use Small Boy
+                command: |
+                        jq -n '. + {"executor_being_used": "small_boy"}' > /tmp/pipeline-parameters.json
       - continuation/continue:
           configuration_path: .circleci/continue-config.yml
           parameters: /tmp/pipeline-parameters.json
