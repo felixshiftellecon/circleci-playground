@@ -19,6 +19,9 @@ jobs:
       - run: echo "running job b"
       - run: exit 1
       - persist_to_workspace:
+          root: /tmp/dir
+          paths:
+            - foo/bar
           when: always
 
 workflows:
