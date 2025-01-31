@@ -6,18 +6,12 @@ executors:
       - image: cimg/base:stable
 
 jobs:
-  job_a:
+  job_b:
     executor: base
     parameters:
       persist_to_workspace:
         default: true
         type: boolean
-    steps:
-      - checkout
-      - run: echo "Running job a"
-      - run: cat path_a/README.md
-  job_b:
-    executor: base
     steps:
       - checkout
       - run: mkdir tmp_build
@@ -32,5 +26,4 @@ jobs:
 workflows:
   workflow-a:
     jobs:
-      - job_a
       - job_b
