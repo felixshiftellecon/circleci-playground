@@ -5,23 +5,21 @@ executors:
     docker:
       - image: cimg/base:stable
 
+parameters:
+  gradle_version:
+    type: string
+    default: "8.12"
+
 jobs:
   job_b:
     executor: base
-    parameters:
-      persist_to_workspace:
-        default: true
-        type: boolean
     steps:
       - checkout
-      - run: mkdir tmp_build
+      - run: mkdir tmp_build/<< pipeline.parameters.gradle_version >>
       - run: exit 1
-      - when:
-          condition: << parameters.persist_to_workspace >>
-          steps:
-            - persist_to_workspace:
-                paths: tmp_build/
-                root: .
+      - save_cache:
+          key: cache-key
+          path: tmp_build/<< pipeline.parameters.gradle_version >>
 
 workflows:
   workflow-a:
