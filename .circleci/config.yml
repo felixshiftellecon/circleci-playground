@@ -19,7 +19,8 @@ jobs:
       - run: exit 1
       - save_cache:
           key: cache-key
-          path: tmp_build/<< pipeline.parameters.gradle_version >>
+          paths:
+            - tmp_build/<< pipeline.parameters.gradle_version >>
 
 workflows:
   workflow-a:
