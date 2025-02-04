@@ -15,7 +15,7 @@ jobs:
     executor: base
     steps:
       - checkout
-      - run: mkdir tmp_build/<< pipeline.parameters.gradle_version >>
+      - run: mkdir -p tmp_build/<< pipeline.parameters.gradle_version >>
       - run: exit 1
       - save_cache:
           key: cache-key
