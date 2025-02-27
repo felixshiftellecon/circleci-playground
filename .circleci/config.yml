@@ -4,6 +4,7 @@ executors:
   base:
     docker:
       - image: cimg/base:stable
+      - image: cimg/mysql:8.0
 
 parameters:
   gradle_version:
@@ -15,11 +16,8 @@ jobs:
     executor: base
     steps:
       - checkout
-      - run: mkdir -p tmp_build/<< pipeline.parameters.gradle_version >>
-      - save_cache:
-          key: cache-key
-          paths:
-            - tmp_build/<< pipeline.parameters.gradle_version >>
+      - setup_remote_docker
+      - run: docker exec localhost:3306 ls /
 
 workflows:
   workflow-a:
