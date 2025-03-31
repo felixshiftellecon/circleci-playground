@@ -28,3 +28,4 @@ workflows:
   workflow-a:
     jobs:
       - job_a
+      - job_b
