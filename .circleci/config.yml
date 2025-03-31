@@ -13,7 +13,8 @@ jobs:
       - run: touch file.txt
       - save_cache:
           key: myapp-{{ .Branch }}-{{ checksum "file.txt" }}
-          path: file.txt
+          paths:
+            - file.txt
 
   job_b:
     executor: base
