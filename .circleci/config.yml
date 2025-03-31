@@ -12,7 +12,7 @@ jobs:
       - checkout
       - run: touch file.txt
       - save_cache:
-          key: myapp-{{ .Branch }}-{{ checksum "file.txt" }}
+          key: myapp-{{ .Branch }}-{{ checksum "README.md" }}
           paths:
             - file.txt
 
@@ -21,7 +21,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: myapp-{{ .Branch }}-{{ checksum "file.txt" }}
+          key: myapp-{{ .Branch }}-{{ checksum "README.md" }}
       - run: echo "running job b"
       - run: cat path_b/README.md
 
