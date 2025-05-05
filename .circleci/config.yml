@@ -15,7 +15,7 @@ jobs:
           background: true
           command: sleep 10000
       - save_cache:
-          key: myapp-{{ .Branch }}-{{ checksum "README.md" }}
+          key: myapp-{{ .Branch }}
           background: true
           paths:
             - file.txt
