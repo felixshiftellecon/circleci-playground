@@ -19,6 +19,9 @@ jobs:
           background: true
           paths:
             - file.txt
+      - run:
+          background: true
+          command: sleep 100
 
   job_b:
     executor: base
