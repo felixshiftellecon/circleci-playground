@@ -15,14 +15,12 @@ jobs:
           background: true
           command: sleep 10000
       - save_cache:
-          key: myapp-{{ .Branch }}
+          key: myapp-v1{{ .Branch }}
           background: true
           paths:
             - file.txt
             - .git
-      - run:
-          background: true
-          command: sleep 100
+      - run: echo "im done"
 
   job_b:
     executor: base
