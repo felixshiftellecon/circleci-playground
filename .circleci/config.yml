@@ -7,29 +7,18 @@ executors:
 
 jobs:
   job_a:
-    executor: base
+    machine:
+      image: ubuntu-2004:2024.01.2
+    resource_class: 2xlarge+
     steps:
-      - checkout
-      - run: touch file.txt
-      - run:
-          background: true
-          command: sleep 10000
-      - save_cache:
-          key: myapp-v1{{ .Branch }}
-          background: true
-          paths:
-            - file.txt
-            - .git
-      - run: echo "im done"
+      - run: echo "Don't run me"
 
   job_b:
-    executor: base
+    macos:
+      xcode: "15.4.0"
+    resource_class: m2pro.large
     steps:
-      - checkout
-      - restore_cache:
-          key: myapp-{{ .Branch }}-{{ checksum "README.md" }}
-      - run: echo "running job b"
-      - run: cat path_b/README.md
+      - run: echo "Don't run me"
 
 workflows:
   workflow-a:
