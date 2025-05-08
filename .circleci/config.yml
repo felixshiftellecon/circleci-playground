@@ -32,6 +32,8 @@ workflows:
           requires:
             - job_a:
                 - failed
+      - job_c:
+          requires:
             - job_b:
                 - failed
           
