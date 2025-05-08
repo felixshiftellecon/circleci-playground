@@ -7,21 +7,31 @@ executors:
 
 jobs:
   job_a:
-    machine:
-      image: ubuntu-2004:2024.01.2
-    resource_class: 2xlarge+
+    executor: base
     steps:
-      - run: echo "Don't run me"
+      - run: echo "I fail"
+      - run: exit 1
 
   job_b:
-    macos:
-      xcode: "15.4.0"
-    resource_class: m2pro.large
+    executor: base
     steps:
-      - run: echo "Don't run me"
+      - run: echo "I succeed"
+  
+  job_c:
+    executor: base
+    steps:
+      - run: echo "I should run"
+      - run: exit 1
 
 workflows:
   workflow-a:
     jobs:
       - job_a
       - job_b
+      - job_c:
+          requires:
+            - job_a:
+                - failed
+            - job_b:
+                - failed
+          
