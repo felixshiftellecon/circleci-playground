@@ -18,7 +18,9 @@ jobs:
       - run: echo "I succeed"
   
   job_c:
-    executor: base
+    macos:
+      xcode: "15.4.0"
+    resource_class: m2pro.large
     steps:
       - run: echo "I should run"
       - run: exit 1
@@ -32,6 +34,8 @@ workflows:
           requires:
             - job_a:
                 - failed
+      - job_c:
+          requires:
             - job_b:
                 - failed
           
