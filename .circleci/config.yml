@@ -18,9 +18,9 @@ jobs:
       - run: echo "I succeed"
   
   job_c:
-    macos:
-      xcode: "15.4.0"
-    resource_class: m2pro.large
+    machine:
+      image: ubuntu-2004:2024.01.2
+    resource_class: 2xlarge+
     steps:
       - run: echo "I should run"
       - run: exit 1
