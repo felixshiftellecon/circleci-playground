@@ -7,12 +7,13 @@ jobs:
   test:
     docker:
       - image: cimg/base:2023.04
-    shell: /bin/bash --login -eo pipefail
     steps:
       - run: echo $SHELL
-      - run: |
-          echo 'export CODEPUSH_DEPLOYMENT_NAME=pr${CIRCLE_PULL_REQUEST##*/}' >> "$BASH_ENV"
-          echo "$CODEPUSH_DEPLOYMENT_NAME"
+      - run:
+          command: |
+                    echo 'export CODEPUSH_DEPLOYMENT_NAME=pr${CIRCLE_PULL_REQUEST##*/}' >> "$BASH_ENV"
+                    echo "$CODEPUSH_DEPLOYMENT_NAME"
+          shell: /bin/bash --login -eo pipefail 
       - run: |
           echo "$CODEPUSH_DEPLOYMENT_NAME"
 
