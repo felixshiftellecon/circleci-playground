@@ -4,7 +4,7 @@ executors:
   base_bash:
       docker:
         - image: cimg/base:2023.04
-      shell: /bin/bash
+      shell: /bin/sh
 
 jobs:
   test:
