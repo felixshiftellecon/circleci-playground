@@ -7,10 +7,11 @@ jobs:
   test:
     docker:
       - image: cimg/base:2023.04
+    shell: /bin/sh
     steps:
       - run:
           command: echo $0
-          shell: /bin/bash --login -eo pipefail 
+          shell: /bin/bash
       - run: |
           echo $0
 
