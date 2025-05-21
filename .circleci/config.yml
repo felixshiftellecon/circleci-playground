@@ -10,7 +10,7 @@ jobs:
     steps:
       - run:
           command: echo $SHELL
-          shell: /bin/bash --login -eo pipefail 
+          shell: /bin/sh
       - run: |
           echo "$SHELL"
 
