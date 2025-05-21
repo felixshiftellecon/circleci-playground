@@ -10,11 +10,11 @@ jobs:
     steps:
       - run:
           command: |
-                    echo $SHELL
-                    ls -l $(which $SHELL)
+                    echo $0
+                    ls -l $(which $0)
           shell: /bin/sh
       - run: |
-          ls -l $(which $SHELL)
+          ls -l $(which $0)
 
 workflows:
   setup-workflow:
