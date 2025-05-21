@@ -5,16 +5,14 @@ orbs:
 
 jobs:
   test:
-    machine:
-      image: ubuntu-2004:current
+    macos:
+      xcode: "14.2.0"
     steps:
       - run:
-          command: |
-                    echo $0
-                    ls -l $(which $0)
-          shell: /bin/sh
+          command: echo $0
+          shell: /bin/sh 
       - run: |
-          ls -l $(which $0)
+          echo "$0"
 
 workflows:
   setup-workflow:
