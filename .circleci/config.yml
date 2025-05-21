@@ -1,17 +1,17 @@
 version: 2.1
 
-orbs:
-  aws-cli: circleci/aws-cli@3.1
+executors:
+  base_bash:
+      docker:
+        - image: cimg/base:2023.04
+      shell: /bin/bash
 
 jobs:
   test:
-    docker:
-      - image: cimg/base:2023.04
-    shell: /bin/sh
+    executor: base_bash
     steps:
       - run:
           command: echo $0
-          shell: /bin/bash
       - run: |
           echo $0
 
