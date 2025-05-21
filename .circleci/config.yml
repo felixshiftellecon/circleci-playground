@@ -8,11 +8,8 @@ jobs:
     docker:
       - image: cimg/base:2023.04
     steps:
-      - run: echo $SHELL
       - run:
-          command: |
-                    echo 'export CODEPUSH_DEPLOYMENT_NAME=pr${CIRCLE_PULL_REQUEST##*/}' >> "$BASH_ENV"
-                    echo "$CODEPUSH_DEPLOYMENT_NAME"
+          command: echo $SHELL
           shell: /bin/bash --login -eo pipefail 
       - run: |
           echo "$CODEPUSH_DEPLOYMENT_NAME"
