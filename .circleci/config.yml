@@ -5,14 +5,14 @@ orbs:
 
 jobs:
   test:
-    macos:
-      xcode: "14.2.0"
+    docker:
+      - image: cimg/base:2023.04
     steps:
       - run:
           command: echo $0
-          shell: /bin/sh 
+          shell: /bin/bash --login -eo pipefail 
       - run: |
-          echo "$0"
+          echo $0
 
 workflows:
   setup-workflow:
