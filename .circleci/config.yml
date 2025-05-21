@@ -12,7 +12,8 @@ jobs:
           command: echo $SHELL
           shell: /bin/sh
       - run: |
-          echo $0
+          echo $0 >> $the_shell
+          ls -l `which $the_shell`
 
 workflows:
   setup-workflow:
