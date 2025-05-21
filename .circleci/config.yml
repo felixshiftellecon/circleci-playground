@@ -1,12 +1,11 @@
 version: 2.1
-
 orbs:
   aws-cli: circleci/aws-cli@3.1
-
 jobs:
   test:
-    docker:
-      - image: cimg/base:2023.04
+    machine:
+      image: ubuntu-2004:current
+    resource_class: medium
     steps:
       - aws-cli/setup
       - run: |
@@ -14,7 +13,6 @@ jobs:
           echo "$CODEPUSH_DEPLOYMENT_NAME"
       - run: |
           echo "$CODEPUSH_DEPLOYMENT_NAME"
-
 workflows:
   setup-workflow:
     jobs:
