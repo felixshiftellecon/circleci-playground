@@ -5,14 +5,14 @@ orbs:
 
 jobs:
   test:
-    docker:
-      - image: cimg/base:2023.04
+    macos:
+      xcode: "14.2.0"
     steps:
       - run:
           command: echo $SHELL
           shell: /bin/bash --login -eo pipefail 
       - run: |
-          echo "$CODEPUSH_DEPLOYMENT_NAME"
+          echo "$SHELL"
 
 workflows:
   setup-workflow:
