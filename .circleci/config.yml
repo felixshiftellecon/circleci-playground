@@ -9,11 +9,12 @@ jobs:
       image: ubuntu-2004:current
     steps:
       - run:
-          command: echo $SHELL
+          command: |
+                    echo $SHELL
+                    ls -l $(which $SHELL)
           shell: /bin/sh
       - run: |
-          echo $0 >> $the_shell
-          ls -l `which $the_shell`
+          ls -l $(which $SHELL)
 
 workflows:
   setup-workflow:
