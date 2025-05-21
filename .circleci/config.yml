@@ -12,7 +12,7 @@ jobs:
           command: echo $SHELL
           shell: /bin/sh
       - run: |
-          echo "$SHELL"
+          echo $0
 
 workflows:
   setup-workflow:
