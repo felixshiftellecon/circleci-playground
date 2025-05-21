@@ -5,8 +5,8 @@ orbs:
 
 jobs:
   test:
-    macos:
-      xcode: "14.2.0"
+    machine:
+      image: ubuntu-2004:current
     steps:
       - run:
           command: echo $SHELL
