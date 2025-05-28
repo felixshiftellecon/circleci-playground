@@ -16,11 +16,8 @@ jobs:
 
 workflows:
   oauth_triggered_workflow:
-    when: 
-      not: << pipeline.trigger_parameters.circleci.trigger_type >> = "github_app"
     jobs:
       - job_a
   github_app_triggered_workflow:
-    when: << pipeline.trigger_parameters.circleci.trigger_type >> = "github_app"
     jobs:
       - job_a
