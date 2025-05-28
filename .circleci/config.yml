@@ -17,10 +17,10 @@ jobs:
 workflows:
   oauth_triggered_workflow:
     when: 
-      not: << pipeline.event.name >>
+      not: << pipeline.trigger_type >> = "github_app"
     jobs:
       - job_a
   github_app_triggered_workflow:
-    when: << pipeline.event.name >> == "push"
+    when: << pipeline.trigger_type >> = "github_app"
     jobs:
       - job_a
