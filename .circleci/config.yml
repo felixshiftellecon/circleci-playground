@@ -17,10 +17,10 @@ jobs:
 workflows:
   oauth_triggered_workflow:
     when: 
-      not: << pipeline.circleci >>
+      not: << pipeline.trigger_parameters.circleci >>
     jobs:
       - job_a
   github_app_triggered_workflow:
-    when: << pipeline.circleci >>
+    when: << pipeline.trigger_parameters.circleci >>
     jobs:
       - job_a
