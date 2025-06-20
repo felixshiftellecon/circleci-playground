@@ -12,7 +12,7 @@ jobs:
     steps:
       - checkout
       - run: circleci-agent step halt
-  job_b:
+  semgrep:
     executor: base
     steps:
       - run: echo "running job b"
@@ -21,6 +21,6 @@ workflows:
   workflow-a:
     jobs:
       - job_a
-      - job_b:
+      - semgrep:
           requires:
             - job_a
