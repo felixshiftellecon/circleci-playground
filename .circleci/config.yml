@@ -22,5 +22,6 @@ workflows:
     jobs:
       - job_a
       - semgrep:
+          name: something_else
           requires:
             - job_a
