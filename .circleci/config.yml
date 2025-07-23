@@ -103,6 +103,35 @@ commands:
     description: "Test connectivity to verify firewall restrictions are working"
     steps:
       - run:
+          name: "Debug firewall status"
+          command: |
+            echo "=== DEBUGGING FIREWALL STATUS ==="
+            echo "Current time: $(date)"
+            
+            # Check if we're on Linux or macOS
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+              echo "Platform: macOS"
+              echo "pf status:"
+              sudo pfctl -s info 2>/dev/null || echo "pfctl not available"
+              echo "pf rules:"
+              sudo pfctl -s rules 2>/dev/null || echo "pfctl rules not available"
+            else
+              echo "Platform: Linux"
+              echo "iptables status:"
+              sudo iptables -L -n -v 2>/dev/null || echo "iptables not available"
+              echo "iptables policies:"
+              sudo iptables -L -n | grep -E "(Chain|policy)" 2>/dev/null || echo "iptables policies not available"
+            fi
+            
+            echo "=== NETWORK DEBUGGING ==="
+            echo "DNS resolution test:"
+            nslookup google.com 8.8.8.8 2>/dev/null || echo "nslookup failed"
+            
+            echo "Route to google.com:"
+            traceroute -m 5 google.com 2>/dev/null || echo "traceroute failed"
+            
+            echo "=== END DEBUGGING ==="
+      - run:
           name: "Test blocked domains (google.com)"
           command: |
             echo "Testing connectivity to google.com (should fail due to restrictions)..."
@@ -111,6 +140,10 @@ commands:
             # Use timeout to prevent hanging
             if timeout 10 curl -s --connect-timeout 5 --max-time 10 https://google.com > /dev/null 2>&1; then
               echo "WARNING: google.com is reachable - firewall restrictions may not be working"
+              echo "This could mean:"
+              echo "1. Firewall rules weren't applied correctly"
+              echo "2. Rules are being bypassed"
+              echo "3. Network routing is different than expected"
               exit 1
             else
               echo "SUCCESS: google.com is blocked as expected"
