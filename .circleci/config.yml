@@ -21,8 +21,10 @@ commands:
   setup-linux-firewall:
     description: "Setup iptables firewall restrictions for Linux environments"
     steps:
-      - run: |
-          echo "Setting up iptables firewall rules for Linux..."
+      - run:
+          name: "Configure iptables firewall rules"
+          command: |
+            echo "Setting up iptables firewall rules for Linux..."
           
           # Flush existing rules
           sudo iptables -F
@@ -67,8 +69,10 @@ commands:
   setup-macos-firewall:
     description: "Setup pf firewall restrictions for macOS environments"
     steps:
-      - run: |
-          echo "Setting up pf firewall rules for macOS..."
+      - run:
+          name: "Configure pf firewall rules"
+          command: |
+            echo "Setting up pf firewall rules for macOS..."
           
           # Create pf rules file
           cat > /tmp/circleci-pf.conf \<< 'EOF'
@@ -89,16 +93,16 @@ commands:
           pass out proto udp from any to any port 53
           pass in proto udp from any port 53 to any
           
-          # Allow CircleCI domains (using IP addresses to avoid DNS resolution issues)
-          pass out proto tcp from any to 3.220.0.0/16 port 80,443
-          pass out proto tcp from any to 3.221.0.0/16 port 80,443
-          pass out proto tcp from any to 3.222.0.0/16 port 80,443
-          pass out proto tcp from any to 3.223.0.0/16 port 80,443
+          # Allow CircleCI IP ranges
+          pass out proto tcp from any to 3.220.0.0/16 port {80, 443}
+          pass out proto tcp from any to 3.221.0.0/16 port {80, 443}
+          pass out proto tcp from any to 3.222.0.0/16 port {80, 443}
+          pass out proto tcp from any to 3.223.0.0/16 port {80, 443}
           
-          # Allow GitHub domains (using IP addresses to avoid DNS resolution issues)
-          pass out proto tcp from any to 140.82.112.0/20 port 80,443
-          pass out proto tcp from any to 192.30.252.0/22 port 80,443
-          pass out proto tcp from any to 185.199.108.0/22 port 80,443
+          # Allow GitHub IP ranges
+          pass out proto tcp from any to 140.82.112.0/20 port {80, 443}
+          pass out proto tcp from any to 192.30.252.0/22 port {80, 443}
+          pass out proto tcp from any to 185.199.108.0/22 port {80, 443}
           EOF
           
           # Apply pf rules (requires sudo)
@@ -112,31 +116,35 @@ commands:
   test-connectivity:
     description: "Test connectivity to verify firewall restrictions are working"
     steps:
-      - run: |
-          echo "Testing connectivity to google.com (should fail due to restrictions)..."
+      - run:
+          name: "Test blocked domains (google.com)"
+          command: |
+            echo "Testing connectivity to google.com (should fail due to restrictions)..."
           if curl -s --connect-timeout 5 https://google.com > /dev/null; then
             echo "WARNING: google.com is reachable - firewall restrictions may not be working"
             exit 1
           else
             echo "SUCCESS: google.com is blocked as expected"
           fi
-          
-          echo "Testing connectivity to allowed domains..."
-          echo "Testing CircleCI..."
-          if curl -s --connect-timeout 5 https://circleci.com > /dev/null; then
-            echo "SUCCESS: CircleCI is reachable"
-          else
-            echo "ERROR: CircleCI is not reachable"
-            exit 1
-          fi
-          
-          echo "Testing GitHub..."
-          if curl -s --connect-timeout 5 https://github.com > /dev/null; then
-            echo "SUCCESS: GitHub is reachable"
-          else
-            echo "ERROR: GitHub is not reachable"
-            exit 1
-          fi
+      - run:
+          name: "Test allowed domains (CircleCI & GitHub)"
+          command: |
+            echo "Testing connectivity to allowed domains..."
+            echo "Testing CircleCI..."
+            if curl -s --connect-timeout 5 https://circleci.com > /dev/null; then
+              echo "SUCCESS: CircleCI is reachable"
+            else
+              echo "ERROR: CircleCI is not reachable"
+              exit 1
+            fi
+            
+            echo "Testing GitHub..."
+            if curl -s --connect-timeout 5 https://github.com > /dev/null; then
+              echo "SUCCESS: GitHub is reachable"
+            else
+              echo "ERROR: GitHub is not reachable"
+              exit 1
+            fi
 
 jobs:
   machine:
