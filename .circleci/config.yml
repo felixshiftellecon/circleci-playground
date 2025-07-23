@@ -16,7 +16,6 @@ executors:
     macos:
       xcode: 15.0
 
-
 commands:
   setup-linux-firewall:
     description: "Setup iptables firewall restrictions for Linux environments"
@@ -25,46 +24,46 @@ commands:
           name: "Configure iptables firewall rules"
           command: |
             echo "Setting up iptables firewall rules for Linux..."
-          
-          # Flush existing rules
-          sudo iptables -F
-          sudo iptables -X
-          
-          # Set default policies to DROP
-          sudo iptables -P INPUT DROP
-          sudo iptables -P FORWARD DROP
-          sudo iptables -P OUTPUT DROP
-          
-          # Allow loopback
-          sudo iptables -A INPUT -i lo -j ACCEPT
-          sudo iptables -A OUTPUT -o lo -j ACCEPT
-          
-          # Allow established connections
-          sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-          sudo iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-          
-          # Allow DNS (needed for domain resolution)
-          sudo iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
-          sudo iptables -A INPUT -p udp --sport 53 -j ACCEPT
-          
-          # Allow CircleCI domains
-          sudo iptables -A OUTPUT -d circleci.com -j ACCEPT
-          sudo iptables -A OUTPUT -d *.circleci.com -j ACCEPT
-          sudo iptables -A OUTPUT -d api.circleci.com -j ACCEPT
-          sudo iptables -A OUTPUT -d cimg.io -j ACCEPT
-          sudo iptables -A OUTPUT -d *.cimg.io -j ACCEPT
-          
-          # Allow GitHub domains
-          sudo iptables -A OUTPUT -d github.com -j ACCEPT
-          sudo iptables -A OUTPUT -d *.github.com -j ACCEPT
-          sudo iptables -A OUTPUT -d githubusercontent.com -j ACCEPT
-          sudo iptables -A OUTPUT -d *.githubusercontent.com -j ACCEPT
-          
-          # Allow HTTP/HTTPS for allowed domains
-          sudo iptables -A OUTPUT -p tcp --dport 80 -j ACCEPT
-          sudo iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
-          
-          echo "iptables firewall rules applied successfully"
+            
+            # Flush existing rules
+            sudo iptables -F
+            sudo iptables -X
+            
+            # Set default policies to DROP
+            sudo iptables -P INPUT DROP
+            sudo iptables -P FORWARD DROP
+            sudo iptables -P OUTPUT DROP
+            
+            # Allow loopback
+            sudo iptables -A INPUT -i lo -j ACCEPT
+            sudo iptables -A OUTPUT -o lo -j ACCEPT
+            
+            # Allow established connections
+            sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+            sudo iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+            
+            # Allow DNS (needed for domain resolution)
+            sudo iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
+            sudo iptables -A INPUT -p udp --sport 53 -j ACCEPT
+            
+            # Allow CircleCI domains
+            sudo iptables -A OUTPUT -d circleci.com -j ACCEPT
+            sudo iptables -A OUTPUT -d *.circleci.com -j ACCEPT
+            sudo iptables -A OUTPUT -d api.circleci.com -j ACCEPT
+            sudo iptables -A OUTPUT -d cimg.io -j ACCEPT
+            sudo iptables -A OUTPUT -d *.cimg.io -j ACCEPT
+            
+            # Allow GitHub domains
+            sudo iptables -A OUTPUT -d github.com -j ACCEPT
+            sudo iptables -A OUTPUT -d *.github.com -j ACCEPT
+            sudo iptables -A OUTPUT -d githubusercontent.com -j ACCEPT
+            sudo iptables -A OUTPUT -d *.githubusercontent.com -j ACCEPT
+            
+            # Allow HTTP/HTTPS for allowed domains
+            sudo iptables -A OUTPUT -p tcp --dport 80 -j ACCEPT
+            sudo iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
+            
+            echo "iptables firewall rules applied successfully"
 
   setup-macos-firewall:
     description: "Setup pf firewall restrictions for macOS environments"
@@ -73,45 +72,43 @@ commands:
           name: "Configure pf firewall rules"
           command: |
             echo "Setting up pf firewall rules for macOS..."
-          
-          # Create pf rules file
-          cat > /tmp/circleci-pf.conf \<< 'EOF'
-          # Flush existing rules
-          flush all
-          
-          # Block all traffic by default
-          block drop all
-          
-          # Allow loopback
-          pass quick on lo0 all
-          
-          # Allow established connections
-          pass out proto tcp from any to any flags S/SA keep state
-          pass out proto udp from any to any keep state
-          
-          # Allow DNS
-          pass out proto udp from any to any port 53
-          pass in proto udp from any port 53 to any
-          
-          # Allow CircleCI IP ranges
-          pass out proto tcp from any to 3.220.0.0/16 port {80, 443}
-          pass out proto tcp from any to 3.221.0.0/16 port {80, 443}
-          pass out proto tcp from any to 3.222.0.0/16 port {80, 443}
-          pass out proto tcp from any to 3.223.0.0/16 port {80, 443}
-          
-          # Allow GitHub IP ranges
-          pass out proto tcp from any to 140.82.112.0/20 port {80, 443}
-          pass out proto tcp from any to 192.30.252.0/22 port {80, 443}
-          pass out proto tcp from any to 185.199.108.0/22 port {80, 443}
-          EOF
-          
-          # Apply pf rules (requires sudo)
-          sudo pfctl -f /tmp/circleci-pf.conf
-          sudo pfctl -e
-          
-          echo "pf firewall rules applied successfully"
-
-
+            
+            # Create pf rules file
+            cat > /tmp/circleci-pf.conf \<< 'EOF'
+            # Flush existing rules
+            flush all
+            
+            # Block all traffic by default
+            block drop all
+            
+            # Allow loopback
+            pass quick on lo0 all
+            
+            # Allow established connections
+            pass out proto tcp from any to any flags S/SA keep state
+            pass out proto udp from any to any keep state
+            
+            # Allow DNS
+            pass out proto udp from any to any port 53
+            pass in proto udp from any port 53 to any
+            
+            # Allow CircleCI IP ranges
+            pass out proto tcp from any to 3.220.0.0/16 port {80, 443}
+            pass out proto tcp from any to 3.221.0.0/16 port {80, 443}
+            pass out proto tcp from any to 3.222.0.0/16 port {80, 443}
+            pass out proto tcp from any to 3.223.0.0/16 port {80, 443}
+            
+            # Allow GitHub IP ranges
+            pass out proto tcp from any to 140.82.112.0/20 port {80, 443}
+            pass out proto tcp from any to 192.30.252.0/22 port {80, 443}
+            pass out proto tcp from any to 185.199.108.0/22 port {80, 443}
+            EOF
+            
+            # Apply pf rules (requires sudo)
+            sudo pfctl -f /tmp/circleci-pf.conf
+            sudo pfctl -e
+            
+            echo "pf firewall rules applied successfully"
 
   test-connectivity:
     description: "Test connectivity to verify firewall restrictions are working"
@@ -120,12 +117,12 @@ commands:
           name: "Test blocked domains (google.com)"
           command: |
             echo "Testing connectivity to google.com (should fail due to restrictions)..."
-          if curl -s --connect-timeout 5 https://google.com > /dev/null; then
-            echo "WARNING: google.com is reachable - firewall restrictions may not be working"
-            exit 1
-          else
-            echo "SUCCESS: google.com is blocked as expected"
-          fi
+            if curl -s --connect-timeout 5 https://google.com > /dev/null; then
+              echo "WARNING: google.com is reachable - firewall restrictions may not be working"
+              exit 1
+            else
+              echo "SUCCESS: google.com is blocked as expected"
+            fi
       - run:
           name: "Test allowed domains (CircleCI & GitHub)"
           command: |
@@ -150,16 +147,19 @@ jobs:
   machine:
     executor: machine
     steps:
+      - checkout
       - setup-linux-firewall
       - test-connectivity
-      - checkout
+      - run: echo "Running job a"
+      - run: cat path_a/README.md
   macos:
     executor: macos
     steps:
+      - checkout
       - setup-macos-firewall
       - test-connectivity
-      - checkout
-
+      - run: echo "running job b"
+      - run: cat path_b/README.md
 
 workflows:
   workflow-a:
