@@ -89,7 +89,13 @@ commands:
             
             # Apply pf rules (requires sudo)
             sudo pfctl -q -f /tmp/circleci-pf.conf
-            sudo pfctl -q -e
+            
+            # Only enable pf if it's not already enabled
+            if ! sudo pfctl -s info | grep -q "Status: Enabled"; then
+              sudo pfctl -q -e
+            else
+              echo "pf is already enabled, skipping enable step"
+            fi
             
             echo "pf firewall rules applied successfully"
 
