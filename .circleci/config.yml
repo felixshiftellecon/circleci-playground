@@ -151,16 +151,20 @@ commands:
             # Allow DNS
             echo "pass out proto udp from any to any port 53" >> /tmp/circleci-pf.conf
             
-            # Allow CircleCI and GitHub by IP address
-            if [ ! -z "$CIRCLE_IP" ]; then
-              echo "pass out proto tcp from any to $CIRCLE_IP port 80" >> /tmp/circleci-pf.conf
-              echo "pass out proto tcp from any to $CIRCLE_IP port 443" >> /tmp/circleci-pf.conf
-            fi
+            # Add all resolved IPs for better coverage
+            echo "Adding all resolved IPs..."
+            for ip in $(dig +short circleci.com); do
+              echo "pass out proto tcp from any to $ip port 80" >> /tmp/circleci-pf.conf
+              echo "pass out proto tcp from any to $ip port 443" >> /tmp/circleci-pf.conf
+            done
             
-            if [ ! -z "$GITHUB_IP" ]; then
-              echo "pass out proto tcp from any to $GITHUB_IP port 80" >> /tmp/circleci-pf.conf
-              echo "pass out proto tcp from any to $GITHUB_IP port 443" >> /tmp/circleci-pf.conf
-            fi
+            for ip in $(dig +short github.com); do
+              echo "pass out proto tcp from any to $ip port 80" >> /tmp/circleci-pf.conf
+              echo "pass out proto tcp from any to $ip port 443" >> /tmp/circleci-pf.conf
+            done
+            
+            echo "Final pf rules:"
+            cat /tmp/circleci-pf.conf
             
             # Apply pf rules (requires sudo)
             sudo pfctl -q -f /tmp/circleci-pf.conf
@@ -231,10 +235,20 @@ commands:
             echo "Test started at: $(date)"
             
             echo "Testing CircleCI..."
+            echo "Resolving CircleCI IPs:"
+            dig +short circleci.com
+            
+            echo "Testing which IP CircleCI uses:"
+            curl -s --connect-timeout 5 --max-time 10 -I https://circleci.com 2>&1 | head -1 || echo "curl failed"
+            
             if timeout 10 curl -s --connect-timeout 5 --max-time 10 https://circleci.com > /dev/null 2>&1; then
               echo "SUCCESS: CircleCI is reachable"
             else
               echo "ERROR: CircleCI is not reachable"
+              echo "This might be because:"
+              echo "1. CircleCI is using a different IP than expected"
+              echo "2. pf rules are not covering all IPs"
+              echo "3. Network routing issues"
               exit 1
             fi
             
