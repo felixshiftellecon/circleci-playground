@@ -11,13 +11,11 @@ parameters:
 executors:
   machine:
     machine:
-      image: ubuntu-2204:202507-01
+      image: ubuntu-2204:2024.11.1
   macos:
     macos:
       xcode: 15.0
-  docker:
-    docker:
-      - image: cimg/base:stable
+
 
 commands:
   setup-linux-firewall:
@@ -91,14 +89,16 @@ commands:
           pass out proto udp from any to any port 53
           pass in proto udp from any port 53 to any
           
-          # Allow CircleCI domains
-          pass out proto tcp from any to circleci.com port 80,443
-          pass out proto tcp from any to api.circleci.com port 80,443
-          pass out proto tcp from any to cimg.io port 80,443
+          # Allow CircleCI domains (using IP addresses to avoid DNS resolution issues)
+          pass out proto tcp from any to 3.220.0.0/16 port 80,443
+          pass out proto tcp from any to 3.221.0.0/16 port 80,443
+          pass out proto tcp from any to 3.222.0.0/16 port 80,443
+          pass out proto tcp from any to 3.223.0.0/16 port 80,443
           
-          # Allow GitHub domains
-          pass out proto tcp from any to github.com port 80,443
-          pass out proto tcp from any to githubusercontent.com port 80,443
+          # Allow GitHub domains (using IP addresses to avoid DNS resolution issues)
+          pass out proto tcp from any to 140.82.112.0/20 port 80,443
+          pass out proto tcp from any to 192.30.252.0/22 port 80,443
+          pass out proto tcp from any to 185.199.108.0/22 port 80,443
           EOF
           
           # Apply pf rules (requires sudo)
@@ -107,59 +107,7 @@ commands:
           
           echo "pf firewall rules applied successfully"
 
-  setup-docker-firewall:
-    description: "Setup firewall restrictions for Docker environments"
-    steps:
-      - run: |
-          echo "Setting up firewall rules for Docker environment..."
-          
-          # Check if iptables is available in the container
-          if command -v iptables >/dev/null 2>&1; then
-            echo "iptables available - applying Linux firewall rules"
-            
-            # Flush existing rules
-            sudo iptables -F
-            sudo iptables -X
-            
-            # Set default policies to DROP
-            sudo iptables -P INPUT DROP
-            sudo iptables -P FORWARD DROP
-            sudo iptables -P OUTPUT DROP
-            
-            # Allow loopback
-            sudo iptables -A INPUT -i lo -j ACCEPT
-            sudo iptables -A OUTPUT -o lo -j ACCEPT
-            
-            # Allow established connections
-            sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-            sudo iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-            
-            # Allow DNS (needed for domain resolution)
-            sudo iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
-            sudo iptables -A INPUT -p udp --sport 53 -j ACCEPT
-            
-            # Allow CircleCI domains
-            sudo iptables -A OUTPUT -d circleci.com -j ACCEPT
-            sudo iptables -A OUTPUT -d *.circleci.com -j ACCEPT
-            sudo iptables -A OUTPUT -d api.circleci.com -j ACCEPT
-            sudo iptables -A OUTPUT -d cimg.io -j ACCEPT
-            sudo iptables -A OUTPUT -d *.cimg.io -j ACCEPT
-            
-            # Allow GitHub domains
-            sudo iptables -A OUTPUT -d github.com -j ACCEPT
-            sudo iptables -A OUTPUT -d *.github.com -j ACCEPT
-            sudo iptables -A OUTPUT -d githubusercontent.com -j ACCEPT
-            sudo iptables -A OUTPUT -d *.githubusercontent.com -j ACCEPT
-            
-            # Allow HTTP/HTTPS for allowed domains
-            sudo iptables -A OUTPUT -p tcp --dport 80 -j ACCEPT
-            sudo iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
-            
-            echo "iptables firewall rules applied successfully in Docker"
-          else
-            echo "iptables not available in Docker container - skipping firewall setup"
-            echo "Note: Docker containers may not have firewall capabilities"
-          fi
+
 
   test-connectivity:
     description: "Test connectivity to verify firewall restrictions are working"
@@ -203,16 +151,10 @@ jobs:
       - setup-macos-firewall
       - test-connectivity
       - checkout
-  docker:
-    executor: docker
-    steps:
-      - setup-docker-firewall
-      - test-connectivity
-      - checkout
+
 
 workflows:
   workflow-a:
     jobs:
       - machine
       - macos
-      - docker
