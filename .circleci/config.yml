@@ -12,7 +12,7 @@ executors:
   machine:
     machine:
       image: ubuntu-2204:202507-01
-  macOS:
+  macos:
     macos:
       xcode: 15.0
   docker:
@@ -199,8 +199,8 @@ jobs:
       - test-connectivity
       - run: echo "Running job a"
       - run: cat path_a/README.md
-  macOS:
-    executor: macOS
+  macos:
+    executor: macos
     steps:
       - checkout
       - setup-macos-firewall
@@ -220,5 +220,5 @@ workflows:
   workflow-a:
     jobs:
       - machine
-      - macOS
+      - macos
       - docker
