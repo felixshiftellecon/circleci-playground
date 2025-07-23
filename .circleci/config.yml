@@ -1,37 +1,224 @@
 version: 2.1
 
-setup: true
+parameters:
+  run-path-a:
+    type: boolean
+    default: false
+  run-path-b:
+    type: boolean
+    default: false
 
-orbs:
-  path-filtering: circleci/path-filtering@0.1.0
-  continuation: circleci/continuation@0.2.0
+executors:
+  machine:
+    machine:
+      image: ubuntu-2204:202507-01
+  macOS:
+    macos:
+      xcode: 15.0
+  docker:
+    docker:
+      - image: cimg/base:stable
+
+commands:
+  setup-linux-firewall:
+    description: "Setup iptables firewall restrictions for Linux environments"
+    steps:
+      - run: |
+          echo "Setting up iptables firewall rules for Linux..."
+          
+          # Flush existing rules
+          sudo iptables -F
+          sudo iptables -X
+          
+          # Set default policies to DROP
+          sudo iptables -P INPUT DROP
+          sudo iptables -P FORWARD DROP
+          sudo iptables -P OUTPUT DROP
+          
+          # Allow loopback
+          sudo iptables -A INPUT -i lo -j ACCEPT
+          sudo iptables -A OUTPUT -o lo -j ACCEPT
+          
+          # Allow established connections
+          sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+          sudo iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+          
+          # Allow DNS (needed for domain resolution)
+          sudo iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
+          sudo iptables -A INPUT -p udp --sport 53 -j ACCEPT
+          
+          # Allow CircleCI domains
+          sudo iptables -A OUTPUT -d circleci.com -j ACCEPT
+          sudo iptables -A OUTPUT -d *.circleci.com -j ACCEPT
+          sudo iptables -A OUTPUT -d api.circleci.com -j ACCEPT
+          sudo iptables -A OUTPUT -d cimg.io -j ACCEPT
+          sudo iptables -A OUTPUT -d *.cimg.io -j ACCEPT
+          
+          # Allow GitHub domains
+          sudo iptables -A OUTPUT -d github.com -j ACCEPT
+          sudo iptables -A OUTPUT -d *.github.com -j ACCEPT
+          sudo iptables -A OUTPUT -d githubusercontent.com -j ACCEPT
+          sudo iptables -A OUTPUT -d *.githubusercontent.com -j ACCEPT
+          
+          # Allow HTTP/HTTPS for allowed domains
+          sudo iptables -A OUTPUT -p tcp --dport 80 -j ACCEPT
+          sudo iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
+          
+          echo "iptables firewall rules applied successfully"
+
+  setup-macos-firewall:
+    description: "Setup pf firewall restrictions for macOS environments"
+    steps:
+      - run: |
+          echo "Setting up pf firewall rules for macOS..."
+          
+          # Create pf rules file
+          cat > /tmp/circleci-pf.conf << 'EOF'
+          # Flush existing rules
+          flush all
+          
+          # Block all traffic by default
+          block drop all
+          
+          # Allow loopback
+          pass quick on lo0 all
+          
+          # Allow established connections
+          pass out proto tcp from any to any flags S/SA keep state
+          pass out proto udp from any to any keep state
+          
+          # Allow DNS
+          pass out proto udp from any to any port 53
+          pass in proto udp from any port 53 to any
+          
+          # Allow CircleCI domains
+          pass out proto tcp from any to circleci.com port 80,443
+          pass out proto tcp from any to api.circleci.com port 80,443
+          pass out proto tcp from any to cimg.io port 80,443
+          
+          # Allow GitHub domains
+          pass out proto tcp from any to github.com port 80,443
+          pass out proto tcp from any to githubusercontent.com port 80,443
+          EOF
+          
+          # Apply pf rules (requires sudo)
+          sudo pfctl -f /tmp/circleci-pf.conf
+          sudo pfctl -e
+          
+          echo "pf firewall rules applied successfully"
+
+  setup-docker-firewall:
+    description: "Setup firewall restrictions for Docker environments"
+    steps:
+      - run: |
+          echo "Setting up firewall rules for Docker environment..."
+          
+          # Check if iptables is available in the container
+          if command -v iptables >/dev/null 2>&1; then
+            echo "iptables available - applying Linux firewall rules"
+            
+            # Flush existing rules
+            sudo iptables -F
+            sudo iptables -X
+            
+            # Set default policies to DROP
+            sudo iptables -P INPUT DROP
+            sudo iptables -P FORWARD DROP
+            sudo iptables -P OUTPUT DROP
+            
+            # Allow loopback
+            sudo iptables -A INPUT -i lo -j ACCEPT
+            sudo iptables -A OUTPUT -o lo -j ACCEPT
+            
+            # Allow established connections
+            sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+            sudo iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+            
+            # Allow DNS (needed for domain resolution)
+            sudo iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
+            sudo iptables -A INPUT -p udp --sport 53 -j ACCEPT
+            
+            # Allow CircleCI domains
+            sudo iptables -A OUTPUT -d circleci.com -j ACCEPT
+            sudo iptables -A OUTPUT -d *.circleci.com -j ACCEPT
+            sudo iptables -A OUTPUT -d api.circleci.com -j ACCEPT
+            sudo iptables -A OUTPUT -d cimg.io -j ACCEPT
+            sudo iptables -A OUTPUT -d *.cimg.io -j ACCEPT
+            
+            # Allow GitHub domains
+            sudo iptables -A OUTPUT -d github.com -j ACCEPT
+            sudo iptables -A OUTPUT -d *.github.com -j ACCEPT
+            sudo iptables -A OUTPUT -d githubusercontent.com -j ACCEPT
+            sudo iptables -A OUTPUT -d *.githubusercontent.com -j ACCEPT
+            
+            # Allow HTTP/HTTPS for allowed domains
+            sudo iptables -A OUTPUT -p tcp --dport 80 -j ACCEPT
+            sudo iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
+            
+            echo "iptables firewall rules applied successfully in Docker"
+          else
+            echo "iptables not available in Docker container - skipping firewall setup"
+            echo "Note: Docker containers may not have firewall capabilities"
+          fi
+
+  test-connectivity:
+    description: "Test connectivity to verify firewall restrictions are working"
+    steps:
+      - run: |
+          echo "Testing connectivity to google.com (should fail due to restrictions)..."
+          if curl -s --connect-timeout 5 https://google.com > /dev/null; then
+            echo "WARNING: google.com is reachable - firewall restrictions may not be working"
+            exit 1
+          else
+            echo "SUCCESS: google.com is blocked as expected"
+          fi
+          
+          echo "Testing connectivity to allowed domains..."
+          echo "Testing CircleCI..."
+          if curl -s --connect-timeout 5 https://circleci.com > /dev/null; then
+            echo "SUCCESS: CircleCI is reachable"
+          else
+            echo "ERROR: CircleCI is not reachable"
+            exit 1
+          fi
+          
+          echo "Testing GitHub..."
+          if curl -s --connect-timeout 5 https://github.com > /dev/null; then
+            echo "SUCCESS: GitHub is reachable"
+          else
+            echo "ERROR: GitHub is not reachable"
+            exit 1
+          fi
+
+jobs:
+  machine:
+    executor: machine
+    steps:
+      - checkout
+      - setup-linux-firewall
+      - test-connectivity
+      - run: echo "Running job a"
+      - run: cat path_a/README.md
+  macOS:
+    executor: macOS
+    steps:
+      - checkout
+      - setup-macos-firewall
+      - test-connectivity
+      - run: echo "running job b"
+      - run: cat path_b/README.md
+  docker:
+    executor: docker
+    steps:
+      - checkout
+      - setup-docker-firewall
+      - test-connectivity
+      - run: echo "running job c"
+      - run: cat path_c/README.md
 
 workflows:
-  setup-workflow:
+  workflow-a:
     jobs:
-      - path-filtering/filter:
-          name: check path
-          mapping: |
-            path_a/.* run-path-a true
-            path_b/.* run-path-b true
-          base-revision: main
-          config-path: .circleci/continue-config.yml
-          filters:
-            tags:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from Tag
-          configuration_path: .circleci/continue_config.yml
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from API
-          configuration_path: ./.circleci/continue_config.yml
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              ignore: /.*/
+      - machine
+      - macOS
+      - docker
