@@ -62,10 +62,6 @@ commands:
             timeout 30 sudo iptables -A OUTPUT -d github.com -j ACCEPT || echo "Warning: github.com failed"
             timeout 30 sudo iptables -A OUTPUT -d githubusercontent.com -j ACCEPT || echo "Warning: githubusercontent.com failed"
             
-            echo "Adding HTTP/HTTPS rules..."
-            timeout 30 sudo iptables -A OUTPUT -p tcp --dport 80 -j ACCEPT || echo "Warning: HTTP failed"
-            timeout 30 sudo iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT || echo "Warning: HTTPS failed"
-            
             echo "Iptables setup completed at: $(date)"
             echo "iptables firewall rules applied successfully"
       - run:
@@ -91,6 +87,45 @@ commands:
             sudo iptables -L OUTPUT -n | grep -v "Chain\|policy" | wc -l || echo "Failed to count rules"
             
             echo "=== END VERIFICATION ==="
+      - run:
+          name: "Alternative iptables approach (if needed)"
+          command: |
+            echo "=== ALTERNATIVE IPTABLES APPROACH ==="
+            
+            # Check if OUTPUT policy is DROP, if not, try alternative approach
+            if ! sudo iptables -L OUTPUT -n | grep -q "policy DROP"; then
+              echo "OUTPUT policy is not DROP, trying alternative approach..."
+              
+              # Create iptables rules file
+              cat > /tmp/iptables-rules << 'EOF'
+              *filter
+              :INPUT DROP [0:0]
+              :FORWARD DROP [0:0]
+              :OUTPUT DROP [0:0]
+              -A INPUT -i lo -j ACCEPT
+              -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+              -A OUTPUT -o lo -j ACCEPT
+              -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+              -A OUTPUT -p udp --dport 53 -j ACCEPT
+              -A INPUT -p udp --sport 53 -j ACCEPT
+              -A OUTPUT -d circleci.com -j ACCEPT
+              -A OUTPUT -d api.circleci.com -j ACCEPT
+              -A OUTPUT -d cimg.io -j ACCEPT
+              -A OUTPUT -d github.com -j ACCEPT
+              -A OUTPUT -d githubusercontent.com -j ACCEPT
+              -A OUTPUT -p tcp --dport 80 -j ACCEPT
+              -A OUTPUT -p tcp --dport 443 -j ACCEPT
+              COMMIT
+              EOF
+              
+              # Apply rules using iptables-restore
+              sudo iptables-restore < /tmp/iptables-rules
+              echo "Alternative rules applied using iptables-restore"
+            else
+              echo "OUTPUT policy is already DROP, skipping alternative approach"
+            fi
+            
+            echo "=== END ALTERNATIVE APPROACH ==="
 
   setup-macos-firewall:
     description: "Setup pf firewall restrictions for macOS environments"
@@ -100,6 +135,14 @@ commands:
           command: |
             echo "Setting up pf firewall rules for macOS..."
             
+            # Get actual IP addresses for the domains we need
+            echo "Resolving domain IPs..."
+            CIRCLE_IP=$(dig +short circleci.com | head -1)
+            GITHUB_IP=$(dig +short github.com | head -1)
+            
+            echo "CircleCI IP: $CIRCLE_IP"
+            echo "GitHub IP: $GITHUB_IP"
+            
             # Create a simple pf rules file without YAML indentation
             echo "# Simple pf configuration for CircleCI" > /tmp/circleci-pf.conf
             echo "block drop all" >> /tmp/circleci-pf.conf
@@ -108,37 +151,16 @@ commands:
             # Allow DNS
             echo "pass out proto udp from any to any port 53" >> /tmp/circleci-pf.conf
             
-            # Allow CircleCI IP ranges (more comprehensive)
-            echo "pass out proto tcp from any to 3.220.0.0/16 port 80" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 3.220.0.0/16 port 443" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 3.221.0.0/16 port 80" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 3.221.0.0/16 port 443" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 3.222.0.0/16 port 80" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 3.222.0.0/16 port 443" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 3.223.0.0/16 port 80" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 3.223.0.0/16 port 443" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 3.224.0.0/16 port 80" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 3.224.0.0/16 port 443" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 3.225.0.0/16 port 80" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 3.225.0.0/16 port 443" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 3.226.0.0/16 port 80" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 3.226.0.0/16 port 443" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 3.227.0.0/16 port 80" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 3.227.0.0/16 port 443" >> /tmp/circleci-pf.conf
+            # Allow CircleCI and GitHub by IP address
+            if [ ! -z "$CIRCLE_IP" ]; then
+              echo "pass out proto tcp from any to $CIRCLE_IP port 80" >> /tmp/circleci-pf.conf
+              echo "pass out proto tcp from any to $CIRCLE_IP port 443" >> /tmp/circleci-pf.conf
+            fi
             
-            # Allow GitHub IP ranges (more comprehensive)
-            echo "pass out proto tcp from any to 140.82.112.0/20 port 80" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 140.82.112.0/20 port 443" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 192.30.252.0/22 port 80" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 192.30.252.0/22 port 443" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 185.199.108.0/22 port 80" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 185.199.108.0/22 port 443" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 185.199.109.0/22 port 80" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 185.199.109.0/22 port 443" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 185.199.110.0/22 port 80" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 185.199.110.0/22 port 443" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 185.199.111.0/22 port 80" >> /tmp/circleci-pf.conf
-            echo "pass out proto tcp from any to 185.199.111.0/22 port 443" >> /tmp/circleci-pf.conf
+            if [ ! -z "$GITHUB_IP" ]; then
+              echo "pass out proto tcp from any to $GITHUB_IP port 80" >> /tmp/circleci-pf.conf
+              echo "pass out proto tcp from any to $GITHUB_IP port 443" >> /tmp/circleci-pf.conf
+            fi
             
             # Apply pf rules (requires sudo)
             sudo pfctl -q -f /tmp/circleci-pf.conf
