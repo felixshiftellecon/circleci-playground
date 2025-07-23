@@ -68,6 +68,29 @@ commands:
             
             echo "Iptables setup completed at: $(date)"
             echo "iptables firewall rules applied successfully"
+      - run:
+          name: "Verify iptables rules"
+          command: |
+            echo "=== VERIFYING IPTABLES RULES ==="
+            echo "Current OUTPUT chain rules:"
+            sudo iptables -L OUTPUT -n -v || echo "Failed to list OUTPUT rules"
+            
+            echo "Current policies:"
+            sudo iptables -L -n | grep -E "(Chain|policy)" || echo "Failed to list policies"
+            
+            echo "Testing if OUTPUT policy is DROP:"
+            if sudo iptables -L OUTPUT -n | grep -q "policy DROP"; then
+              echo "✓ OUTPUT policy is correctly set to DROP"
+            else
+              echo "✗ OUTPUT policy is NOT set to DROP"
+              echo "Current OUTPUT policy:"
+              sudo iptables -L OUTPUT -n | grep policy
+            fi
+            
+            echo "Number of OUTPUT rules:"
+            sudo iptables -L OUTPUT -n | grep -v "Chain\|policy" | wc -l || echo "Failed to count rules"
+            
+            echo "=== END VERIFICATION ==="
 
   setup-macos-firewall:
     description: "Setup pf firewall restrictions for macOS environments"
@@ -81,11 +104,41 @@ commands:
             echo "# Simple pf configuration for CircleCI" > /tmp/circleci-pf.conf
             echo "block drop all" >> /tmp/circleci-pf.conf
             echo "pass quick on lo0 all" >> /tmp/circleci-pf.conf
+            
+            # Allow DNS
+            echo "pass out proto udp from any to any port 53" >> /tmp/circleci-pf.conf
+            
+            # Allow CircleCI IP ranges (more comprehensive)
             echo "pass out proto tcp from any to 3.220.0.0/16 port 80" >> /tmp/circleci-pf.conf
             echo "pass out proto tcp from any to 3.220.0.0/16 port 443" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 3.221.0.0/16 port 80" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 3.221.0.0/16 port 443" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 3.222.0.0/16 port 80" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 3.222.0.0/16 port 443" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 3.223.0.0/16 port 80" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 3.223.0.0/16 port 443" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 3.224.0.0/16 port 80" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 3.224.0.0/16 port 443" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 3.225.0.0/16 port 80" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 3.225.0.0/16 port 443" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 3.226.0.0/16 port 80" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 3.226.0.0/16 port 443" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 3.227.0.0/16 port 80" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 3.227.0.0/16 port 443" >> /tmp/circleci-pf.conf
+            
+            # Allow GitHub IP ranges (more comprehensive)
             echo "pass out proto tcp from any to 140.82.112.0/20 port 80" >> /tmp/circleci-pf.conf
             echo "pass out proto tcp from any to 140.82.112.0/20 port 443" >> /tmp/circleci-pf.conf
-            echo "pass out proto udp from any to any port 53" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 192.30.252.0/22 port 80" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 192.30.252.0/22 port 443" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 185.199.108.0/22 port 80" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 185.199.108.0/22 port 443" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 185.199.109.0/22 port 80" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 185.199.109.0/22 port 443" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 185.199.110.0/22 port 80" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 185.199.110.0/22 port 443" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 185.199.111.0/22 port 80" >> /tmp/circleci-pf.conf
+            echo "pass out proto tcp from any to 185.199.111.0/22 port 443" >> /tmp/circleci-pf.conf
             
             # Apply pf rules (requires sudo)
             sudo pfctl -q -f /tmp/circleci-pf.conf
@@ -177,19 +230,15 @@ jobs:
   machine:
     executor: machine
     steps:
-      - checkout
       - setup-linux-firewall
       - test-connectivity
-      - run: echo "Running job a"
-      - run: cat path_a/README.md
+      - checkout
   macos:
     executor: macos
     steps:
-      - checkout
       - setup-macos-firewall
       - test-connectivity
-      - run: echo "running job b"
-      - run: cat path_b/README.md
+      - checkout
 
 workflows:
   workflow-a:
