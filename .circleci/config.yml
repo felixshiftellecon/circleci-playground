@@ -73,7 +73,7 @@ commands:
           echo "Setting up pf firewall rules for macOS..."
           
           # Create pf rules file
-          cat > /tmp/circleci-pf.conf << 'EOF'
+          cat > /tmp/circleci-pf.conf \<< 'EOF'
           # Flush existing rules
           flush all
           
@@ -194,27 +194,21 @@ jobs:
   machine:
     executor: machine
     steps:
-      - checkout
       - setup-linux-firewall
       - test-connectivity
-      - run: echo "Running job a"
-      - run: cat path_a/README.md
+      - checkout
   macos:
     executor: macos
     steps:
-      - checkout
       - setup-macos-firewall
       - test-connectivity
-      - run: echo "running job b"
-      - run: cat path_b/README.md
+      - checkout
   docker:
     executor: docker
     steps:
-      - checkout
       - setup-docker-firewall
       - test-connectivity
-      - run: echo "running job c"
-      - run: cat path_c/README.md
+      - checkout
 
 workflows:
   workflow-a:
