@@ -10,7 +10,7 @@ executors:
     resource_class: m4pro.medium
   docker:
     docker:
-      - image: ubuntu-2204:2024.11.1
+      - image: cimg/base
 
 commands:
   setup-squid:
@@ -72,14 +72,23 @@ commands:
             echo "🔍 Testing CircleCI domains (Expected: ALLOWED)"
             echo "=============================================="
             
+            echo "Checking if Squid is running..."
+            pgrep squid || echo "Squid not running!"
+            
+            echo "Checking port 3128..."
+            sudo lsof -i :3128 || echo "Nothing on port 3128"
+            
             for domain in "circleci.com" "app.circleci.com" "api.circleci.com"; do
               echo -n "Testing $domain: "
               response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
+              curl_exit_code=$?
               
-              if [ $? -eq 0 ] && [ "$response" != "000" ]; then
+              if [ $curl_exit_code -eq 0 ] && [ "$response" != "000" ]; then
                 echo "✅ ALLOWED (HTTP $response)"
               else
-                echo "❌ BLOCKED or ERROR"
+                echo "❌ BLOCKED or ERROR (curl exit: $curl_exit_code, response: $response)"
+                echo "Trying without proxy..."
+                curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null
                 exit 1
               fi
             done
