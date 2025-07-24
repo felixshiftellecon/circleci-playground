@@ -26,8 +26,8 @@ commands:
               sudo apt-get install -y squid curl
             fi
             
-            squid -f squid.conf -N -d 1 &
-            echo "Squid started (no cache mode)"
+            squid -f squid.conf -N -p -d 1 &
+            echo "Squid started (no cache mode, no PID file)"
             
             sleep 2
             
@@ -92,12 +92,18 @@ commands:
             echo "🔍 Testing Google domains (Expected: BLOCKED)"
             echo "============================================"
             
+            echo "Checking Squid status..."
+            pgrep squid || echo "Squid not running!"
+            lsof -i :3128 || echo "Nothing listening on port 3128"
+            
             for domain in "google.com" "www.google.com" "gmail.com"; do
               echo -n "Testing $domain: "
               response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
               
               if [ $? -eq 0 ] && [ "$response" != "000" ]; then
                 echo "❌ UNEXPECTEDLY ALLOWED (HTTP $response)"
+                echo "Trying without proxy to compare..."
+                curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null
                 exit 1
               else
                 echo "✅ BLOCKED"
