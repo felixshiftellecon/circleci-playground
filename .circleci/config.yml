@@ -36,6 +36,7 @@ commands:
             sudo pkill squid || true
             sleep 1
             
+            rm -f ./squid/squid.pid
             sudo rm -f /opt/homebrew/var/run/squid.pid
             sudo rm -f /var/run/squid.pid
             sudo rm -f /run/squid.pid
