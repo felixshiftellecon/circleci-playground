@@ -32,9 +32,13 @@ commands:
             mkdir -p ./squid/logs
             mkdir -p ./squid/cache
             
-            pkill -f squid || true
-            pkill squid || true
+            sudo pkill -f squid || true
+            sudo pkill squid || true
             sleep 1
+            
+            sudo rm -f /opt/homebrew/var/run/squid.pid
+            sudo rm -f /var/run/squid.pid
+            sudo rm -f /run/squid.pid
             
             squid -z -f squid.conf
             
