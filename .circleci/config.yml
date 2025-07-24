@@ -6,7 +6,7 @@ executors:
       image: ubuntu-2204:2024.11.1
   macos:
     macos:
-      xcode: 15.0
+      xcode: "16.0.0"
     resource_class: m4pro.medium
   docker:
     docker:
@@ -30,11 +30,7 @@ commands:
           name: "Create Squid directories"
           command: |
             sudo mkdir -p /var/spool/squid /var/log/squid
-            if [[ "$OSTYPE" == "darwin"* ]]; then
-              sudo chown -R $(whoami):staff /var/spool/squid /var/log/squid
-            else
-              sudo chown -R squid:squid /var/spool/squid /var/log/squid
-            fi
+            sudo chown -R $(whoami):$(id -gn) /var/spool/squid /var/log/squid
       
       - run:
           name: "Install Squid configuration"

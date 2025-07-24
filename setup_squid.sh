@@ -71,13 +71,8 @@ sudo mkdir -p /var/spool/squid
 sudo mkdir -p /var/log/squid
 
 echo -e "${YELLOW}Setting permissions...${NC}"
-if [[ "$OSTYPE" == "darwin"* ]] || [[ "$(uname)" == "Darwin" ]]; then
-    sudo chown -R $(whoami):staff /var/spool/squid
-    sudo chown -R $(whoami):staff /var/log/squid
-else
-    sudo chown -R squid:squid /var/spool/squid
-    sudo chown -R squid:squid /var/log/squid
-fi
+sudo chown -R $(whoami):$(id -gn) /var/spool/squid
+sudo chown -R $(whoami):$(id -gn) /var/log/squid
 
 echo -e "${YELLOW}Installing Squid configuration...${NC}"
 if [[ "$OSTYPE" == "darwin"* ]] || [[ "$(uname)" == "Darwin" ]]; then
