@@ -36,10 +36,13 @@ commands:
           name: "Install Squid configuration"
           command: |
             if [[ "$OSTYPE" == "darwin"* ]]; then
+              sudo mkdir -p /usr/local/etc/squid
               sudo cp squid.conf /usr/local/etc/squid/squid.conf
             else
               sudo cp squid.conf /etc/squid/squid.conf
             fi
+            
+            sudo pkill squid || true
             
             sudo squid -z
             
@@ -151,8 +154,16 @@ jobs:
       - setup-squid
       - test-connectivity
 
+  test-squid-proxy-docker:
+    executor: docker
+    steps:
+      - checkout
+      - setup-squid
+      - test-connectivity
+
 workflows:
   test-proxy-access-control:
     jobs:
       - test-squid-proxy
       - test-squid-proxy-macos
+      - test-squid-proxy-docker
