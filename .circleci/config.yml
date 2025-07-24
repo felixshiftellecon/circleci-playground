@@ -14,10 +14,10 @@ executors:
 
 commands:
   setup-squid:
-    description: "Install and configure Squid proxy with CircleCI/GitHub access control"
+    description: "Install and start Squid proxy"
     steps:
       - run:
-          name: "Install Squid and curl"
+          name: "Install Squid and start proxy"
           command: |
             if [[ "$OSTYPE" == "darwin"* ]]; then
               brew install squid curl
@@ -25,33 +25,14 @@ commands:
               sudo apt-get update
               sudo apt-get install -y squid curl
             fi
-      
-      - run:
-          name: "Create local directories and start Squid"
-          command: |
-            mkdir -p ./squid/logs
-            mkdir -p ./squid/cache
             
-            sudo pkill -f squid || true
-            sudo pkill squid || true
-            sleep 1
+            squid -f squid.conf -N -d 1 &
+            echo "Squid started (no cache mode)"
             
-            rm -f ./squid/squid.pid
-            sudo rm -f /opt/homebrew/var/run/squid.pid
-            sudo rm -f /var/run/squid.pid
-            sudo rm -f /run/squid.pid
-            
-            squid -z -f squid.conf
-            
-            squid -f squid.conf -d 1 &
-            echo "Squid started as background process"
-            
-            sleep 3
+            sleep 2
             
             if pgrep squid > /dev/null; then
               echo "✅ Squid is running"
-              echo "Checking if Squid is listening on port 3128..."
-              lsof -i :3128 || echo "WARNING: Squid not listening on port 3128"
             else
               echo "❌ Squid failed to start"
               exit 1
@@ -135,8 +116,7 @@ commands:
             echo "Squid proxy is working correctly!"
             
             echo ""
-            echo "📋 Recent Squid access logs:"
-            tail -5 ./squid/logs/access.log 2>/dev/null || echo "No access logs found"
+            echo "🎉 Squid proxy test completed successfully!"
 
 jobs:
   test-squid-proxy:
