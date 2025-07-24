@@ -38,8 +38,8 @@ commands:
             if [[ "$OSTYPE" == "darwin"* ]]; then
               sudo mkdir -p /usr/local/etc/squid
               sudo cp squid.conf /usr/local/etc/squid/squid.conf
-              sudo mkdir -p /var/log/squid
-              sudo chown -R $(whoami):$(id -gn) /var/log/squid
+              sudo mkdir -p /opt/homebrew/var/logs
+              sudo chown -R $(whoami):$(id -gn) /opt/homebrew/var/logs
             else
               sudo cp squid.conf /etc/squid/squid.conf
             fi
@@ -61,8 +61,8 @@ commands:
             sudo squid -k parse
             
             if [[ "$OSTYPE" == "darwin"* ]]; then
-              sudo squid -d 1 -f /usr/local/etc/squid/squid.conf -u $(whoami) -g $(id -gn)
-              echo "Squid started with explicit config and user"
+              sudo squid -d 1 -f /usr/local/etc/squid/squid.conf
+              echo "Squid started with explicit config"
             else
               sudo systemctl start squid
             fi
