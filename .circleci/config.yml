@@ -38,11 +38,19 @@ commands:
             if [[ "$OSTYPE" == "darwin"* ]]; then
               sudo mkdir -p /usr/local/etc/squid
               sudo cp squid.conf /usr/local/etc/squid/squid.conf
+              sudo mkdir -p /var/log/squid
+              sudo chown -R $(whoami):$(id -gn) /var/log/squid
             else
               sudo cp squid.conf /etc/squid/squid.conf
             fi
             
             sudo pkill squid || true
+            
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+              sudo rm -f /opt/homebrew/var/run/squid.pid
+            else
+              sudo rm -f /run/squid.pid
+            fi
             
             sudo squid -z
             
