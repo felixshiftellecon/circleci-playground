@@ -10,7 +10,7 @@ executors:
     resource_class: m4pro.medium
   docker:
     docker:
-      - image: cimg/base
+      - image: cimg/base:2025.07
 
 commands:
   setup-squid:
@@ -49,7 +49,8 @@ commands:
             sudo squid -k parse
             
             if [[ "$OSTYPE" == "darwin"* ]]; then
-              sudo squid -d 1
+              sudo squid -d 1 -f /usr/local/etc/squid/squid.conf
+              echo "Squid started with explicit config"
             else
               sudo systemctl start squid
             fi
@@ -58,6 +59,16 @@ commands:
             
             if pgrep squid > /dev/null; then
               echo "✅ Squid is running"
+              echo "Checking if Squid is listening on port 3128..."
+              sudo lsof -i :3128 || echo "WARNING: Squid not listening on port 3128"
+              
+              if [[ "$OSTYPE" == "darwin"* ]]; then
+                echo "Squid logs:"
+                tail -10 /usr/local/var/logs/squid/cache.log 2>/dev/null || echo "No cache log found"
+              else
+                echo "Squid logs:"
+                sudo tail -10 /var/log/squid/cache.log 2>/dev/null || echo "No cache log found"
+              fi
             else
               echo "❌ Squid failed to start"
               exit 1
