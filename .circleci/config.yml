@@ -44,12 +44,16 @@ commands:
               sudo cp squid.conf /etc/squid/squid.conf
             fi
             
+            sudo pkill -f squid || true
             sudo pkill squid || true
+            sleep 3
             
             if [[ "$OSTYPE" == "darwin"* ]]; then
               sudo rm -f /opt/homebrew/var/run/squid.pid
             else
               sudo rm -f /run/squid.pid
+              sudo rm -f /var/run/squid.pid
+              sudo rm -f /var/spool/squid/squid.pid
             fi
             
             sudo squid -z
@@ -57,8 +61,8 @@ commands:
             sudo squid -k parse
             
             if [[ "$OSTYPE" == "darwin"* ]]; then
-              sudo squid -d 1 -f /usr/local/etc/squid/squid.conf
-              echo "Squid started with explicit config"
+              sudo squid -d 1 -f /usr/local/etc/squid/squid.conf -u $(whoami) -g $(id -gn)
+              echo "Squid started with explicit config and user"
             else
               sudo systemctl start squid
             fi
