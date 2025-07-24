@@ -27,60 +27,26 @@ commands:
             fi
       
       - run:
-          name: "Create Squid directories"
+          name: "Create local directories and start Squid"
           command: |
-            sudo mkdir -p /var/spool/squid /var/log/squid
-            sudo chown -R $(whoami):$(id -gn) /var/spool/squid /var/log/squid
-      
-      - run:
-          name: "Install Squid configuration"
-          command: |
-            if [[ "$OSTYPE" == "darwin"* ]]; then
-              sudo mkdir -p /usr/local/etc/squid
-              sudo cp squid.conf /usr/local/etc/squid/squid.conf
-              sudo mkdir -p /opt/homebrew/var/logs
-              sudo chown -R $(whoami):$(id -gn) /opt/homebrew/var/logs
-            else
-              sudo cp squid.conf /etc/squid/squid.conf
-            fi
+            mkdir -p ./squid/logs
+            mkdir -p ./squid/cache
             
-            sudo pkill -f squid || true
-            sudo pkill squid || true
+            pkill -f squid || true
+            pkill squid || true
+            sleep 1
+            
+            squid -z -f squid.conf
+            
+            squid -f squid.conf -d 1 &
+            echo "Squid started as background process"
+            
             sleep 3
-            
-            if [[ "$OSTYPE" == "darwin"* ]]; then
-              sudo rm -f /opt/homebrew/var/run/squid.pid
-            else
-              sudo rm -f /run/squid.pid
-              sudo rm -f /var/run/squid.pid
-              sudo rm -f /var/spool/squid/squid.pid
-            fi
-            
-            sudo squid -z
-            
-            sudo squid -k parse
-            
-            if [[ "$OSTYPE" == "darwin"* ]]; then
-              sudo squid -d 1 -f /usr/local/etc/squid/squid.conf
-              echo "Squid started with explicit config"
-            else
-              sudo systemctl start squid
-            fi
-            
-            sleep 5
             
             if pgrep squid > /dev/null; then
               echo "✅ Squid is running"
               echo "Checking if Squid is listening on port 3128..."
-              sudo lsof -i :3128 || echo "WARNING: Squid not listening on port 3128"
-              
-              if [[ "$OSTYPE" == "darwin"* ]]; then
-                echo "Squid logs:"
-                tail -10 /usr/local/var/logs/squid/cache.log 2>/dev/null || echo "No cache log found"
-              else
-                echo "Squid logs:"
-                sudo tail -10 /var/log/squid/cache.log 2>/dev/null || echo "No cache log found"
-              fi
+              lsof -i :3128 || echo "WARNING: Squid not listening on port 3128"
             else
               echo "❌ Squid failed to start"
               exit 1
@@ -165,11 +131,7 @@ commands:
             
             echo ""
             echo "📋 Recent Squid access logs:"
-            if [[ "$OSTYPE" == "darwin"* ]]; then
-              tail -5 /usr/local/var/logs/squid/access.log 2>/dev/null || echo "No access logs found"
-            else
-              sudo tail -5 /var/log/squid/access.log 2>/dev/null || echo "No access logs found"
-            fi
+            tail -5 ./squid/logs/access.log 2>/dev/null || echo "No access logs found"
 
 jobs:
   test-squid-proxy:
