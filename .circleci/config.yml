@@ -1,13 +1,5 @@
 version: 2.1
 
-parameters:
-  run-path-a:
-    type: boolean
-    default: false
-  run-path-b:
-    type: boolean
-    default: false
-
 executors:
   machine:
     machine:
@@ -15,269 +7,156 @@ executors:
   macos:
     macos:
       xcode: 15.0
+    resource_class: m4pro.medium
+  docker:
+    docker:
+      image: ubuntu-2204:2024.11.1
 
 commands:
-  setup-linux-firewall:
-    description: "Setup iptables firewall restrictions for Linux environments"
+  setup-squid:
+    description: "Install and configure Squid proxy with CircleCI/GitHub access control"
     steps:
       - run:
-          name: "Configure iptables firewall rules"
+          name: "Install Squid and curl"
           command: |
-            echo "Setting up iptables firewall rules for Linux..."
-            echo "Starting at: $(date)"
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+              brew install squid curl
+            else
+              sudo apt-get update
+              sudo apt-get install -y squid curl
+            fi
+      
+      - run:
+          name: "Create Squid directories"
+          command: |
+            sudo mkdir -p /var/spool/squid /var/log/squid
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+              sudo chown -R $(whoami):staff /var/spool/squid /var/log/squid
+            else
+              sudo chown -R squid:squid /var/spool/squid /var/log/squid
+            fi
+      
+      - run:
+          name: "Install Squid configuration"
+          command: |
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+              sudo cp squid.conf /usr/local/etc/squid/squid.conf
+            else
+              sudo cp squid.conf /etc/squid/squid.conf
+            fi
             
-            # Check if iptables is available
-            if ! command -v iptables >/dev/null 2>&1; then
-              echo "ERROR: iptables not found"
+            sudo squid -z
+            
+            sudo squid -k parse
+            
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+              sudo squid -d 1
+            else
+              sudo systemctl start squid
+            fi
+            
+            sleep 5
+            
+            if pgrep squid > /dev/null; then
+              echo "✅ Squid is running"
+            else
+              echo "❌ Squid failed to start"
               exit 1
             fi
-            
-            echo "Flushing existing rules..."
-            timeout 30 sudo iptables -F || echo "Warning: flush failed"
-            timeout 30 sudo iptables -X || echo "Warning: clear failed"
-            
-            echo "Setting default policies..."
-            timeout 30 sudo iptables -P INPUT DROP || echo "Warning: INPUT policy failed"
-            timeout 30 sudo iptables -P FORWARD DROP || echo "Warning: FORWARD policy failed"
-            timeout 30 sudo iptables -P OUTPUT DROP || echo "Warning: OUTPUT policy failed"
-            
-            echo "Adding loopback rules..."
-            timeout 30 sudo iptables -A INPUT -i lo -j ACCEPT || echo "Warning: INPUT loopback failed"
-            timeout 30 sudo iptables -A OUTPUT -o lo -j ACCEPT || echo "Warning: OUTPUT loopback failed"
-            
-            echo "Adding established connection rules..."
-            timeout 30 sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT || echo "Warning: INPUT established failed"
-            timeout 30 sudo iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT || echo "Warning: OUTPUT established failed"
-            
-            echo "Adding DNS rules..."
-            timeout 30 sudo iptables -A OUTPUT -p udp --dport 53 -j ACCEPT || echo "Warning: DNS out failed"
-            timeout 30 sudo iptables -A INPUT -p udp --sport 53 -j ACCEPT || echo "Warning: DNS in failed"
-            
-            echo "Adding CircleCI domain rules..."
-            timeout 30 sudo iptables -A OUTPUT -d circleci.com -j ACCEPT || echo "Warning: circleci.com failed"
-            timeout 30 sudo iptables -A OUTPUT -d api.circleci.com -j ACCEPT || echo "Warning: api.circleci.com failed"
-            timeout 30 sudo iptables -A OUTPUT -d cimg.io -j ACCEPT || echo "Warning: cimg.io failed"
-            
-            echo "Adding GitHub domain rules..."
-            timeout 30 sudo iptables -A OUTPUT -d github.com -j ACCEPT || echo "Warning: github.com failed"
-            timeout 30 sudo iptables -A OUTPUT -d githubusercontent.com -j ACCEPT || echo "Warning: githubusercontent.com failed"
-            
-            echo "Iptables setup completed at: $(date)"
-            echo "iptables firewall rules applied successfully"
-      - run:
-          name: "Verify iptables rules"
-          command: |
-            echo "=== VERIFYING IPTABLES RULES ==="
-            echo "Current OUTPUT chain rules:"
-            sudo iptables -L OUTPUT -n -v || echo "Failed to list OUTPUT rules"
-            
-            echo "Current policies:"
-            sudo iptables -L -n | grep -E "(Chain|policy)" || echo "Failed to list policies"
-            
-            echo "Testing if OUTPUT policy is DROP:"
-            if sudo iptables -L OUTPUT -n | grep -q "policy DROP"; then
-              echo "✓ OUTPUT policy is correctly set to DROP"
-            else
-              echo "✗ OUTPUT policy is NOT set to DROP"
-              echo "Current OUTPUT policy:"
-              sudo iptables -L OUTPUT -n | grep policy
-            fi
-            
-            echo "Number of OUTPUT rules:"
-            sudo iptables -L OUTPUT -n | grep -v "Chain\|policy" | wc -l || echo "Failed to count rules"
-            
-            echo "=== END VERIFICATION ==="
-      - run:
-          name: "Alternative iptables approach (if needed)"
-          command: |
-            echo "=== ALTERNATIVE IPTABLES APPROACH ==="
-            
-            # Check if OUTPUT policy is DROP, if not, try alternative approach
-            if ! sudo iptables -L OUTPUT -n | grep -q "policy DROP"; then
-              echo "OUTPUT policy is not DROP, trying alternative approach..."
-              
-              # Create iptables rules file
-              cat > /tmp/iptables-rules \<< 'EOF'
-              *filter
-              :INPUT DROP [0:0]
-              :FORWARD DROP [0:0]
-              :OUTPUT DROP [0:0]
-              -A INPUT -i lo -j ACCEPT
-              -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-              -A OUTPUT -o lo -j ACCEPT
-              -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-              -A OUTPUT -p udp --dport 53 -j ACCEPT
-              -A INPUT -p udp --sport 53 -j ACCEPT
-              -A OUTPUT -d circleci.com -j ACCEPT
-              -A OUTPUT -d api.circleci.com -j ACCEPT
-              -A OUTPUT -d cimg.io -j ACCEPT
-              -A OUTPUT -d github.com -j ACCEPT
-              -A OUTPUT -d githubusercontent.com -j ACCEPT
-              -A OUTPUT -p tcp --dport 80 -j ACCEPT
-              -A OUTPUT -p tcp --dport 443 -j ACCEPT
-              COMMIT
-              EOF
-              
-              # Apply rules using iptables-restore
-              sudo iptables-restore < /tmp/iptables-rules
-              echo "Alternative rules applied using iptables-restore"
-            else
-              echo "OUTPUT policy is already DROP, skipping alternative approach"
-            fi
-            
-            echo "=== END ALTERNATIVE APPROACH ==="
-
-  setup-macos-firewall:
-    description: "Setup pf firewall restrictions for macOS environments"
-    steps:
-      - run:
-          name: "Configure pf firewall rules"
-          command: |
-            echo "Setting up pf firewall rules for macOS..."
-            
-            # Get actual IP addresses for the domains we need
-            echo "Resolving domain IPs..."
-            CIRCLE_IP=$(dig +short circleci.com | head -1)
-            GITHUB_IP=$(dig +short github.com | head -1)
-            
-            echo "CircleCI IP: $CIRCLE_IP"
-            echo "GitHub IP: $GITHUB_IP"
-            
-            # Create a simple pf rules file without YAML indentation
-            echo "# Simple pf configuration for CircleCI" > /tmp/circleci-pf.conf
-            echo "block drop all" >> /tmp/circleci-pf.conf
-            echo "pass quick on lo0 all" >> /tmp/circleci-pf.conf
-            
-            # Allow DNS
-            echo "pass out proto udp from any to any port 53" >> /tmp/circleci-pf.conf
-            
-            # Add all resolved IPs for better coverage
-            echo "Adding all resolved IPs..."
-            for ip in $(dig +short circleci.com); do
-              echo "pass out proto tcp from any to $ip port 80" >> /tmp/circleci-pf.conf
-              echo "pass out proto tcp from any to $ip port 443" >> /tmp/circleci-pf.conf
-            done
-            
-            for ip in $(dig +short github.com); do
-              echo "pass out proto tcp from any to $ip port 80" >> /tmp/circleci-pf.conf
-              echo "pass out proto tcp from any to $ip port 443" >> /tmp/circleci-pf.conf
-            done
-            
-            echo "Final pf rules:"
-            cat /tmp/circleci-pf.conf
-            
-            # Apply pf rules (requires sudo)
-            sudo pfctl -q -f /tmp/circleci-pf.conf
-            
-            # Only enable pf if it's not already enabled
-            if ! sudo pfctl -s info | grep -q "Status: Enabled"; then
-              sudo pfctl -q -e
-            else
-              echo "pf is already enabled, skipping enable step"
-            fi
-            
-            echo "pf firewall rules applied successfully"
 
   test-connectivity:
-    description: "Test connectivity to verify firewall restrictions are working"
+    description: "Test Squid proxy access control using curl"
     steps:
       - run:
-          name: "Debug firewall status"
+          name: "Test CircleCI domains (should be ALLOWED)"
           command: |
-            echo "=== DEBUGGING FIREWALL STATUS ==="
-            echo "Current time: $(date)"
+            echo "🔍 Testing CircleCI domains (Expected: ALLOWED)"
+            echo "=============================================="
             
-            # Check if we're on Linux or macOS
+            for domain in "circleci.com" "app.circleci.com" "api.circleci.com"; do
+              echo -n "Testing $domain: "
+              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
+              
+              if [ $? -eq 0 ] && [ "$response" != "000" ]; then
+                echo "✅ ALLOWED (HTTP $response)"
+              else
+                echo "❌ BLOCKED or ERROR"
+                exit 1
+              fi
+            done
+      
+      - run:
+          name: "Test GitHub domains (should be ALLOWED)"
+          command: |
+            echo "🔍 Testing GitHub domains (Expected: ALLOWED)"
+            echo "============================================="
+            
+            for domain in "github.com" "api.github.com" "raw.githubusercontent.com"; do
+              echo -n "Testing $domain: "
+              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
+              
+              if [ $? -eq 0 ] && [ "$response" != "000" ]; then
+                echo "✅ ALLOWED (HTTP $response)"
+              else
+                echo "❌ BLOCKED or ERROR"
+                exit 1
+              fi
+            done
+      
+      - run:
+          name: "Test Google domains (should be BLOCKED)"
+          command: |
+            echo "🔍 Testing Google domains (Expected: BLOCKED)"
+            echo "============================================"
+            
+            for domain in "google.com" "www.google.com" "gmail.com"; do
+              echo -n "Testing $domain: "
+              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
+              
+              if [ $? -eq 0 ] && [ "$response" != "000" ]; then
+                echo "❌ UNEXPECTEDLY ALLOWED (HTTP $response)"
+                exit 1
+              else
+                echo "✅ BLOCKED"
+              fi
+            done
+      
+      - run:
+          name: "Test summary and cleanup"
+          command: |
+            echo ""
+            echo "🎉 All tests completed successfully!"
+            echo "=================================="
+            echo "✅ CircleCI and GitHub domains are accessible"
+            echo "✅ Google and other domains are blocked"
+            echo ""
+            echo "Squid proxy is working correctly!"
+            
+            echo ""
+            echo "📋 Recent Squid access logs:"
             if [[ "$OSTYPE" == "darwin"* ]]; then
-              echo "Platform: macOS"
-              echo "pf status:"
-              sudo pfctl -s info 2>/dev/null || echo "pfctl not available"
-              echo "pf rules:"
-              sudo pfctl -s rules 2>/dev/null || echo "pfctl rules not available"
+              tail -5 /usr/local/var/logs/squid/access.log 2>/dev/null || echo "No access logs found"
             else
-              echo "Platform: Linux"
-              echo "iptables status:"
-              sudo iptables -L -n -v 2>/dev/null || echo "iptables not available"
-              echo "iptables policies:"
-              sudo iptables -L -n | grep -E "(Chain|policy)" 2>/dev/null || echo "iptables policies not available"
+              sudo tail -5 /var/log/squid/access.log 2>/dev/null || echo "No access logs found"
             fi
-            
-            echo "=== NETWORK DEBUGGING ==="
-            echo "DNS resolution test:"
-            nslookup google.com 8.8.8.8 2>/dev/null || echo "nslookup failed"
-            
-            echo "Route to google.com:"
-            traceroute -m 5 google.com 2>/dev/null || echo "traceroute failed"
-            
-            echo "=== END DEBUGGING ==="
-      - run:
-          name: "Test blocked domains (google.com)"
-          command: |
-            echo "Testing connectivity to google.com (should fail due to restrictions)..."
-            echo "Test started at: $(date)"
-            
-            # Use timeout to prevent hanging
-            if timeout 10 curl -s --connect-timeout 5 --max-time 10 https://google.com > /dev/null 2>&1; then
-              echo "WARNING: google.com is reachable - firewall restrictions may not be working"
-              echo "This could mean:"
-              echo "1. Firewall rules weren't applied correctly"
-              echo "2. Rules are being bypassed"
-              echo "3. Network routing is different than expected"
-              exit 1
-            else
-              echo "SUCCESS: google.com is blocked as expected"
-            fi
-            echo "Test completed at: $(date)"
-      - run:
-          name: "Test allowed domains (CircleCI & GitHub)"
-          command: |
-            echo "Testing connectivity to allowed domains..."
-            echo "Test started at: $(date)"
-            
-            echo "Testing CircleCI..."
-            echo "Resolving CircleCI IPs:"
-            dig +short circleci.com
-            
-            echo "Testing which IP CircleCI uses:"
-            curl -s --connect-timeout 5 --max-time 10 -I https://circleci.com 2>&1 | head -1 || echo "curl failed"
-            
-            if timeout 10 curl -s --connect-timeout 5 --max-time 10 https://circleci.com > /dev/null 2>&1; then
-              echo "SUCCESS: CircleCI is reachable"
-            else
-              echo "ERROR: CircleCI is not reachable"
-              echo "This might be because:"
-              echo "1. CircleCI is using a different IP than expected"
-              echo "2. pf rules are not covering all IPs"
-              echo "3. Network routing issues"
-              exit 1
-            fi
-            
-            echo "Testing GitHub..."
-            if timeout 10 curl -s --connect-timeout 5 --max-time 10 https://github.com > /dev/null 2>&1; then
-              echo "SUCCESS: GitHub is reachable"
-            else
-              echo "ERROR: GitHub is not reachable"
-              exit 1
-            fi
-            
-            echo "Test completed at: $(date)"
 
 jobs:
-  machine:
+  test-squid-proxy:
     executor: machine
     steps:
-      - setup-linux-firewall
-      - test-connectivity
       - checkout
-  macos:
+      - setup-squid
+      - test-connectivity
+
+  test-squid-proxy-macos:
     executor: macos
     steps:
-      - setup-macos-firewall
-      - test-connectivity
       - checkout
+      - setup-squid
+      - test-connectivity
 
 workflows:
-  workflow-a:
+  test-proxy-access-control:
     jobs:
-      - machine
-      - macos
+      - test-squid-proxy
+      - test-squid-proxy-macos
