@@ -16,9 +16,20 @@ The project tests a Squid proxy configuration that:
 squid -f squid.conf -N -p -d 1 &  # ❌ Invalid
 ```
 
-**Solution**: Removed the problematic `-p` flag:
+**Solution**: Removed the problematic `-p` flag and added Docker-specific handling:
 ```bash
 squid -f squid.conf -N -d 1 &     # ✅ Fixed
+```
+
+### 2. ACL Configuration Issues
+**Problem**: Google domains were still being allowed through the proxy despite blocking rules.
+
+**Solution**: Reordered ACL rules to ensure deny rules are processed before allow rules:
+```conf
+# Block Google domains first
+http_access deny blocked_domains
+# Then allow permitted domains
+http_access allow allowed_domains
 ```
 
 ### 2. Squid Configuration Improvements
