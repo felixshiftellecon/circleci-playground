@@ -36,7 +36,7 @@ commands:
             # Use different flags for Docker to avoid PID file issues
             if [[ -f /.dockerenv ]]; then
               # Docker environment - avoid PID file issues
-              squid -f squid.conf -N -d 1 &
+              squid -f squid.conf -N -d 1 -p /tmp/squid.pid &
             else
               # Regular environment
               squid -f squid.conf -N -d 1 &
