@@ -33,7 +33,14 @@ commands:
             fi
             
             echo "Starting Squid with configuration..."
-            squid -f squid.conf -N -d 1 &
+            # Use different flags for Docker to avoid PID file issues
+            if [[ -f /.dockerenv ]]; then
+              # Docker environment - avoid PID file
+              squid -f squid.conf -N -d 1 -p /tmp/squid.pid &
+            else
+              # Regular environment
+              squid -f squid.conf -N -d 1 &
+            fi
             SQUID_PID=$!
             echo "Squid started with PID: $SQUID_PID"
             

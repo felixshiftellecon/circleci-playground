@@ -25,10 +25,12 @@ squid -f squid.conf -N -d 1 &     # ✅ Fixed
 **Problem**: Basic configuration without proper logging and caching settings.
 
 **Solution**: Enhanced `squid.conf` with:
-- Proper domain ACL definitions
+- Proper domain ACL definitions with explicit blocking rules
+- Localhost access control
 - Logging configuration
 - Cache disabling for testing
 - Better error handling
+- Cross-platform compatibility fixes
 
 ### 3. CircleCI Setup Improvements
 **Problem**: Insufficient error handling and logging in CI environment.
