@@ -21,20 +21,34 @@ commands:
           command: |
             if [[ "$OSTYPE" == "darwin"* ]]; then
               brew install squid curl
+              # Create log directory for macOS
+              sudo mkdir -p /var/log/squid
+              sudo chown $(whoami) /var/log/squid
             else
               sudo apt-get update
               sudo apt-get install -y squid curl
+              # Create log directory for Linux
+              sudo mkdir -p /var/log/squid
+              sudo chown $(whoami) /var/log/squid
             fi
             
-            squid -f squid.conf -N -p -d 1 &
-            echo "Squid started (no cache mode, no PID file)"
+            echo "Starting Squid with configuration..."
+            squid -f squid.conf -N -d 1 &
+            SQUID_PID=$!
+            echo "Squid started with PID: $SQUID_PID"
             
-            sleep 2
+            # Wait for Squid to start
+            sleep 3
             
+            # Check if Squid is running
             if pgrep squid > /dev/null; then
               echo "✅ Squid is running"
+              echo "Checking port 3128..."
+              netstat -tlnp 2>/dev/null | grep :3128 || lsof -i :3128 2>/dev/null || echo "Port check completed"
             else
               echo "❌ Squid failed to start"
+              echo "Checking for errors..."
+              tail -n 20 /var/log/squid/cache.log 2>/dev/null || echo "No cache log found"
               exit 1
             fi
 
@@ -51,10 +65,13 @@ commands:
             pgrep squid || echo "Squid not running!"
             
             echo "Checking port 3128..."
-            sudo lsof -i :3128 || echo "Nothing on port 3128"
+            netstat -tlnp 2>/dev/null | grep :3128 || lsof -i :3128 2>/dev/null || echo "Nothing on port 3128"
             
+            # Test with retry logic
             for domain in "circleci.com" "app.circleci.com" "api.circleci.com"; do
               echo -n "Testing $domain: "
+              
+              # Try with proxy
               response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
               curl_exit_code=$?
               
@@ -62,8 +79,11 @@ commands:
                 echo "✅ ALLOWED (HTTP $response)"
               else
                 echo "❌ BLOCKED or ERROR (curl exit: $curl_exit_code, response: $response)"
-                echo "Trying without proxy..."
-                curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null
+                echo "Checking Squid logs..."
+                tail -n 10 /var/log/squid/access.log 2>/dev/null || echo "No access log found"
+                echo "Trying without proxy to verify domain is reachable..."
+                direct_response=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
+                echo "Direct access response: $direct_response"
                 exit 1
               fi
             done
@@ -76,12 +96,20 @@ commands:
             
             for domain in "github.com" "api.github.com" "raw.githubusercontent.com"; do
               echo -n "Testing $domain: "
-              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
               
-              if [ $? -eq 0 ] && [ "$response" != "000" ]; then
+              # Try with proxy
+              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
+              curl_exit_code=$?
+              
+              if [ $curl_exit_code -eq 0 ] && [ "$response" != "000" ]; then
                 echo "✅ ALLOWED (HTTP $response)"
               else
-                echo "❌ BLOCKED or ERROR"
+                echo "❌ BLOCKED or ERROR (curl exit: $curl_exit_code, response: $response)"
+                echo "Checking Squid logs..."
+                tail -n 10 /var/log/squid/access.log 2>/dev/null || echo "No access log found"
+                echo "Trying without proxy to verify domain is reachable..."
+                direct_response=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
+                echo "Direct access response: $direct_response"
                 exit 1
               fi
             done
@@ -94,19 +122,25 @@ commands:
             
             echo "Checking Squid status..."
             pgrep squid || echo "Squid not running!"
-            lsof -i :3128 || echo "Nothing listening on port 3128"
+            netstat -tlnp 2>/dev/null | grep :3128 || lsof -i :3128 2>/dev/null || echo "Nothing listening on port 3128"
             
             for domain in "google.com" "www.google.com" "gmail.com"; do
               echo -n "Testing $domain: "
-              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
               
-              if [ $? -eq 0 ] && [ "$response" != "000" ]; then
+              # Try with proxy
+              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
+              curl_exit_code=$?
+              
+              if [ $curl_exit_code -eq 0 ] && [ "$response" != "000" ]; then
                 echo "❌ UNEXPECTEDLY ALLOWED (HTTP $response)"
-                echo "Trying without proxy to compare..."
-                curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null
+                echo "Checking Squid logs..."
+                tail -n 10 /var/log/squid/access.log 2>/dev/null || echo "No access log found"
+                echo "Trying without proxy to verify domain is reachable..."
+                direct_response=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
+                echo "Direct access response: $direct_response"
                 exit 1
               else
-                echo "✅ BLOCKED"
+                echo "✅ BLOCKED (curl exit: $curl_exit_code, response: $response)"
               fi
             done
       
