@@ -63,10 +63,8 @@ commands:
               echo "Setting up network-level proxy enforcement..."
               if [[ "$OSTYPE" == "darwin"* ]]; then
                 echo "macOS: Setting up pf rules to redirect traffic to proxy"
-                cat > /tmp/pf.conf << EOF
-rdr pass out proto tcp to any port 80 -> 127.0.0.1 port 3128
-rdr pass out proto tcp to any port 443 -> 127.0.0.1 port 3128
-EOF
+                echo "rdr pass out proto tcp to any port 80 -> 127.0.0.1 port 3128" > /tmp/pf.conf
+                echo "rdr pass out proto tcp to any port 443 -> 127.0.0.1 port 3128" >> /tmp/pf.conf
                 sudo pfctl -ef /tmp/pf.conf
               else
                 echo "Linux: Setting up iptables rules to redirect traffic to proxy"
