@@ -33,6 +33,17 @@ commands:
             fi
             
             echo "Starting Squid with configuration..."
+            
+            # Check if port 3128 is already in use
+            echo "Checking if port 3128 is available..."
+            if netstat -tlnp 2>/dev/null | grep -q :3128 || lsof -i :3128 2>/dev/null; then
+              echo "❌ Port 3128 is already in use:"
+              netstat -tlnp 2>/dev/null | grep :3128 || lsof -i :3128 2>/dev/null
+              exit 1
+            else
+              echo "✅ Port 3128 is available"
+            fi
+            
             # Use different flags for Docker to avoid PID file issues
             if [[ -f /.dockerenv ]]; then
               # Docker environment - avoid PID file issues
@@ -44,14 +55,45 @@ commands:
             SQUID_PID=$!
             echo "Squid started with PID: $SQUID_PID"
             
-            # Wait for Squid to start
-            sleep 3
+            # Wait for Squid to start and check port availability
+            echo "Waiting for Squid to start..."
+            for i in {1..10}; do
+              if pgrep squid > /dev/null; then
+                echo "Squid process found, checking port..."
+                if netstat -tlnp 2>/dev/null | grep -q :3128 || lsof -i :3128 2>/dev/null; then
+                  echo "✅ Squid is listening on port 3128"
+                  break
+                else
+                  echo "Squid running but port not ready yet (attempt $i/10)..."
+                  sleep 1
+                fi
+              else
+                echo "Squid process not found (attempt $i/10)..."
+                sleep 1
+              fi
+            done
             
-            # Check if Squid is running
+            # Final check if Squid is running
             if pgrep squid > /dev/null; then
-              echo "✅ Squid is running"
+              echo "✅ Squid process is running"
               echo "Checking port 3128..."
-              netstat -tlnp 2>/dev/null | grep :3128 || lsof -i :3128 2>/dev/null || echo "Port check completed"
+              netstat -tlnp 2>/dev/null | grep :3128 || lsof -i :3128 2>/dev/null || echo "Port 3128 not found"
+              
+              # Check what ports Squid is actually listening on
+              echo "Checking what ports Squid is listening on:"
+              netstat -tlnp 2>/dev/null | grep squid || lsof -i -P 2>/dev/null | grep squid || echo "No Squid listening ports found"
+              
+              # Check Squid logs for startup errors
+              echo "Checking Squid logs:"
+              tail -n 10 /var/log/squid/cache.log 2>/dev/null || echo "No cache log found"
+              tail -n 10 /var/log/squid/access.log 2>/dev/null || echo "No access log found"
+              
+              # If Squid is running but not on port 3128, it's a configuration issue
+              if ! netstat -tlnp 2>/dev/null | grep -q :3128 && ! lsof -i :3128 2>/dev/null; then
+                echo "❌ Squid is running but not listening on port 3128"
+                echo "This indicates a configuration error"
+                exit 1
+              fi
             else
               echo "❌ Squid failed to start"
               echo "Checking for errors..."
