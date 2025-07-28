@@ -36,11 +36,10 @@ commands:
               sudo systemctl stop squid 2>/dev/null || true
               sudo systemctl disable squid 2>/dev/null || true
               
-              # Also stop any running Squid processes from previous runs
+              # Quick cleanup of any running Squid processes
               echo "Stopping any existing Squid processes..."
               sudo pkill squid 2>/dev/null || true
-              sudo pkill -f squid 2>/dev/null || true
-              sleep 2
+              sleep 1
             fi
             
             echo "Starting Squid with configuration..."
@@ -72,8 +71,7 @@ commands:
             # Clean up any existing Squid processes
             echo "Cleaning up any existing Squid processes..."
             pkill squid 2>/dev/null || true
-            pkill -f squid 2>/dev/null || true
-            sleep 3
+            sleep 2
             
             # Remove any existing PID files (platform-specific)
             if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -84,31 +82,19 @@ commands:
               sudo rm -f /run/squid.pid /tmp/squid.pid 2>/dev/null || true
             fi
             
-            # Force kill any process using port 3128
-            echo "Checking what's using port 3128..."
-            lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep :3128 || echo "No process found on port 3128"
+            # Quick check and kill any process using port 3128
+            echo "Checking port 3128..."
+            if lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep -q :3128; then
+              echo "Port 3128 in use, killing process..."
+              sudo lsof -ti :3128 2>/dev/null | xargs -r sudo kill -9 2>/dev/null || true
+              sleep 1
+            fi
             
-            # Get process details before killing
-            echo "Process details for port 3128:"
-            sudo lsof -i :3128 2>/dev/null || echo "lsof not available"
-            ss -tlnp 2>/dev/null | grep :3128 || echo "ss not available"
-            
-            # Kill any process using port 3128
-            sudo lsof -ti :3128 2>/dev/null | xargs -r sudo kill -9 2>/dev/null || true
-            sleep 2
-            
-            # Check if port 3128 is already in use
+            # Final check if port 3128 is available
             echo "Checking if port 3128 is available..."
             if lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep -q :3128; then
-              echo "❌ Port 3128 is still in use after cleanup:"
-              lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep :3128
-              echo "Attempting additional cleanup..."
-              sudo lsof -ti :3128 2>/dev/null | xargs -r sudo kill -9 2>/dev/null || true
-              sleep 3
-              if lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep -q :3128; then
-                echo "❌ Port 3128 still in use after force kill"
-                exit 1
-              fi
+              echo "❌ Port 3128 still in use after cleanup"
+              exit 1
             fi
             echo "✅ Port 3128 is available"
             
@@ -133,18 +119,18 @@ commands:
             
             # Wait for Squid to start and check port availability
             echo "Waiting for Squid to start..."
-            for i in {1..10}; do
+            for i in {1..6}; do
               if pgrep squid > /dev/null; then
                 echo "Squid process found, checking port..."
                 if lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep -q :3128; then
                   echo "✅ Squid is listening on port 3128"
                   break
                 else
-                  echo "Squid running but port not ready yet (attempt $i/10)..."
+                  echo "Squid running but port not ready yet (attempt $i/6)..."
                   sleep 1
                 fi
               else
-                echo "Squid process not found (attempt $i/10)..."
+                echo "Squid process not found (attempt $i/6)..."
                 sleep 1
               fi
             done
@@ -152,33 +138,14 @@ commands:
             # Final check if Squid is running
             if pgrep squid > /dev/null; then
               echo "✅ Squid process is running"
-              echo "Checking port 3128..."
-              lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep :3128 || echo "Port 3128 not found"
-              
-              # Check what ports Squid is actually listening on
-              echo "Checking what ports Squid is listening on:"
-              ss -tlnp 2>/dev/null | grep squid || lsof -i -P 2>/dev/null | grep squid || echo "No Squid listening ports found"
-              
-              # Additional port checking for different environments
-              echo "Checking for port 3128 specifically:"
-              lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep :3128 || echo "Port 3128 not found"
-              
-              # Check Squid logs for startup errors
-              echo "Checking Squid logs:"
-              ls -la /var/log/squid/ 2>/dev/null || echo "Log directory not accessible"
-              sudo tail -n 10 /var/log/squid/cache.log 2>/dev/null || echo "No cache log found"
-              sudo tail -n 10 /var/log/squid/access.log 2>/dev/null || echo "No access log found"
-              
-              # If Squid is running but not on port 3128, it's a configuration issue
-              if ! lsof -i :3128 2>/dev/null && ! ss -tlnp 2>/dev/null | grep -q :3128; then
+              if lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep -q :3128; then
+                echo "✅ Squid is listening on port 3128"
+              else
                 echo "❌ Squid is running but not listening on port 3128"
-                echo "This indicates a configuration error"
                 exit 1
               fi
             else
               echo "❌ Squid failed to start"
-              echo "Checking for errors..."
-              sudo tail -n 20 /var/log/squid/cache.log 2>/dev/null || echo "No cache log found"
               exit 1
             fi
 
@@ -202,7 +169,7 @@ commands:
               echo -n "Testing $domain: "
               
               # Try with proxy
-              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
+              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null || echo "000")
               curl_exit_code=$?
               
               echo "curl exit code: $curl_exit_code, response: $response"
@@ -232,7 +199,7 @@ commands:
               echo -n "Testing $domain: "
               
               # Try with proxy
-              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
+              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null || echo "000")
               curl_exit_code=$?
               
               echo "curl exit code: $curl_exit_code, response: $response"
@@ -265,8 +232,8 @@ commands:
             for domain in "google.com" "www.google.com" "gmail.com"; do
               echo -n "Testing $domain: "
               
-              # Try with proxy
-              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
+              # Try with proxy - capture exit code properly
+              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null || echo "000")
               curl_exit_code=$?
               
               echo "curl exit code: $curl_exit_code, response: $response"

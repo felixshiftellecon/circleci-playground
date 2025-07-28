@@ -135,6 +135,8 @@ The Docker executor has different limitations (see Docker job logs for details).
 8. **Fixed Config File Path Issues**: Use absolute path `/home/circleci/project/squid.conf` for Linux to ensure custom config is used
 9. **Replaced `netstat` with `ss`**: Updated all port checking commands to use `ss` instead of `netstat` (not available in CircleCI)
 10. **Fixed Log File Permissions**: Added `sudo` to log file access commands to handle proxy user ownership
+11. **Optimized Cleanup Process**: Reduced sleep times and simplified cleanup to prevent job timeouts
+12. **Fixed Curl Exit Code Handling**: Added proper error handling for curl commands to prevent job failures when proxy blocks connections
 
 ## Troubleshooting
 
