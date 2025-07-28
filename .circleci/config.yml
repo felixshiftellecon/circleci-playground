@@ -68,6 +68,7 @@ commands:
                 echo "pass out proto tcp to 127.0.0.1 port 3128" >> /tmp/pf.conf
                 echo "pass out proto tcp to 127.0.0.1 port 3129" >> /tmp/pf.conf
                 echo "pass out proto tcp from 127.0.0.1 to any" >> /tmp/pf.conf
+                echo "pass out proto tcp to any" >> /tmp/pf.conf
                 sudo pfctl -ef /tmp/pf.conf
               else
                 echo "Linux: Setting up iptables rules to redirect traffic to proxy"
@@ -91,8 +92,9 @@ commands:
             echo "Checking if Squid is running..."
             pgrep squid || echo "Squid not running!"
             
-            echo "Checking port 3128..."
+            echo "Checking ports 3128 and 3129..."
             lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep :3128 || echo "Nothing on port 3128"
+            lsof -i :3129 2>/dev/null || ss -tlnp 2>/dev/null | grep :3129 || echo "Nothing on port 3129"
             
             for domain in "circleci.com" "app.circleci.com" "api.circleci.com"; do
               echo -n "Testing $domain: "
@@ -155,6 +157,7 @@ commands:
             echo "Checking Squid status..."
             pgrep squid || echo "Squid not running!"
             lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep :3128 || echo "Nothing listening on port 3128"
+            lsof -i :3129 2>/dev/null || ss -tlnp 2>/dev/null | grep :3129 || echo "Nothing listening on port 3129"
             
             for domain in "google.com" "www.google.com" "gmail.com"; do
               echo -n "Testing $domain: "
