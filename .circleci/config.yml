@@ -169,8 +169,12 @@ commands:
               echo -n "Testing $domain: "
               
               # Try with proxy
-              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null || echo "000")
+              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
               curl_exit_code=$?
+              # If curl failed, set response to 000
+              if [ $curl_exit_code -ne 0 ]; then
+                response="000"
+              fi
               
               echo "curl exit code: $curl_exit_code, response: $response"
               
@@ -199,8 +203,12 @@ commands:
               echo -n "Testing $domain: "
               
               # Try with proxy
-              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null || echo "000")
+              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
               curl_exit_code=$?
+              # If curl failed, set response to 000
+              if [ $curl_exit_code -ne 0 ]; then
+                response="000"
+              fi
               
               echo "curl exit code: $curl_exit_code, response: $response"
               
@@ -233,8 +241,12 @@ commands:
               echo -n "Testing $domain: "
               
               # Try with proxy - capture exit code properly
-              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null || echo "000")
+              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
               curl_exit_code=$?
+              # If curl failed, set response to 000
+              if [ $curl_exit_code -ne 0 ]; then
+                response="000"
+              fi
               
               echo "curl exit code: $curl_exit_code, response: $response"
               

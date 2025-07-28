@@ -137,6 +137,8 @@ The Docker executor has different limitations (see Docker job logs for details).
 10. **Fixed Log File Permissions**: Added `sudo` to log file access commands to handle proxy user ownership
 11. **Optimized Cleanup Process**: Reduced sleep times and simplified cleanup to prevent job timeouts
 12. **Fixed Curl Exit Code Handling**: Added proper error handling for curl commands to prevent job failures when proxy blocks connections
+13. **Fixed Linux PID File Permission**: Added `pid_filename /tmp/squid.pid` to squid.conf to use writable PID file location
+14. **Fixed Curl Response Handling**: Improved curl exit code handling to properly set response to "000" when curl fails
 
 ## Troubleshooting
 
