@@ -30,35 +30,103 @@ commands:
               # Create log directory for Linux
               sudo mkdir -p /var/log/squid
               sudo chown $(whoami) /var/log/squid
+              
+              # Stop any system Squid service that might have started
+              echo "Stopping any system Squid service..."
+              sudo systemctl stop squid 2>/dev/null || true
+              sudo systemctl disable squid 2>/dev/null || true
+              
+              # Also stop any running Squid processes from previous runs
+              echo "Stopping any existing Squid processes..."
+              sudo pkill squid 2>/dev/null || true
+              sudo pkill -f squid 2>/dev/null || true
+              sleep 2
             fi
             
             echo "Starting Squid with configuration..."
             
+            # Ensure we're using the correct config file
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+              # macOS - use relative path
+              CONFIG_FILE="squid.conf"
+            else
+              # Linux - use absolute path to ensure we get the right file
+              CONFIG_FILE="/home/circleci/project/squid.conf"
+            fi
+            
+            # Debug: Check configuration file
+            echo "Checking Squid configuration file: $CONFIG_FILE"
+            ls -la "$CONFIG_FILE"
+            echo "Configuration file contents (first 10 lines):"
+            head -10 "$CONFIG_FILE"
+            
+            # Test configuration syntax
+            echo "Testing Squid configuration syntax..."
+            squid -k parse -f "$CONFIG_FILE" 2>&1 || echo "Configuration syntax check failed"
+            
+            # Debug: Show what command we're about to run
+            echo "About to start Squid with config file: $CONFIG_FILE"
+            echo "OSTYPE: $OSTYPE"
+            echo "Docker environment check: $([ -f /.dockerenv ] && echo "YES" || echo "NO")"
+            
             # Clean up any existing Squid processes
             echo "Cleaning up any existing Squid processes..."
             pkill squid 2>/dev/null || true
-            sleep 2
+            pkill -f squid 2>/dev/null || true
+            sleep 3
             
-            # Remove any existing PID files (including macOS Homebrew path)
-            sudo rm -f /run/squid.pid /tmp/squid.pid /opt/homebrew/var/run/squid.pid 2>/dev/null || true
+            # Remove any existing PID files (platform-specific)
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+              # macOS Homebrew Squid PID file location
+              sudo rm -f /opt/homebrew/var/run/squid.pid 2>/dev/null || true
+            else
+              # Linux PID file locations
+              sudo rm -f /run/squid.pid /tmp/squid.pid 2>/dev/null || true
+            fi
+            
+            # Force kill any process using port 3128
+            echo "Checking what's using port 3128..."
+            lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep :3128 || echo "No process found on port 3128"
+            
+            # Get process details before killing
+            echo "Process details for port 3128:"
+            sudo lsof -i :3128 2>/dev/null || echo "lsof not available"
+            ss -tlnp 2>/dev/null | grep :3128 || echo "ss not available"
+            
+            # Kill any process using port 3128
+            sudo lsof -ti :3128 2>/dev/null | xargs -r sudo kill -9 2>/dev/null || true
+            sleep 2
             
             # Check if port 3128 is already in use
             echo "Checking if port 3128 is available..."
             if lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep -q :3128; then
-              echo "❌ Port 3128 is already in use:"
+              echo "❌ Port 3128 is still in use after cleanup:"
               lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep :3128
-              exit 1
-            else
-              echo "✅ Port 3128 is available"
+              echo "Attempting additional cleanup..."
+              sudo lsof -ti :3128 2>/dev/null | xargs -r sudo kill -9 2>/dev/null || true
+              sleep 3
+              if lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep -q :3128; then
+                echo "❌ Port 3128 still in use after force kill"
+                exit 1
+              fi
             fi
+            echo "✅ Port 3128 is available"
             
-            # Use different flags for Docker to avoid PID file issues
-            if [[ -f /.dockerenv ]]; then
-              # Docker environment - avoid PID file issues
+            # Start Squid with appropriate flags for each environment
+            echo "Starting Squid..."
+            
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+              # macOS: No -p flag, use relative config path
+              echo "macOS detected - starting Squid without -p flag"
+              squid -f squid.conf -N -d 1 &
+            elif [[ -f /.dockerenv ]]; then
+              # Docker: No -p flag, use relative config path
+              echo "Docker detected - starting Squid without -p flag"
               squid -f squid.conf -N -d 1 &
             else
-              # Regular environment - use a writable PID file location
-              squid -f squid.conf -N -d 1 -p /tmp/squid.pid &
+              # Linux: Use absolute config path, no -p flag needed
+              echo "Linux detected - starting Squid with absolute config path"
+              squid -f /home/circleci/project/squid.conf -N -d 1 &
             fi
             SQUID_PID=$!
             echo "Squid started with PID: $SQUID_PID"

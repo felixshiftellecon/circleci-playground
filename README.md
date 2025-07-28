@@ -104,14 +104,21 @@ The Linux machine executor can have issues with Squid process management:
 1. **PID File Conflicts**: Multiple Squid instances can leave stale PID files
 2. **Process Cleanup**: Previous test runs may leave processes running
 3. **Port Binding**: New instances may fail to start if port is still in use
+4. **System Service Conflicts**: Ubuntu package installation may auto-start Squid service
 
 **Evidence from logs**:
 ```
 FATAL: Squid is already running: Found fresh instance PID file (/run/squid.pid) with PID 2618
 ❌ Squid is running but not listening on port 3128
+❌ Port 3128 is already in use: LISTEN 0 256 *:3128 *:*
 ```
 
-**Solution**: Enhanced cleanup in startup script to kill existing processes and remove PID files.
+**Solution**: Enhanced cleanup in startup script including:
+- Force kill processes using port 3128
+- Stop and disable system Squid service
+- Remove all PID files
+- Extended wait times for process cleanup
+- Use absolute path to custom config file (`/home/circleci/project/squid.conf`)
 
 ### Docker Executor Issues
 The Docker executor has different limitations (see Docker job logs for details).
@@ -124,8 +131,10 @@ The Docker executor has different limitations (see Docker job logs for details).
 4. **Enhanced Error Reporting**: More detailed logging and error messages for debugging
 5. **Fixed ACL Logic**: Removed problematic `localhost` ACL that was allowing all localhost traffic before domain rules could apply
 6. **Fixed Linux PID File Issues**: Added `-p /tmp/squid.pid` flag for Linux environments to avoid permission denied errors
-7. **Replaced `netstat` with `ss`**: Updated all port checking commands to use `ss` instead of `netstat` (not available in CircleCI)
-8. **Fixed Log File Permissions**: Added `sudo` to log file access commands to handle proxy user ownership
+7. **Fixed macOS PID File Issues**: Removed `-p` flag for macOS environments as it's not supported
+8. **Fixed Config File Path Issues**: Use absolute path `/home/circleci/project/squid.conf` for Linux to ensure custom config is used
+9. **Replaced `netstat` with `ss`**: Updated all port checking commands to use `ss` instead of `netstat` (not available in CircleCI)
+10. **Fixed Log File Permissions**: Added `sudo` to log file access commands to handle proxy user ownership
 
 ## Troubleshooting
 
