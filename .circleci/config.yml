@@ -44,9 +44,9 @@ commands:
             
             # Check if port 3128 is already in use
             echo "Checking if port 3128 is available..."
-            if netstat -tlnp 2>/dev/null | grep -q :3128 || lsof -i :3128 2>/dev/null || netstat -an 2>/dev/null | grep -q :3128; then
+            if lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep -q :3128; then
               echo "❌ Port 3128 is already in use:"
-              netstat -tlnp 2>/dev/null | grep :3128 || lsof -i :3128 2>/dev/null || netstat -an 2>/dev/null | grep :3128
+              lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep :3128
               exit 1
             else
               echo "✅ Port 3128 is available"
@@ -57,8 +57,8 @@ commands:
               # Docker environment - avoid PID file issues
               squid -f squid.conf -N -d 1 &
             else
-              # Regular environment
-              squid -f squid.conf -N -d 1 &
+              # Regular environment - use a writable PID file location
+              squid -f squid.conf -N -d 1 -p /tmp/squid.pid &
             fi
             SQUID_PID=$!
             echo "Squid started with PID: $SQUID_PID"
@@ -68,7 +68,7 @@ commands:
             for i in {1..10}; do
               if pgrep squid > /dev/null; then
                 echo "Squid process found, checking port..."
-                if netstat -tlnp 2>/dev/null | grep -q :3128 || lsof -i :3128 2>/dev/null || netstat -an 2>/dev/null | grep -q :3128; then
+                if lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep -q :3128; then
                   echo "✅ Squid is listening on port 3128"
                   break
                 else
@@ -85,24 +85,24 @@ commands:
             if pgrep squid > /dev/null; then
               echo "✅ Squid process is running"
               echo "Checking port 3128..."
-              netstat -tlnp 2>/dev/null | grep :3128 || lsof -i :3128 2>/dev/null || echo "Port 3128 not found"
+              lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep :3128 || echo "Port 3128 not found"
               
               # Check what ports Squid is actually listening on
               echo "Checking what ports Squid is listening on:"
-              netstat -tlnp 2>/dev/null | grep squid || lsof -i -P 2>/dev/null | grep squid || echo "No Squid listening ports found"
+              ss -tlnp 2>/dev/null | grep squid || lsof -i -P 2>/dev/null | grep squid || echo "No Squid listening ports found"
               
-              # Additional port checking for macOS
+              # Additional port checking for different environments
               echo "Checking for port 3128 specifically:"
-              lsof -i :3128 2>/dev/null || netstat -an | grep :3128 || echo "Port 3128 not found in netstat/lsof"
+              lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep :3128 || echo "Port 3128 not found"
               
               # Check Squid logs for startup errors
               echo "Checking Squid logs:"
               ls -la /var/log/squid/ 2>/dev/null || echo "Log directory not accessible"
-              tail -n 10 /var/log/squid/cache.log 2>/dev/null || echo "No cache log found"
-              tail -n 10 /var/log/squid/access.log 2>/dev/null || echo "No access log found"
+              sudo tail -n 10 /var/log/squid/cache.log 2>/dev/null || echo "No cache log found"
+              sudo tail -n 10 /var/log/squid/access.log 2>/dev/null || echo "No access log found"
               
               # If Squid is running but not on port 3128, it's a configuration issue
-              if ! netstat -tlnp 2>/dev/null | grep -q :3128 && ! lsof -i :3128 2>/dev/null && ! netstat -an 2>/dev/null | grep -q :3128; then
+              if ! lsof -i :3128 2>/dev/null && ! ss -tlnp 2>/dev/null | grep -q :3128; then
                 echo "❌ Squid is running but not listening on port 3128"
                 echo "This indicates a configuration error"
                 exit 1
@@ -110,7 +110,7 @@ commands:
             else
               echo "❌ Squid failed to start"
               echo "Checking for errors..."
-              tail -n 20 /var/log/squid/cache.log 2>/dev/null || echo "No cache log found"
+              sudo tail -n 20 /var/log/squid/cache.log 2>/dev/null || echo "No cache log found"
               exit 1
             fi
 
@@ -127,7 +127,7 @@ commands:
             pgrep squid || echo "Squid not running!"
             
             echo "Checking port 3128..."
-            netstat -tlnp 2>/dev/null | grep :3128 || lsof -i :3128 2>/dev/null || echo "Nothing on port 3128"
+            lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep :3128 || echo "Nothing on port 3128"
             
             # Test with retry logic
             for domain in "circleci.com" "app.circleci.com" "api.circleci.com"; do
@@ -137,18 +137,22 @@ commands:
               response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
               curl_exit_code=$?
               
+              echo "curl exit code: $curl_exit_code, response: $response"
+              
               if [ $curl_exit_code -eq 0 ] && [ "$response" != "000" ]; then
                 echo "✅ ALLOWED (HTTP $response)"
               else
                 echo "❌ BLOCKED or ERROR (curl exit: $curl_exit_code, response: $response)"
                 echo "Checking Squid logs..."
-                tail -n 10 /var/log/squid/access.log 2>/dev/null || echo "No access log found"
+                sudo tail -n 10 /var/log/squid/access.log 2>/dev/null || echo "No access log found"
                 echo "Trying without proxy to verify domain is reachable..."
                 direct_response=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
                 echo "Direct access response: $direct_response"
                 exit 1
               fi
             done
+            
+            echo "✅ All CircleCI domain tests completed"
       
       - run:
           name: "Test GitHub domains (should be ALLOWED)"
@@ -163,18 +167,22 @@ commands:
               response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
               curl_exit_code=$?
               
+              echo "curl exit code: $curl_exit_code, response: $response"
+              
               if [ $curl_exit_code -eq 0 ] && [ "$response" != "000" ]; then
                 echo "✅ ALLOWED (HTTP $response)"
               else
                 echo "❌ BLOCKED or ERROR (curl exit: $curl_exit_code, response: $response)"
                 echo "Checking Squid logs..."
-                tail -n 10 /var/log/squid/access.log 2>/dev/null || echo "No access log found"
+                sudo tail -n 10 /var/log/squid/access.log 2>/dev/null || echo "No access log found"
                 echo "Trying without proxy to verify domain is reachable..."
                 direct_response=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
                 echo "Direct access response: $direct_response"
                 exit 1
               fi
             done
+            
+            echo "✅ All GitHub domain tests completed"
       
       - run:
           name: "Test Google domains (should be BLOCKED)"
@@ -184,7 +192,7 @@ commands:
             
             echo "Checking Squid status..."
             pgrep squid || echo "Squid not running!"
-            netstat -tlnp 2>/dev/null | grep :3128 || lsof -i :3128 2>/dev/null || echo "Nothing listening on port 3128"
+            lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep :3128 || echo "Nothing listening on port 3128"
             
             for domain in "google.com" "www.google.com" "gmail.com"; do
               echo -n "Testing $domain: "
@@ -193,18 +201,25 @@ commands:
               response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
               curl_exit_code=$?
               
+              echo "curl exit code: $curl_exit_code, response: $response"
+              
               if [ $curl_exit_code -eq 0 ] && [ "$response" != "000" ]; then
                 echo "❌ UNEXPECTEDLY ALLOWED (HTTP $response)"
                 echo "Checking Squid logs..."
-                tail -n 10 /var/log/squid/access.log 2>/dev/null || echo "No access log found"
+                sudo tail -n 10 /var/log/squid/access.log 2>/dev/null || echo "No access log found"
                 echo "Trying without proxy to verify domain is reachable..."
                 direct_response=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
                 echo "Direct access response: $direct_response"
                 exit 1
               else
                 echo "✅ BLOCKED (curl exit: $curl_exit_code, response: $response)"
+                # Show Squid logs to confirm the block
+                echo "Checking Squid logs to confirm block:"
+                sudo tail -n 5 /var/log/squid/access.log 2>/dev/null || echo "No access log found"
               fi
             done
+            
+            echo "✅ All Google domain tests completed"
       
       - run:
           name: "Test summary and cleanup"

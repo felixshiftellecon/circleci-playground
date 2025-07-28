@@ -123,6 +123,9 @@ The Docker executor has different limitations (see Docker job logs for details).
 3. **Robust Startup Polling**: Added polling loop to ensure Squid is fully started before proceeding
 4. **Enhanced Error Reporting**: More detailed logging and error messages for debugging
 5. **Fixed ACL Logic**: Removed problematic `localhost` ACL that was allowing all localhost traffic before domain rules could apply
+6. **Fixed Linux PID File Issues**: Added `-p /tmp/squid.pid` flag for Linux environments to avoid permission denied errors
+7. **Replaced `netstat` with `ss`**: Updated all port checking commands to use `ss` instead of `netstat` (not available in CircleCI)
+8. **Fixed Log File Permissions**: Added `sudo` to log file access commands to handle proxy user ownership
 
 ## Troubleshooting
 
