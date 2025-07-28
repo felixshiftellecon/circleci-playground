@@ -65,12 +65,13 @@ commands:
                 echo "macOS: Setting up pf rules to redirect traffic to proxy"
                 echo "nat-anchor \"com.apple/*\"" > /tmp/pf.conf
                 echo "rdr-anchor \"com.apple/*\"" >> /tmp/pf.conf
-                echo "rdr pass out proto tcp to any port 80 -> 127.0.0.1 port 3129" >> /tmp/pf.conf
-                echo "rdr pass out proto tcp to any port 443 -> 127.0.0.1 port 3129" >> /tmp/pf.conf
+                echo "nat on en0 out proto tcp to any port 80 -> 127.0.0.1 port 3129" >> /tmp/pf.conf
+                echo "nat on en0 out proto tcp to any port 443 -> 127.0.0.1 port 3129" >> /tmp/pf.conf
                 echo "pass out proto tcp to 127.0.0.1 port 3128" >> /tmp/pf.conf
                 echo "pass out proto tcp to 127.0.0.1 port 3129" >> /tmp/pf.conf
                 echo "pass out proto tcp from 127.0.0.1 to any" >> /tmp/pf.conf
                 echo "pass out proto tcp to any" >> /tmp/pf.conf
+                echo "pass out proto tcp from any to any" >> /tmp/pf.conf
                 
                 echo "=== DEBUG: Generated pf.conf content ==="
                 cat /tmp/pf.conf
@@ -89,6 +90,11 @@ commands:
                           sudo iptables -t nat -A OUTPUT -p tcp --dport 443 -j REDIRECT --to-port 3129
                           echo "Checking iptables rules..."
                           sudo iptables -t nat -L OUTPUT -n --line-numbers
+                          echo "Testing redirect with curl..."
+                          curl -s -o /dev/null -w "Test redirect: %{http_code} (exit: %{exitcode})\n" --connect-timeout 5 "http://example.com" 2>/dev/null || echo "Redirect test failed"
+                          
+                          echo "Testing HTTPS redirect with curl..."
+                          curl -s -o /dev/null -w "Test HTTPS redirect: %{http_code} (exit: %{exitcode})\n" --connect-timeout 5 "https://httpbin.org/status/200" 2>/dev/null || echo "HTTPS redirect test failed"
               fi
             else
               echo "❌ Squid failed to start"
@@ -122,6 +128,11 @@ commands:
               fi
               
               echo "curl exit code: $curl_exit_code, response: $response"
+              
+              # Show Squid access logs for debugging
+              echo "=== Squid Access Logs (last 5 entries) ==="
+              sudo tail -n 5 /var/log/squid/access.log 2>/dev/null || echo "No access logs found"
+              echo "=== End Squid Access Logs ==="
               echo "Checking Squid access log for this request..."
               sudo tail -n 5 /var/log/squid/access.log 2>/dev/null || echo "No access log found"
               
