@@ -139,6 +139,7 @@ The Docker executor has different limitations (see Docker job logs for details).
 12. **Fixed Curl Exit Code Handling**: Added proper error handling for curl commands to prevent job failures when proxy blocks connections
 13. **Fixed Linux PID File Permission**: Added `pid_filename /tmp/squid.pid` to squid.conf to use writable PID file location
 14. **Fixed Curl Response Handling**: Improved curl exit code handling to properly set response to "000" when curl fails
+15. **Simplified Configuration**: Streamlined setup to match working SSH approach - removed complex cleanup and polling logic
 
 ## Troubleshooting
 

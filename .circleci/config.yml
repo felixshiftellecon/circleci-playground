@@ -31,15 +31,10 @@ commands:
               sudo mkdir -p /var/log/squid
               sudo chown $(whoami) /var/log/squid
               
-              # Stop any system Squid service that might have started
-              echo "Stopping any system Squid service..."
-              sudo systemctl stop squid 2>/dev/null || true
-              sudo systemctl disable squid 2>/dev/null || true
-              
-              # Quick cleanup of any running Squid processes
+              # Simple cleanup - just like SSH
               echo "Stopping any existing Squid processes..."
               sudo pkill squid 2>/dev/null || true
-              sleep 1
+              sleep 2
             fi
             
             echo "Starting Squid with configuration..."
@@ -68,82 +63,33 @@ commands:
             echo "OSTYPE: $OSTYPE"
             echo "Docker environment check: $([ -f /.dockerenv ] && echo "YES" || echo "NO")"
             
-            # Clean up any existing Squid processes
+            # Simple cleanup - just like SSH
             echo "Cleaning up any existing Squid processes..."
-            pkill squid 2>/dev/null || true
+            sudo pkill squid 2>/dev/null || true
             sleep 2
             
-            # Remove any existing PID files (platform-specific)
-            if [[ "$OSTYPE" == "darwin"* ]]; then
-              # macOS Homebrew Squid PID file location
-              sudo rm -f /opt/homebrew/var/run/squid.pid 2>/dev/null || true
-            else
-              # Linux PID file locations
-              sudo rm -f /run/squid.pid /tmp/squid.pid 2>/dev/null || true
-            fi
-            
-            # Quick check and kill any process using port 3128
-            echo "Checking port 3128..."
-            if lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep -q :3128; then
-              echo "Port 3128 in use, killing process..."
-              sudo lsof -ti :3128 2>/dev/null | xargs -r sudo kill -9 2>/dev/null || true
-              sleep 1
-            fi
-            
-            # Final check if port 3128 is available
-            echo "Checking if port 3128 is available..."
-            if lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep -q :3128; then
-              echo "❌ Port 3128 still in use after cleanup"
-              exit 1
-            fi
-            echo "✅ Port 3128 is available"
-            
-            # Start Squid with appropriate flags for each environment
+            # Start Squid - exactly like SSH
             echo "Starting Squid..."
-            
             if [[ "$OSTYPE" == "darwin"* ]]; then
-              # macOS: No -p flag, use relative config path
-              echo "macOS detected - starting Squid without -p flag"
+              echo "macOS detected - starting Squid"
               squid -f squid.conf -N -d 1 &
             elif [[ -f /.dockerenv ]]; then
-              # Docker: No -p flag, use relative config path
-              echo "Docker detected - starting Squid without -p flag"
+              echo "Docker detected - starting Squid"
               squid -f squid.conf -N -d 1 &
             else
-              # Linux: Use absolute config path, no -p flag needed
-              echo "Linux detected - starting Squid with absolute config path"
-              squid -f /home/circleci/project/squid.conf -N -d 1 &
+              echo "Linux detected - starting Squid"
+              cd /home/circleci/project && sudo squid -f squid.conf -N -d 1 &
             fi
             SQUID_PID=$!
             echo "Squid started with PID: $SQUID_PID"
             
-            # Wait for Squid to start and check port availability
+            # Simple wait - just like SSH
             echo "Waiting for Squid to start..."
-            for i in {1..6}; do
-              if pgrep squid > /dev/null; then
-                echo "Squid process found, checking port..."
-                if lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep -q :3128; then
-                  echo "✅ Squid is listening on port 3128"
-                  break
-                else
-                  echo "Squid running but port not ready yet (attempt $i/6)..."
-                  sleep 1
-                fi
-              else
-                echo "Squid process not found (attempt $i/6)..."
-                sleep 1
-              fi
-            done
+            sleep 3
             
-            # Final check if Squid is running
+            # Simple check - just like SSH
             if pgrep squid > /dev/null; then
-              echo "✅ Squid process is running"
-              if lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep -q :3128; then
-                echo "✅ Squid is listening on port 3128"
-              else
-                echo "❌ Squid is running but not listening on port 3128"
-                exit 1
-              fi
+              echo "✅ Squid is running"
             else
               echo "❌ Squid failed to start"
               exit 1
