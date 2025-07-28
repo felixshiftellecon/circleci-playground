@@ -96,6 +96,34 @@ The pipeline runs three jobs to test the proxy across different environments:
 - `gmail.com`
 - Any other domain not in the allowed list
 
+## Environment Limitations
+
+### Process Management Issues
+The Linux machine executor can have issues with Squid process management:
+
+1. **PID File Conflicts**: Multiple Squid instances can leave stale PID files
+2. **Process Cleanup**: Previous test runs may leave processes running
+3. **Port Binding**: New instances may fail to start if port is still in use
+
+**Evidence from logs**:
+```
+FATAL: Squid is already running: Found fresh instance PID file (/run/squid.pid) with PID 2618
+❌ Squid is running but not listening on port 3128
+```
+
+**Solution**: Enhanced cleanup in startup script to kill existing processes and remove PID files.
+
+### Docker Executor Issues
+The Docker executor has different limitations (see Docker job logs for details).
+
+## Recent Fixes Applied
+
+1. **Enhanced Process Cleanup**: Added comprehensive cleanup for existing Squid processes and PID files (including macOS Homebrew path)
+2. **Improved Port Detection**: Better detection of port 3128 availability across different environments using multiple methods
+3. **Robust Startup Polling**: Added polling loop to ensure Squid is fully started before proceeding
+4. **Enhanced Error Reporting**: More detailed logging and error messages for debugging
+5. **Fixed ACL Logic**: Removed problematic `localhost` ACL that was allowing all localhost traffic before domain rules could apply
+
 ## Troubleshooting
 
 ### Common Issues
@@ -139,6 +167,8 @@ curl -v --proxy http://127.0.0.1:3128 https://circleci.com
 ```conf
 http_port 3128
 acl allowed_domains dstdomain .circleci.com .github.com .githubusercontent.com .githubassets.com
+acl blocked_domains dstdomain .google.com .gmail.com .youtube.com
+http_access deny blocked_domains
 http_access allow allowed_domains
 http_access deny all
 ```
