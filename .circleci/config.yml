@@ -21,17 +21,14 @@ commands:
           command: |
             if [[ "$OSTYPE" == "darwin"* ]]; then
               brew install squid curl
-              # Create log directory for macOS
               sudo mkdir -p /var/log/squid
               sudo chown $(whoami) /var/log/squid
             else
               sudo apt-get update
               sudo apt-get install -y squid curl
-              # Create log directory for Linux
               sudo mkdir -p /var/log/squid
               sudo chown $(whoami) /var/log/squid
               
-              # Simple cleanup - just like SSH
               echo "Stopping any existing Squid processes..."
               sudo pkill squid 2>/dev/null || true
               sleep 2
@@ -39,36 +36,10 @@ commands:
             
             echo "Starting Squid with configuration..."
             
-            # Ensure we're using the correct config file
-            if [[ "$OSTYPE" == "darwin"* ]]; then
-              # macOS - use relative path
-              CONFIG_FILE="squid.conf"
-            else
-              # Linux - use absolute path to ensure we get the right file
-              CONFIG_FILE="/home/circleci/project/squid.conf"
-            fi
-            
-            # Debug: Check configuration file
-            echo "Checking Squid configuration file: $CONFIG_FILE"
-            ls -la "$CONFIG_FILE"
-            echo "Configuration file contents (first 10 lines):"
-            head -10 "$CONFIG_FILE"
-            
-            # Test configuration syntax
-            echo "Testing Squid configuration syntax..."
-            squid -k parse -f "$CONFIG_FILE" 2>&1 || echo "Configuration syntax check failed"
-            
-            # Debug: Show what command we're about to run
-            echo "About to start Squid with config file: $CONFIG_FILE"
-            echo "OSTYPE: $OSTYPE"
-            echo "Docker environment check: $([ -f /.dockerenv ] && echo "YES" || echo "NO")"
-            
-            # Simple cleanup - just like SSH
             echo "Cleaning up any existing Squid processes..."
             sudo pkill squid 2>/dev/null || true
             sleep 2
             
-            # Start Squid - exactly like SSH
             echo "Starting Squid..."
             if [[ "$OSTYPE" == "darwin"* ]]; then
               echo "macOS detected - starting Squid"
@@ -83,11 +54,9 @@ commands:
             SQUID_PID=$!
             echo "Squid started with PID: $SQUID_PID"
             
-            # Simple wait - just like SSH
             echo "Waiting for Squid to start..."
             sleep 3
             
-            # Simple check - just like SSH
             if pgrep squid > /dev/null; then
               echo "✅ Squid is running"
             else
@@ -110,14 +79,11 @@ commands:
             echo "Checking port 3128..."
             lsof -i :3128 2>/dev/null || ss -tlnp 2>/dev/null | grep :3128 || echo "Nothing on port 3128"
             
-            # Test with retry logic
             for domain in "circleci.com" "app.circleci.com" "api.circleci.com"; do
               echo -n "Testing $domain: "
               
-              # Try with proxy
               response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
               curl_exit_code=$?
-              # If curl failed, set response to 000
               if [ $curl_exit_code -ne 0 ]; then
                 response="000"
               fi
@@ -148,10 +114,8 @@ commands:
             for domain in "github.com" "api.github.com" "raw.githubusercontent.com"; do
               echo -n "Testing $domain: "
               
-              # Try with proxy
               response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
               curl_exit_code=$?
-              # If curl failed, set response to 000
               if [ $curl_exit_code -ne 0 ]; then
                 response="000"
               fi
@@ -186,10 +150,8 @@ commands:
             for domain in "google.com" "www.google.com" "gmail.com"; do
               echo -n "Testing $domain: "
               
-              # Try with proxy - capture exit code properly
               response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
               curl_exit_code=$?
-              # If curl failed, set response to 000
               if [ $curl_exit_code -ne 0 ]; then
                 response="000"
               fi
@@ -206,8 +168,6 @@ commands:
                 exit 1
               else
                 echo "✅ BLOCKED (curl exit: $curl_exit_code, response: $response)"
-                # Show Squid logs to confirm the block
-                echo "Checking Squid logs to confirm block:"
                 sudo tail -n 5 /var/log/squid/access.log 2>/dev/null || echo "No access log found"
               fi
             done
@@ -229,21 +189,21 @@ commands:
             echo "🎉 Squid proxy test completed successfully!"
 
 jobs:
-  test-squid-proxy:
+  squid-proxy-linux:
     executor: machine
     steps:
       - checkout
       - setup-squid
       - test-connectivity
 
-  test-squid-proxy-macos:
+  squid-proxy-macos:
     executor: macos
     steps:
       - checkout
       - setup-squid
       - test-connectivity
 
-  test-squid-proxy-docker:
+  squid-proxy-docker:
     executor: docker
     steps:
       - checkout
@@ -253,6 +213,6 @@ jobs:
 workflows:
   test-proxy-access-control:
     jobs:
-      - test-squid-proxy
-      - test-squid-proxy-macos
-      - test-squid-proxy-docker
+      - squid-proxy-linux
+      - squid-proxy-macos
+      - squid-proxy-docker
