@@ -68,7 +68,6 @@ commands:
                 echo "pass out proto tcp to 127.0.0.1 port 3128" >> /tmp/pf.conf
                 echo "pass out proto tcp to 127.0.0.1 port 3129" >> /tmp/pf.conf
                 echo "pass out proto tcp from 127.0.0.1 to any" >> /tmp/pf.conf
-                echo "pass out proto tcp to any" >> /tmp/pf.conf
                 sudo pfctl -ef /tmp/pf.conf
               else
                 echo "Linux: Setting up iptables rules to redirect traffic to proxy"
@@ -99,6 +98,7 @@ commands:
             for domain in "circleci.com" "app.circleci.com" "api.circleci.com"; do
               echo -n "Testing $domain: "
               
+              echo "Testing direct connection to $domain..."
               response=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
               curl_exit_code=$?
               if [ $curl_exit_code -ne 0 ]; then
@@ -106,6 +106,8 @@ commands:
               fi
               
               echo "curl exit code: $curl_exit_code, response: $response"
+              echo "Checking Squid access log for this request..."
+              sudo tail -n 5 /var/log/squid/access.log 2>/dev/null || echo "No access log found"
               
               if [ $curl_exit_code -eq 0 ] && [ "$response" != "000" ]; then
                 echo "✅ ALLOWED (HTTP $response)"
