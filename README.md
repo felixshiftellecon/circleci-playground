@@ -54,8 +54,8 @@ The pipeline runs two jobs:
 Each job:
 1. Installs Squid and curl
 2. Starts Squid with CONNECT method support
-3. Sets up network-level enforcement (redirects traffic to proxy)
-4. Tests domain access control - all traffic automatically goes through proxy
+      3. Sets up network-level enforcement (redirects traffic to proxy)
+      4. Tests domain access control - all traffic automatically goes through proxy
 
 ## Testing
 
