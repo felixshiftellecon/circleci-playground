@@ -9,7 +9,7 @@ The project configures a Squid proxy with network-level enforcement that:
 - **Forces all traffic through the proxy** - no application changes needed
 - **Allows** access to CircleCI and GitHub domains
 - **Blocks** access to Google and other domains
-- Runs on port 3128 with intercept mode
+- Runs on port 3128 with proper CONNECT method handling
 - Works across Linux and macOS executors
 
 ## Files
@@ -23,10 +23,13 @@ The project configures a Squid proxy with network-level enforcement that:
 ### Squid Configuration (`squid.conf`)
 
 ```conf
-http_port 3128 intercept
+http_port 3128
 
+acl SSL_ports port 443
+acl CONNECT method CONNECT
 acl allowed_domains dstdomain .circleci.com .github.com .githubusercontent.com .githubassets.com
 
+http_access allow CONNECT SSL_ports
 http_access allow allowed_domains
 http_access deny all
 
@@ -36,6 +39,10 @@ cache_log /var/log/squid/cache.log
 debug_options ALL,1
 
 cache_mem 0
+
+httpd_suppress_version_string on
+via off
+forwarded_for off
 ```
 
 ### CircleCI Pipeline
@@ -46,7 +53,7 @@ The pipeline runs two jobs:
 
 Each job:
 1. Installs Squid and curl
-2. Starts Squid with intercept mode
+2. Starts Squid with CONNECT method support
 3. Sets up network-level enforcement (redirects traffic to proxy)
 4. Tests domain access control - all traffic automatically goes through proxy
 
