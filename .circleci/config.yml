@@ -59,6 +59,20 @@ commands:
             
             if pgrep squid > /dev/null; then
               echo "✅ Squid is running"
+              
+              echo "Setting up network-level proxy enforcement..."
+              if [[ "$OSTYPE" == "darwin"* ]]; then
+                echo "macOS: Setting up pf rules to redirect traffic to proxy"
+                cat > /tmp/pf.conf << EOF
+rdr pass out proto tcp to any port 80 -> 127.0.0.1 port 3128
+rdr pass out proto tcp to any port 443 -> 127.0.0.1 port 3128
+EOF
+                sudo pfctl -ef /tmp/pf.conf
+              else
+                echo "Linux: Setting up iptables rules to redirect traffic to proxy"
+                sudo iptables -t nat -A OUTPUT -p tcp --dport 80 -j REDIRECT --to-port 3128
+                sudo iptables -t nat -A OUTPUT -p tcp --dport 443 -j REDIRECT --to-port 3128
+              fi
             else
               echo "❌ Squid failed to start"
               exit 1
@@ -82,7 +96,7 @@ commands:
             for domain in "circleci.com" "app.circleci.com" "api.circleci.com"; do
               echo -n "Testing $domain: "
               
-              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
+              response=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
               curl_exit_code=$?
               if [ $curl_exit_code -ne 0 ]; then
                 response="000"
@@ -96,9 +110,6 @@ commands:
                 echo "❌ BLOCKED or ERROR (curl exit: $curl_exit_code, response: $response)"
                 echo "Checking Squid logs..."
                 sudo tail -n 10 /var/log/squid/access.log 2>/dev/null || echo "No access log found"
-                echo "Trying without proxy to verify domain is reachable..."
-                direct_response=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
-                echo "Direct access response: $direct_response"
                 exit 1
               fi
             done
@@ -114,7 +125,7 @@ commands:
             for domain in "github.com" "api.github.com" "raw.githubusercontent.com"; do
               echo -n "Testing $domain: "
               
-              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
+              response=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
               curl_exit_code=$?
               if [ $curl_exit_code -ne 0 ]; then
                 response="000"
@@ -128,9 +139,6 @@ commands:
                 echo "❌ BLOCKED or ERROR (curl exit: $curl_exit_code, response: $response)"
                 echo "Checking Squid logs..."
                 sudo tail -n 10 /var/log/squid/access.log 2>/dev/null || echo "No access log found"
-                echo "Trying without proxy to verify domain is reachable..."
-                direct_response=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
-                echo "Direct access response: $direct_response"
                 exit 1
               fi
             done
@@ -150,7 +158,7 @@ commands:
             for domain in "google.com" "www.google.com" "gmail.com"; do
               echo -n "Testing $domain: "
               
-              response=$(curl -s -o /dev/null -w "%{http_code}" --proxy http://127.0.0.1:3128 --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
+              response=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
               curl_exit_code=$?
               if [ $curl_exit_code -ne 0 ]; then
                 response="000"
@@ -162,9 +170,6 @@ commands:
                 echo "❌ UNEXPECTEDLY ALLOWED (HTTP $response)"
                 echo "Checking Squid logs..."
                 sudo tail -n 10 /var/log/squid/access.log 2>/dev/null || echo "No access log found"
-                echo "Trying without proxy to verify domain is reachable..."
-                direct_response=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "https://$domain" 2>/dev/null)
-                echo "Direct access response: $direct_response"
                 exit 1
               else
                 echo "✅ BLOCKED (curl exit: $curl_exit_code, response: $response)"
@@ -203,16 +208,8 @@ jobs:
       - setup-squid
       - test-connectivity
 
-  squid-proxy-docker:
-    executor: docker
-    steps:
-      - checkout
-      - setup-squid
-      - test-connectivity
-
 workflows:
   test-proxy-access-control:
     jobs:
       - squid-proxy-linux
       - squid-proxy-macos
-      - squid-proxy-docker

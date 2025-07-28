@@ -4,11 +4,13 @@ This repository demonstrates how to set up and test a Squid proxy with access co
 
 ## Overview
 
-The project configures a Squid proxy that:
+The project configures a Squid proxy with network-level enforcement that:
+- **Redirects all HTTP/HTTPS traffic** through the proxy using iptables/pf rules
+- **Forces all traffic through the proxy** - no application changes needed
 - **Allows** access to CircleCI and GitHub domains
 - **Blocks** access to Google and other domains
-- Runs on port 3128
-- Works across Linux, macOS, and Docker executors
+- Runs on port 3128 with transparent proxy mode
+- Works across Linux and macOS executors
 
 ## Files
 
@@ -21,45 +23,32 @@ The project configures a Squid proxy that:
 ### Squid Configuration (`squid.conf`)
 
 ```conf
-http_port 3128
+http_port 3128 transparent
 
-# Define allowed domains (CircleCI and GitHub)
 acl allowed_domains dstdomain .circleci.com .github.com .githubusercontent.com .githubassets.com
 
-# Define blocked domains (explicitly block Google)
-acl blocked_domains dstdomain .google.com .gmail.com .youtube.com
-
-# Block requests to blocked domains FIRST
-http_access deny blocked_domains
-
-# Allow requests to allowed domains
 http_access allow allowed_domains
-
-# Deny all other requests
 http_access deny all
 
-# Basic logging
 access_log /var/log/squid/access.log
 cache_log /var/log/squid/cache.log
 
-# Enable debug logging for ACL matching
 debug_options ALL,1
 
-# Disable caching for testing
 cache_mem 0
 ```
 
 ### CircleCI Pipeline
 
-The pipeline runs three jobs:
+The pipeline runs two jobs:
 1. **Linux** (`machine` executor)
-2. **macOS** (`macos` executor) 
-3. **Docker** (`docker` executor)
+2. **macOS** (`macos` executor)
 
 Each job:
 1. Installs Squid and curl
-2. Starts Squid with the custom configuration
-3. Tests domain access control
+2. Starts Squid with transparent proxy mode
+3. Sets up network-level enforcement (redirects traffic to proxy)
+4. Tests domain access control - all traffic automatically goes through proxy
 
 ## Testing
 
@@ -84,8 +73,9 @@ chmod +x test_squid_local.sh
 
 ## Key Features
 
-- **Cross-platform compatibility**: Works on Linux, macOS, and Docker
-- **Simple setup**: Minimal configuration with proven working approach
+- **Network-level enforcement**: Redirects all HTTP/HTTPS traffic through proxy using iptables/pf
+- **Zero application changes**: No need to configure applications to use proxy
+- **Cross-platform compatibility**: Works on Linux and macOS
 - **Access control**: Domain-based allow/deny rules
 - **Debug logging**: Verbose logging for troubleshooting
 - **No caching**: Disabled for testing purposes
