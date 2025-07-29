@@ -75,11 +75,27 @@ commands:
               
               echo "Setting up network-level proxy enforcement..."
               if [[ "$OSTYPE" == "darwin"* ]]; then
-                echo "macOS: Setting up pf rules to redirect traffic to proxy"
+                echo "macOS: Setting up pf rules to enforce proxy"
                 ./setup_pf_rules.sh
+
+                echo "Enabling proxy environment variables for subsequent steps…"
+                {
+                  echo 'export http_proxy="http://127.0.0.1:3128"'
+                  echo 'export https_proxy="http://127.0.0.1:3128"'
+                  echo 'export no_proxy="127.0.0.1,localhost"'
+                } >> "$BASH_ENV"
+                source "$BASH_ENV"
               else
                 echo "Linux: Setting up iptables rules to redirect traffic to proxy"
                 ./setup_iptables_rules.sh
+
+                echo "Enabling proxy environment variables for subsequent steps… (Linux)"
+                {
+                  echo 'export http_proxy="http://127.0.0.1:3128"'
+                  echo 'export https_proxy="http://127.0.0.1:3128"'
+                  echo 'export no_proxy="127.0.0.1,localhost"'
+                } >> "$BASH_ENV"
+                source "$BASH_ENV"
               fi
             else
               echo "❌ Squid failed to start"
@@ -253,10 +269,6 @@ commands:
 jobs:
   squid-proxy-linux:
     executor: machine
-    environment:
-      http_proxy: "http://127.0.0.1:3128"
-      https_proxy: "http://127.0.0.1:3128"
-      no_proxy: "127.0.0.1,localhost"
     steps:
       - checkout
       - setup-squid
@@ -264,10 +276,6 @@ jobs:
 
   squid-proxy-macos:
     executor: macos
-    environment:
-      http_proxy: "http://127.0.0.1:3128"
-      https_proxy: "http://127.0.0.1:3128"
-      no_proxy: "127.0.0.1,localhost"
     steps:
       - checkout
       - setup-squid

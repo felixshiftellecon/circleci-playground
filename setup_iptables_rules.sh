@@ -6,7 +6,8 @@
 echo "Setting up iptables rules for Squid proxy..."
 
 # Fail fast on errors
-set -e
+set -euo pipefail
+set -x
 
 # Use a shorter xtables lock wait time (5s) to avoid hanging if some other
 # process like UFW is manipulating iptables at the same time.
