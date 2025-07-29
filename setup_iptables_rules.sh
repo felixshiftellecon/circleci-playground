@@ -19,6 +19,19 @@ $IPT -t nat -F OUTPUT || true
 $IPT -F OUTPUT || true
 
 # Enforce proxy usage: reject direct HTTP/HTTPS traffic that isn't loopback
+echo "Allowing established/related connections…"
+$IPT -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+# Allow CircleCI agent traffic (log uploads, API) directly – resolves many hosts
+echo "Creating ipset for CircleCI domains…"
+sudo ipset create circleci_hosts hash:ip family inet hashsize 1024 maxelem 65536 -exist
+# Pre-resolve a few critical endpoints and add to set; failures ignored
+for host in circleci.com app.circleci.com api.circleci.com dl.circleci.com output.circleci.com; do
+  ip=$(getent ahosts "$host" | awk '{print $1}' | head -n1 || true)
+  [ -n "$ip" ] && sudo ipset add circleci_hosts "$ip" -exist || true
+done
+$IPT -A OUTPUT -p tcp --dport 443 -m set --match-set circleci_hosts dst -j ACCEPT
+
 echo "Adding REJECT rules for direct HTTP/HTTPS…"
 $IPT -A OUTPUT -p tcp --dport 80  ! -d 127.0.0.1 -j REJECT
 $IPT -A OUTPUT -p tcp --dport 443 ! -d 127.0.0.1 -j REJECT
@@ -39,8 +52,6 @@ $IPT -A OUTPUT -p tcp --dport 53 -j ACCEPT
 $IPT -A OUTPUT -d 127.0.0.1 -j ACCEPT
 
 # Allow established connections
-$IPT -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-
 # NOTE: No generic allow-all rule. Anything not explicitly allowed above will be
 # dropped/rejected, ensuring the safelist enforcement.
 
