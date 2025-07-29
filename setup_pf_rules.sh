@@ -7,9 +7,9 @@ echo "Setting up pf rules for Squid proxy..."
 
 # Create pf configuration file
 cat > /tmp/pf.conf << 'EOF'
-# Redirect HTTP and HTTPS traffic to Squid proxy (only for non-localhost)
-rdr pass inet proto tcp from any to !127.0.0.1 port 80 -> 127.0.0.1 port 3129
-rdr pass inet proto tcp from any to !127.0.0.1 port 443 -> 127.0.0.1 port 3129
+# Redirect HTTP traffic to Squid proxy and block direct HTTPS (non-localhost)
+rdr pass inet proto tcp from any to !127.0.0.1 port 80  -> 127.0.0.1 port 3129
+block drop out proto tcp to !127.0.0.1 port 443
 
 # Allow traffic to the proxy itself
 pass out proto tcp to 127.0.0.1 port 3128

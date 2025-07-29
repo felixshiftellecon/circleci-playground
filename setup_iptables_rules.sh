@@ -9,15 +9,15 @@ echo "Setting up iptables rules for Squid proxy..."
 sudo iptables -t nat -F OUTPUT
 sudo iptables -F OUTPUT
 
-# Redirect HTTP and HTTPS to proxy (only for non-localhost traffic)
-sudo iptables -t nat -A OUTPUT -p tcp --dport 80 -d 127.0.0.1 -j RETURN
-sudo iptables -t nat -A OUTPUT -p tcp --dport 443 -d 127.0.0.1 -j RETURN
-sudo iptables -t nat -A OUTPUT -p tcp --dport 80 -j REDIRECT --to-port 3129
-sudo iptables -t nat -A OUTPUT -p tcp --dport 443 -j REDIRECT --to-port 3129
+# Enforce proxy usage: reject direct HTTP/HTTPS traffic that isn't loopback
+sudo iptables -A OUTPUT -p tcp --dport 80  ! -d 127.0.0.1 -j REJECT
+sudo iptables -A OUTPUT -p tcp --dport 443 ! -d 127.0.0.1 -j REJECT
+
+# Note: no transparent redirect rules are needed because tools should respect
+# the http(s)_proxy environment variables.
 
 # Allow traffic to proxy
 sudo iptables -A OUTPUT -p tcp --dport 3128 -j ACCEPT
-sudo iptables -A OUTPUT -p tcp --dport 3129 -j ACCEPT
 
 # Allow DNS traffic (needed for name resolution)
 sudo iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
