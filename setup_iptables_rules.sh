@@ -24,6 +24,13 @@ $IPT -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
 # Allow CircleCI agent traffic (log uploads, API) directly – resolves many hosts
 echo "Creating ipset for CircleCI domains…"
+# Ensure ipset is available
+if ! command -v ipset >/dev/null 2>&1; then
+  echo "ipset not found – installing…"
+  sudo apt-get update -qq
+  sudo apt-get install -y ipset
+fi
+
 sudo ipset create circleci_hosts hash:ip family inet hashsize 1024 maxelem 65536 -exist
 # Pre-resolve a few critical endpoints and add to set; failures ignored
 for host in circleci.com app.circleci.com api.circleci.com dl.circleci.com output.circleci.com; do
