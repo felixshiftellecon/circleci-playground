@@ -5,35 +5,47 @@
 
 echo "Setting up iptables rules for Squid proxy..."
 
+# Fail fast on errors
+set -e
+
+# Use a shorter xtables lock wait time (5s) to avoid hanging if some other
+# process like UFW is manipulating iptables at the same time.
+IPT="sudo iptables -w 5"
+
 # Clear existing rules
-sudo iptables -t nat -F OUTPUT
-sudo iptables -F OUTPUT
+echo "Flushing old rules…"
+$IPT -t nat -F OUTPUT || true
+$IPT -F OUTPUT || true
 
 # Enforce proxy usage: reject direct HTTP/HTTPS traffic that isn't loopback
-sudo iptables -A OUTPUT -p tcp --dport 80  ! -d 127.0.0.1 -j REJECT
-sudo iptables -A OUTPUT -p tcp --dport 443 ! -d 127.0.0.1 -j REJECT
+echo "Adding REJECT rules for direct HTTP/HTTPS…"
+$IPT -A OUTPUT -p tcp --dport 80  ! -d 127.0.0.1 -j REJECT
+$IPT -A OUTPUT -p tcp --dport 443 ! -d 127.0.0.1 -j REJECT
 
 # Note: no transparent redirect rules are needed because tools should respect
 # the http(s)_proxy environment variables.
 
 # Allow traffic to proxy
-sudo iptables -A OUTPUT -p tcp --dport 3128 -j ACCEPT
+echo "Allowing traffic to Squid (3128)…"
+$IPT -A OUTPUT -p tcp --dport 3128 -j ACCEPT
 
 # Allow DNS traffic (needed for name resolution)
-sudo iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
-sudo iptables -A OUTPUT -p tcp --dport 53 -j ACCEPT
+echo "Allowing DNS traffic…"
+$IPT -A OUTPUT -p udp --dport 53 -j ACCEPT
+$IPT -A OUTPUT -p tcp --dport 53 -j ACCEPT
 
 # Allow localhost traffic
-sudo iptables -A OUTPUT -d 127.0.0.1 -j ACCEPT
+$IPT -A OUTPUT -d 127.0.0.1 -j ACCEPT
 
 # Allow established connections
-sudo iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+$IPT -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 
-# Allow all other traffic (don't block everything)
-sudo iptables -A OUTPUT -j ACCEPT
+# NOTE: No generic allow-all rule. Anything not explicitly allowed above will be
+# dropped/rejected, ensuring the safelist enforcement.
 
-echo "Checking iptables rules..."
-sudo iptables -t nat -L OUTPUT -n --line-numbers
-sudo iptables -L OUTPUT -n --line-numbers
+echo "Checking iptables rules (nat table)…"
+$IPT -t nat -L OUTPUT -n --line-numbers
+echo "Checking iptables rules (filter table)…"
+$IPT -L OUTPUT -n --line-numbers
 
 echo "✅ iptables rules loaded successfully" 
