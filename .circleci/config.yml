@@ -265,7 +265,6 @@ commands:
             echo "✅ Google and other domains are blocked"
             echo ""
             echo "Squid proxy is working correctly!"
-            
             echo ""
             echo "🎉 Squid proxy test completed successfully!"
 
@@ -279,6 +278,7 @@ jobs:
 
   squid-proxy-macos:
     executor: macos
+    # No special environment variables needed
     steps:
       - checkout
       - setup-squid

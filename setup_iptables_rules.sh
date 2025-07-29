@@ -58,6 +58,10 @@ $IPT -A OUTPUT -p tcp --dport 53 -j ACCEPT
 # Allow localhost traffic
 $IPT -A OUTPUT -d 127.0.0.1 -j ACCEPT
 
+# Allow Squid (running as user "proxy") to establish TLS tunnels
+echo "Allowing outbound 443 for Squid process (uid proxy)…"
+$IPT -A OUTPUT -p tcp --dport 443 -m owner --uid-owner proxy -j ACCEPT
+
 # Allow established connections
 # NOTE: No generic allow-all rule. Anything not explicitly allowed above will be
 # dropped/rejected, ensuring the safelist enforcement.

@@ -7,6 +7,9 @@ echo "Setting up pf rules for Squid proxy..."
 
 # Create pf configuration file
 cat > /tmp/pf.conf << 'EOF'
+# Allow Squid (running as user "proxy") to reach external HTTPS destinations
+pass out proto tcp user proxy to any port 443
+
 # Block direct HTTP/HTTPS traffic (non-localhost). Tools must use explicit proxy.
 block drop out proto tcp to !127.0.0.1 port 80
 block drop out proto tcp to !127.0.0.1 port 443
