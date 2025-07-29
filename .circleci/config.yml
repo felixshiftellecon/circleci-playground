@@ -253,6 +253,10 @@ commands:
 jobs:
   squid-proxy-linux:
     executor: machine
+    environment:
+      http_proxy: "http://127.0.0.1:3128"
+      https_proxy: "http://127.0.0.1:3128"
+      no_proxy: "127.0.0.1,localhost"
     steps:
       - checkout
       - setup-squid
@@ -260,6 +264,10 @@ jobs:
 
   squid-proxy-macos:
     executor: macos
+    environment:
+      http_proxy: "http://127.0.0.1:3128"
+      https_proxy: "http://127.0.0.1:3128"
+      no_proxy: "127.0.0.1,localhost"
     steps:
       - checkout
       - setup-squid
