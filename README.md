@@ -1,88 +1,124 @@
-# CircleCI Squid Proxy Playground
+# CircleCI Squid Proxy with Domain Safelist
 
-This repository demonstrates how to set up and test a Squid proxy with access control in CircleCI across different environments (Linux, macOS, Docker).
+This project demonstrates how to set up a Squid proxy in CircleCI with network-level traffic redirection and domain-based access control. All outbound HTTP/HTTPS traffic is forced through the proxy, and only domains in the safelist are allowed.
 
 ## Overview
 
-The project configures a Squid proxy with network-level enforcement that:
-- **Redirects all HTTP/HTTPS traffic** through the proxy using iptables/pf rules
-- **Forces all traffic through the proxy** - no application changes needed
-- **Allows** access to CircleCI and GitHub domains
-- **Blocks** access to Google and other domains
-- Runs on port 3128 with proper CONNECT method handling
-- Works across Linux and macOS executors
+The setup includes:
+- **Squid Proxy**: Running on ports 3128 (normal) and 3129 (transparent)
+- **Network Redirection**: Using iptables (Linux) or pf (macOS) to redirect all traffic
+- **Domain Safelist**: Only allowing specific domains to be accessed
+- **CI/CD Integration**: Automated testing in CircleCI
+
+## Allowed Domains
+
+The following domains are allowed through the proxy:
+- `*.circleci.com` - CircleCI services
+- `*.github.com` - GitHub services
+- `*.githubusercontent.com` - GitHub user content
+- `*.githubassets.com` - GitHub assets
+- `api.github.com` - GitHub API
+- `raw.githubusercontent.com` - GitHub raw content
+
+All other domains are blocked.
 
 ## Files
 
-- `.circleci/config.yml` - CircleCI pipeline configuration
-- `squid.conf` - Squid proxy configuration with access control rules
+- `.circleci/config.yml` - CircleCI configuration with Squid setup
+- `squid.conf` - Squid proxy configuration
 - `test_squid_local.sh` - Local testing script
 
-## Configuration
+## How It Works
 
-### Squid Configuration (`squid.conf`)
+### 1. Squid Proxy Setup
+- Squid runs on two ports:
+  - Port 3128: Normal proxy mode
+  - Port 3129: Transparent proxy mode (for intercepted traffic)
 
-```conf
-http_port 3128
+### 2. Network Redirection
+- **Linux**: Uses iptables to redirect HTTP (80) and HTTPS (443) traffic to port 3129
+- **macOS**: Uses pf (Packet Filter) to redirect traffic to port 3129
 
-acl SSL_ports port 443
-acl CONNECT method CONNECT
-acl allowed_domains dstdomain .circleci.com .github.com .githubusercontent.com .githubassets.com
-
-http_access allow CONNECT SSL_ports
-http_access allow allowed_domains
-http_access deny all
-
-access_log /var/log/squid/access.log
-cache_log /var/log/squid/cache.log
-
-debug_options ALL,1
-
-cache_mem 0
-
-httpd_suppress_version_string on
-via off
-forwarded_for off
-```
-
-### CircleCI Pipeline
-
-The pipeline runs two jobs:
-1. **Linux** (`machine` executor)
-2. **macOS** (`macos` executor)
-
-Each job:
-1. Installs Squid and curl
-2. Starts Squid with CONNECT method support
-      3. Sets up network-level enforcement (redirects traffic to proxy)
-      4. Tests domain access control - all traffic automatically goes through proxy
-
-## Testing
-
-The pipeline tests:
-- **CircleCI domains** (should be ALLOWED): `circleci.com`, `app.circleci.com`, `api.circleci.com`
-- **GitHub domains** (should be ALLOWED): `github.com`, `api.github.com`, `raw.githubusercontent.com`
-- **Google domains** (should be BLOCKED): `google.com`, `www.google.com`, `gmail.com`
-
-### Expected Results
-
-- **Allowed domains**: HTTP 200/301 responses
-- **Blocked domains**: curl exit code 56 (CURLE_RECV_ERROR)
+### 3. Access Control
+- Squid configuration defines allowed domains using ACLs
+- SSL CONNECT method is allowed for HTTPS connections
+- All other traffic is denied
 
 ## Local Testing
 
-Run the local test script to validate the configuration:
+To test the setup locally:
 
 ```bash
+# Make the test script executable
 chmod +x test_squid_local.sh
+
+# Run the test
 ./test_squid_local.sh
 ```
 
-## Key Features
+## CircleCI Jobs
 
-- **Network-level enforcement**: Redirects all HTTP/HTTPS traffic through proxy using iptables/pf
-- **Zero application changes**: No need to configure applications to use proxy
-- **Cross-platform compatibility**: Works on Linux and macOS
-- **Access control**: Domain-based allow/deny rules
-- **Debug logging**: Verbose logging for troubleshooting
-- **No caching**: Disabled for testing purposes
+The pipeline includes two jobs:
+- `squid-proxy-linux`: Tests on Ubuntu machine executor
+- `squid-proxy-macos`: Tests on macOS executor
+
+Both jobs:
+1. Install and configure Squid
+2. Set up network redirection rules
+3. Test allowed domains (should succeed)
+4. Test blocked domains (should fail)
+
+## Troubleshooting
+
+### Common Issues
+
+1. **pf syntax errors on macOS**
+   - The pf rules have been fixed to use proper syntax
+   - Rules now use `rdr pass inet` instead of `rdr pass out`
+
+2. **Squid not starting**
+   - Check if ports 3128/3129 are already in use
+   - Verify squid.conf syntax: `squid -k parse squid.conf`
+
+3. **Traffic not being redirected**
+   - Check iptables/pf rules are loaded
+   - Verify Squid is listening on port 3129
+
+### Debug Commands
+
+```bash
+# Check Squid status
+pgrep squid
+lsof -i :3128
+lsof -i :3129
+
+# View Squid logs
+sudo tail -f /var/log/squid/access.log
+sudo tail -f /var/log/squid/cache.log
+
+# Check iptables rules (Linux)
+sudo iptables -t nat -L OUTPUT -n --line-numbers
+sudo iptables -L OUTPUT -n --line-numbers
+
+# Check pf rules (macOS)
+sudo pfctl -s rules
+sudo pfctl -s nat
+```
+
+## Security Considerations
+
+- This setup provides network-level enforcement
+- All HTTP/HTTPS traffic is intercepted and filtered
+- Only explicitly allowed domains can be accessed
+- SSL/TLS connections are properly handled
+- Proxy logs provide audit trail
+
+## Customization
+
+To modify the allowed domains, edit the `allowed_domains` ACL in `squid.conf`:
+
+```
+acl allowed_domains dstdomain .yourdomain.com .anotherdomain.com
+```
+
+To add more ports or protocols, modify the network redirection rules in `.circleci/config.yml`.

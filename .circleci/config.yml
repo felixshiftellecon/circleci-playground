@@ -76,12 +76,23 @@ commands:
               echo "Setting up network-level proxy enforcement..."
               if [[ "$OSTYPE" == "darwin"* ]]; then
                 echo "macOS: Setting up pf rules to redirect traffic to proxy"
-                echo "rdr pass out proto tcp to any port 80 -> 127.0.0.1 port 3129" > /tmp/pf.conf
-                echo "rdr pass out proto tcp to any port 443 -> 127.0.0.1 port 3129" >> /tmp/pf.conf
-                echo "pass out proto tcp to 127.0.0.1 port 3128" >> /tmp/pf.conf
-                echo "pass out proto tcp to 127.0.0.1 port 3129" >> /tmp/pf.conf
-                echo "pass out proto tcp from 127.0.0.1 to any" >> /tmp/pf.conf
-                echo "pass out proto tcp to any" >> /tmp/pf.conf
+                
+                # Create proper pf rules for macOS
+                cat > /tmp/pf.conf << 'EOF'
+# Redirect HTTP and HTTPS traffic to Squid proxy
+rdr pass inet proto tcp from any to any port 80 -> 127.0.0.1 port 3129
+rdr pass inet proto tcp from any to any port 443 -> 127.0.0.1 port 3129
+
+# Allow traffic to the proxy itself
+pass out proto tcp to 127.0.0.1 port 3128
+pass out proto tcp to 127.0.0.1 port 3129
+
+# Allow traffic from localhost
+pass out proto tcp from 127.0.0.1 to any
+
+# Block all other outbound traffic
+block out proto tcp to any
+EOF
                 
                 echo "=== DEBUG: Generated pf.conf content ==="
                 cat /tmp/pf.conf
@@ -95,32 +106,26 @@ commands:
                 sudo pfctl -ef /tmp/pf.conf
                 echo "=== END DEBUG ==="
               else
-                                          echo "Linux: Setting up iptables rules to redirect traffic to proxy"
-                          sudo iptables -t nat -A OUTPUT -p tcp --dport 80 -j REDIRECT --to-port 3129
-                          sudo iptables -t nat -A OUTPUT -p tcp --dport 443 -j REDIRECT --to-port 3129
-                          echo "Checking iptables rules..."
-                          sudo iptables -t nat -L OUTPUT -n --line-numbers
-                          echo "Testing redirect with curl..."
-                          echo "=== DEBUG: Before redirect test ==="
-                          echo "Squid process: $(pgrep squid || echo 'Not running')"
-                          echo "Squid listening ports:"
-                          sudo netstat -tlnp 2>/dev/null | grep squid || echo "No squid ports found"
-                          echo "=== END DEBUG ==="
-                          
-                          curl -s -o /dev/null -w "Test redirect: %{http_code} (exit: %{exitcode})\n" --connect-timeout 5 "http://example.com" 2>/dev/null || echo "Redirect test failed"
-                          
-                          echo "Testing HTTPS redirect with curl..."
-                          curl -s -o /dev/null -w "Test HTTPS redirect: %{http_code} (exit: %{exitcode})\n" --connect-timeout 5 "https://httpbin.org/status/200" 2>/dev/null || echo "HTTPS redirect test failed"
-                          
-                          echo "=== DEBUG: Checking Squid status after redirect test ==="
-                          echo "Squid process: $(pgrep squid || echo 'Not running')"
-                          echo "Squid listening ports:"
-                          sudo netstat -tlnp 2>/dev/null | grep squid || echo "No squid ports found"
-                          echo "Squid access logs (last 10 lines):"
-                          sudo tail -n 10 /var/log/squid/access.log 2>/dev/null || echo "No access logs found"
-                          echo "Squid cache logs (last 10 lines):"
-                          sudo tail -n 10 /var/log/squid/cache.log 2>/dev/null || echo "No cache logs found"
-                          echo "=== END DEBUG ==="
+                echo "Linux: Setting up iptables rules to redirect traffic to proxy"
+                
+                # Clear existing rules
+                sudo iptables -t nat -F OUTPUT
+                sudo iptables -F OUTPUT
+                
+                # Redirect HTTP and HTTPS to proxy
+                sudo iptables -t nat -A OUTPUT -p tcp --dport 80 -j REDIRECT --to-port 3129
+                sudo iptables -t nat -A OUTPUT -p tcp --dport 443 -j REDIRECT --to-port 3129
+                
+                # Allow traffic to proxy
+                sudo iptables -A OUTPUT -p tcp --dport 3128 -j ACCEPT
+                sudo iptables -A OUTPUT -p tcp --dport 3129 -j ACCEPT
+                
+                # Block all other outbound traffic
+                sudo iptables -A OUTPUT -p tcp -j DROP
+                
+                echo "Checking iptables rules..."
+                sudo iptables -t nat -L OUTPUT -n --line-numbers
+                sudo iptables -L OUTPUT -n --line-numbers
               fi
             else
               echo "❌ Squid failed to start"
@@ -159,8 +164,6 @@ commands:
               echo "=== Squid Access Logs (last 5 entries) ==="
               sudo tail -n 5 /var/log/squid/access.log 2>/dev/null || echo "No access logs found"
               echo "=== End Squid Access Logs ==="
-              echo "Checking Squid access log for this request..."
-              sudo tail -n 5 /var/log/squid/access.log 2>/dev/null || echo "No access log found"
               
               if [ $curl_exit_code -eq 0 ] && [ "$response" != "000" ]; then
                 echo "✅ ALLOWED (HTTP $response)"
