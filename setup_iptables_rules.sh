@@ -22,6 +22,10 @@ $IPT -F OUTPUT || true
 echo "Allowing established/related connections…"
 $IPT -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
+# Allow Squid (running as user "proxy") to establish TLS tunnels before any rejects
+echo "Allowing outbound 443 for Squid process (uid proxy)…"
+$IPT -A OUTPUT -p tcp --dport 443 -m owner --uid-owner proxy -j ACCEPT
+
 # Allow CircleCI agent traffic (log uploads, API) directly – resolves many hosts
 echo "Creating ipset for CircleCI domains…"
 # Ensure ipset is available
@@ -57,10 +61,6 @@ $IPT -A OUTPUT -p tcp --dport 53 -j ACCEPT
 
 # Allow localhost traffic
 $IPT -A OUTPUT -d 127.0.0.1 -j ACCEPT
-
-# Allow Squid (running as user "proxy") to establish TLS tunnels
-echo "Allowing outbound 443 for Squid process (uid proxy)…"
-$IPT -A OUTPUT -p tcp --dport 443 -m owner --uid-owner proxy -j ACCEPT
 
 # Allow established connections
 # NOTE: No generic allow-all rule. Anything not explicitly allowed above will be
