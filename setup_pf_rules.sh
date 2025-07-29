@@ -18,8 +18,12 @@ pass out proto tcp to 127.0.0.1 port 3129
 # Allow traffic from localhost
 pass out proto tcp from 127.0.0.1 to any
 
-# Block all other outbound traffic
-block out proto tcp to any
+# Allow DNS traffic
+pass out proto udp to any port 53
+pass out proto tcp to any port 53
+
+# Allow established connections
+pass out proto tcp from any to any established
 EOF
 
 echo "=== DEBUG: Generated pf.conf content ==="

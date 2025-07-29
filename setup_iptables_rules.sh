@@ -17,8 +17,15 @@ sudo iptables -t nat -A OUTPUT -p tcp --dport 443 -j REDIRECT --to-port 3129
 sudo iptables -A OUTPUT -p tcp --dport 3128 -j ACCEPT
 sudo iptables -A OUTPUT -p tcp --dport 3129 -j ACCEPT
 
-# Block all other outbound traffic
-sudo iptables -A OUTPUT -p tcp -j DROP
+# Allow DNS traffic (needed for name resolution)
+sudo iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
+sudo iptables -A OUTPUT -p tcp --dport 53 -j ACCEPT
+
+# Allow localhost traffic
+sudo iptables -A OUTPUT -d 127.0.0.1 -j ACCEPT
+
+# Allow established connections
+sudo iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 
 echo "Checking iptables rules..."
 sudo iptables -t nat -L OUTPUT -n --line-numbers
