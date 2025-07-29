@@ -130,7 +130,6 @@ commands:
               
               echo "curl exit code: $curl_exit_code, response: $response"
               
-              # Show Squid access logs for debugging
               echo "=== Squid Access Logs (last 5 entries) ==="
               sudo tail -n 5 /var/log/squid/access.log 2>/dev/null || echo "No access logs found"
               echo "=== End Squid Access Logs ==="
@@ -254,19 +253,6 @@ commands:
             echo "=== Final Squid Access Logs ==="
             sudo tail -n 10 /var/log/squid/access.log 2>/dev/null || echo "No access logs found"
             echo "=== End Final Squid Access Logs ==="
-      
-      - run:
-          name: "Test summary and cleanup"
-          command: |
-            echo ""
-            echo "🎉 All tests completed successfully!"
-            echo "=================================="
-            echo "✅ CircleCI and GitHub domains are accessible"
-            echo "✅ Google and other domains are blocked"
-            echo ""
-            echo "Squid proxy is working correctly!"
-            echo ""
-            echo "🎉 Squid proxy test completed successfully!"
 
 jobs:
   squid-proxy-linux:
