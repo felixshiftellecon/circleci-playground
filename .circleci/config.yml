@@ -21,7 +21,7 @@ jobs:
       - restore_cache:
           paths:
             - path_a
-          key: 
+          keys: 
             - <<parameters.cache_prefix>>-cache-path-a-{{ .Branch }}
             - <<parameters.cache_prefix>>-cache-path-a-main
             - <<parameters.cache_prefix>>-cache-path-a-
@@ -29,7 +29,7 @@ jobs:
       - save_cache:
           paths:
             - path_a
-          key: v1-cache-path-a-{{ .Branch }}
+          keys: v1-cache-path-a-{{ .Branch }}
 
 
 workflows:
