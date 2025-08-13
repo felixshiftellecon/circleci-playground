@@ -254,12 +254,28 @@ commands:
             sudo tail -n 10 /var/log/squid/access.log 2>/dev/null || echo "No access logs found"
             echo "=== End Final Squid Access Logs ==="
 
+  test-caching:
+    description: "Test caching"
+    steps:
+      - restore_cache:
+          keys:
+            - v1-test-cache
+      - run:
+          name: "Create a file to cache"
+          command: |
+            echo "This is a test file for caching." > test-file.txt
+      - save_cache:
+          key: v1-test-cache
+          paths:
+            - "test-file.txt"
+
 jobs:
   squid-proxy-linux:
     executor: machine
     steps:
       - checkout
       - setup-squid
+      - test-caching
       - test-connectivity
 
   squid-proxy-macos:
@@ -268,6 +284,7 @@ jobs:
     steps:
       - checkout
       - setup-squid
+      - test-caching
       - test-connectivity
 
 workflows:
