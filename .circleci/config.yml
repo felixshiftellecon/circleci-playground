@@ -2,11 +2,11 @@ version: 2.1
 
 commands:
   generate-big-file:
-    description: "Generate a 1 GiB file filled with zeros"
+    description: "Generate a 10 GiB file filled with zeros"
     steps:
       - run:
-          name: Generate 1 GiB file
-          command: dd if=/dev/zero of=bigfile.bin bs=1M count=1024
+          name: Generate 10 GiB file
+          command: dd if=/dev/zero of=bigfile.bin bs=1M count=10240
 
   show-file-size:
     description: "Display bigfile.bin size in MB"
