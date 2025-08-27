@@ -8,16 +8,23 @@ commands:
           name: Generate 10 GiB file
           command: dd if=/dev/zero of=bigfile.bin bs=1M count=10240
 
-  show-file-size:
-    description: "Display bigfile.bin size in MB"
+  generate-second-file:
+    description: "Generate a second 5 GiB file filled with zeros"
     steps:
       - run:
-          name: Show file size (MB)
+          name: Generate second 5 GiB file
+          command: dd if=/dev/zero of=bigfile2.bin bs=1M count=5120
+
+  show-file-size:
+    description: "Display bigfile*.bin size(s) in MB"
+    steps:
+      - run:
+          name: Show file size(s) (MB)
           command: |
             if command -v gdu >/dev/null 2>&1; then
-              gdu -m bigfile.bin | awk '{print $1 " MB"}'
+              gdu -m bigfile*.bin | awk '{print $1 " MB - " $2}'
             else
-              du -m bigfile.bin | awk '{print $1 " MB"}'
+              du -m bigfile*.bin | awk '{print $1 " MB - " $2}'
             fi
 
 jobs:
@@ -43,6 +50,32 @@ jobs:
           paths:
             - bigfile.bin
 
+  m2-layer:
+    macos:
+      xcode: 16.4.0
+    resource_class: m2pro.medium
+    steps:
+      - attach_workspace:
+          at: .
+      - generate-second-file
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bigfile2.bin
+
+  m4-layer:
+    macos:
+      xcode: 16.4.0
+    resource_class: m4pro.medium
+    steps:
+      - attach_workspace:
+          at: .
+      - generate-second-file
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bigfile2.bin
+
   m2-attach:
     macos:
       xcode: 16.4.0
@@ -66,9 +99,15 @@ workflows:
     jobs:
       - m2-persist
       - m4-persist
-      - m2-attach:
+      - m2-layer:
           requires:
             - m2-persist
-      - m4-attach:
+      - m4-layer:
           requires:
             - m4-persist
+      - m2-attach:
+          requires:
+            - m2-layer
+      - m4-attach:
+          requires:
+            - m4-layer
