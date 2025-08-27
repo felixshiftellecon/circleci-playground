@@ -18,6 +18,7 @@ commands:
               gdu -m bigfile.bin | awk '{print $1 " MB"}'
             else
               du -m bigfile.bin | awk '{print $1 " MB"}'
+            fi
 
 jobs:
   m2-persist:
