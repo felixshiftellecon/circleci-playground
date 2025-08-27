@@ -1,24 +1,73 @@
 version: 2.1
 
+commands:
+  generate-big-file:
+    description: "Generate a 1 GiB file filled with zeros"
+    steps:
+      - run:
+          name: Generate 1 GiB file
+          command: dd if=/dev/zero of=bigfile.bin bs=1M count=1024
+
+  show-file-size:
+    description: "Display bigfile.bin size in MB"
+    steps:
+      - run:
+          name: Show file size (MB)
+          command: |
+            if command -v gdu >/dev/null 2>&1; then
+              gdu -m bigfile.bin | awk '{print $1 " MB"}'
+            else
+              du -m bigfile.bin | awk '{print $1 " MB"}'
+
 jobs:
-  m2-latency:
+  m2-persist:
     macos:
       xcode: 16.4.0
     resource_class: m2pro.medium
-
     steps:
-      - run: curl -o /dev/null https://denisl-s3-latency.s3.us-east-1.amazonaws.com/FreeBSD-14.3-RELEASE-arm64-aarch64-bootonly.iso
+      - generate-big-file
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bigfile.bin
 
-  m4-latency:
+  m4-persist:
     macos:
       xcode: 16.4.0
     resource_class: m4pro.medium
-
     steps:
-      - run: curl -o /dev/null https://denisl-s3-latency.s3.us-east-1.amazonaws.com/FreeBSD-14.3-RELEASE-arm64-aarch64-bootonly.iso
+      - generate-big-file
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bigfile.bin
+
+  m2-attach:
+    macos:
+      xcode: 16.4.0
+    resource_class: m2pro.medium
+    steps:
+      - attach_workspace:
+          at: .
+      - show-file-size
+
+  m4-attach:
+    macos:
+      xcode: 16.4.0
+    resource_class: m4pro.medium
+    steps:
+      - attach_workspace:
+          at: .
+      - show-file-size
 
 workflows:
-  my-workflow:
+  big-file-test:
     jobs:
-      - m2-latency
-      - m4-latency
+      - m2-persist
+      - m4-persist
+      - m2-attach:
+          requires:
+            - m2-persist
+      - m4-attach:
+          requires:
+            - m4-persist
