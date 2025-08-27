@@ -1,37 +1,24 @@
 version: 2.1
 
-setup: true
+jobs:
+  m2-latency:
+    macos:
+      xcode: 16.4.0
+    resource_class: m2pro.medium
 
-orbs:
-  path-filtering: circleci/path-filtering@0.1.0
-  continuation: circleci/continuation@0.2.0
+    steps:
+      - run: curl -o /dev/null https://denisl-s3-latency.s3.us-east-1.amazonaws.com/FreeBSD-14.3-RELEASE-arm64-aarch64-bootonly.iso
+
+  m4-latency:
+    macos:
+      xcode: 16.4.0
+    resource_class: m4pro.medium
+
+    steps:
+      - run: curl -o /dev/null https://denisl-s3-latency.s3.us-east-1.amazonaws.com/FreeBSD-14.3-RELEASE-arm64-aarch64-bootonly.iso
 
 workflows:
-  setup-workflow:
+  my-workflow:
     jobs:
-      - path-filtering/filter:
-          name: check path
-          mapping: |
-            path_a/.* run-path-a true
-            path_b/.* run-path-b true
-          base-revision: main
-          config-path: .circleci/continue-config.yml
-          filters:
-            tags:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from Tag
-          configuration_path: .circleci/continue_config.yml
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from API
-          configuration_path: ./.circleci/continue_config.yml
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              ignore: /.*/
+      - m2-latency
+      - m4-latency
