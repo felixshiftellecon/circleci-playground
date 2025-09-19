@@ -14,7 +14,6 @@ jobs:
       - run: echo hello john
   job_b:
     executor: base
-    resource_class: m4pro.large
     steps:
       - checkout
       - run: echo hello 2
