@@ -13,8 +13,8 @@ jobs:
       - run: echo hello 1
   job_b:
     macos:
-      xcode: "15.4.0"
-    resource_class: m2pro.medium
+      xcode: "16.4.0"
+    resource_class: m4pro.large
     steps:
       - checkout
       - run: echo hello 2
