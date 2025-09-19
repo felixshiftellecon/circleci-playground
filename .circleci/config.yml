@@ -1,113 +1,26 @@
 version: 2.1
 
-commands:
-  generate-big-file:
-    description: "Generate a 10 GiB file filled with zeros"
-    steps:
-      - run:
-          name: Generate 10 GiB file
-          command: dd if=/dev/zero of=bigfile.bin bs=1M count=10240
-
-  generate-second-file:
-    description: "Generate a second 5 GiB file filled with zeros"
-    steps:
-      - run:
-          name: Generate second 5 GiB file
-          command: dd if=/dev/zero of=bigfile2.bin bs=1M count=5120
-
-  show-file-size:
-    description: "Display bigfile*.bin size(s) in MB"
-    steps:
-      - run:
-          name: Show file size(s) (MB)
-          command: |
-            if command -v gdu >/dev/null 2>&1; then
-              gdu -m bigfile*.bin | awk '{print $1 " MB - " $2}'
-            else
-              du -m bigfile*.bin | awk '{print $1 " MB - " $2}'
-            fi
+executors:
+  base:
+    docker:
+      - image: cimg/base:stable
 
 jobs:
-  m2-persist:
+  job_a:
+    executor: base
+    steps:
+      - checkout
+      - run: echo hello 1
+  job_b:
     macos:
-      xcode: 16.4.0
+      xcode: "15.4.0"
     resource_class: m2pro.medium
     steps:
-      - generate-big-file
-      - persist_to_workspace:
-          root: .
-          paths:
-            - bigfile.bin
-
-  m4-persist:
-    macos:
-      xcode: 16.4.0
-    resource_class: m4pro.medium
-    steps:
-      - generate-big-file
-      - persist_to_workspace:
-          root: .
-          paths:
-            - bigfile.bin
-
-  m2-layer:
-    macos:
-      xcode: 16.4.0
-    resource_class: m2pro.medium
-    steps:
-      - attach_workspace:
-          at: .
-      - generate-second-file
-      - persist_to_workspace:
-          root: .
-          paths:
-            - bigfile2.bin
-
-  m4-layer:
-    macos:
-      xcode: 16.4.0
-    resource_class: m4pro.medium
-    steps:
-      - attach_workspace:
-          at: .
-      - generate-second-file
-      - persist_to_workspace:
-          root: .
-          paths:
-            - bigfile2.bin
-
-  m2-attach:
-    macos:
-      xcode: 16.4.0
-    resource_class: m2pro.medium
-    steps:
-      - attach_workspace:
-          at: .
-      - show-file-size
-
-  m4-attach:
-    macos:
-      xcode: 16.4.0
-    resource_class: m4pro.medium
-    steps:
-      - attach_workspace:
-          at: .
-      - show-file-size
+      - checkout
+      - run: echo hello 2
 
 workflows:
-  big-file-test:
+  job-workflow:
     jobs:
-      - m2-persist
-      - m4-persist
-      - m2-layer:
-          requires:
-            - m2-persist
-      - m4-layer:
-          requires:
-            - m4-persist
-      - m2-attach:
-          requires:
-            - m2-layer
-      - m4-attach:
-          requires:
-            - m4-layer
+      - job_a
+      - job_b
