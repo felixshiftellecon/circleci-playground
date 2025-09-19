@@ -10,7 +10,7 @@ jobs:
     executor: base
     steps:
       - checkout
-      - run: echo hello 1
+      - run: echo hello
   job_b:
     macos:
       xcode: "16.4.0"
