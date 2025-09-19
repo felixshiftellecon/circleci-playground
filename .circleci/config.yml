@@ -2,8 +2,9 @@ version: 2.1
 
 executors:
   base:
-    docker:
-      - image: cimg/base:stable
+    macos:
+      xcode: "16.4.0"
+    resource_class: m4pro.large
 
 jobs:
   job_a:
@@ -12,8 +13,7 @@ jobs:
       - checkout
       - run: echo hello john
   job_b:
-    macos:
-      xcode: "16.4.0"
+    executor: base
     resource_class: m4pro.large
     steps:
       - checkout
