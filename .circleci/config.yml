@@ -26,8 +26,8 @@ jobs:
             AUTH="Circle-Token: ${CIRCLE_TOKEN}"
             J=$(curl -s -H "$AUTH" "$API/workflow/${CIRCLE_WORKFLOW_ID}/job")
             SEND=$(echo "$J" | jq -r '.items[] | select(.name=="i_send_to_3rd_party") | .id')
-            POLL=$(echo "$J" | jq -r '.items[] | select(.name=="i_poll_3rd_party") | .id')
-            curl -s -H "$AUTH" -H "Content-Type: application/json" -X POST -d '{"from_failed":false,"jobs":["'"$SEND"'","'"$POLL"'"]}' "$API/workflow/${CIRCLE_WORKFLOW_ID}/rerun"
+            # POLL=$(echo "$J" | jq -r '.items[] | select(.name=="i_poll_3rd_party") | .id')
+            curl -s -H "$AUTH" -H "Content-Type: application/json" -X POST -d '{"from_failed":false,"jobs":["'"$SEND"'"]}' "$API/workflow/${CIRCLE_WORKFLOW_ID}/rerun"
 
 workflows:
   workflow-a:
