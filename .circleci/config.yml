@@ -1,37 +1,42 @@
 version: 2.1
 
-setup: true
+executors:
+  base:
+    docker:
+      - image: cimg/base:stable
 
-orbs:
-  path-filtering: circleci/path-filtering@0.1.0
-  continuation: circleci/continuation@0.2.0
+jobs:
+  i_send_to_3rd_party:
+    executor: base
+    steps:
+      - checkout
+      - run: echo "I sent stuff to a 3rd party"
+  i_poll_3rd_party:
+    executor: base
+    steps:
+      - checkout
+      - run: echo "I'm polling for the stuff sent to a 3rd party"
+      - run: echo "but then I fail"
+      - run: exit 1
+      - run:
+          when: on_fail
+          name: Rerun workflow starting at i_send_to_3rd_party
+          command: |
+            sudo apt-get update -qq && sudo apt-get install -y -qq jq curl
+            SEND_JOB_ID=$(curl -s -H "Circle-Token: ${CIRCLE_TOKEN}" \
+              "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/job" | \
+              jq -r '.items[] | select(.name=="i_send_to_3rd_party") | .id')
+            echo "Found i_send_to_3rd_party job id: ${SEND_JOB_ID}"
+            curl -s -H "Circle-Token: ${CIRCLE_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -X POST \
+              -d '{"from_failed":false,"jobs":["i_send_to_3rd_party","i_poll_3rd_party"]}' \
+              "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/rerun" | jq '.'
 
 workflows:
-  setup-workflow:
+  workflow-a:
     jobs:
-      - path-filtering/filter:
-          name: check path
-          mapping: |
-            path_a/.* run-path-a true
-            path_b/.* run-path-b true
-          base-revision: main
-          config-path: .circleci/continue-config.yml
-          filters:
-            tags:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from Tag
-          configuration_path: .circleci/continue_config.yml
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from API
-          configuration_path: ./.circleci/continue_config.yml
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              ignore: /.*/
+      - i_send_to_3rd_party
+      - i_poll_3rd_party:
+          requires:
+            - i_send_to_3rd_party
