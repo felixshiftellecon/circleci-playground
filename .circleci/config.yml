@@ -22,16 +22,12 @@ jobs:
           when: on_fail
           name: Rerun workflow starting at i_send_to_3rd_party
           command: |
-            sudo apt-get update -qq && sudo apt-get install -y -qq jq curl
-            SEND_JOB_ID=$(curl -s -H "Circle-Token: ${CIRCLE_TOKEN}" \
-              "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/job" | \
-              jq -r '.items[] | select(.name=="i_send_to_3rd_party") | .id')
-            echo "Found i_send_to_3rd_party job id: ${SEND_JOB_ID}"
-            curl -s -H "Circle-Token: ${CIRCLE_TOKEN}" \
-              -H "Content-Type: application/json" \
-              -X POST \
-              -d '{"from_failed":false,"jobs":["i_send_to_3rd_party","i_poll_3rd_party"]}' \
-              "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/rerun" | jq '.'
+            API="https://circleci.com/api/v2"
+            AUTH="Circle-Token: ${CIRCLE_TOKEN}"
+            J=$(curl -s -H "$AUTH" "$API/workflow/${CIRCLE_WORKFLOW_ID}/job")
+            SEND=$(echo "$J" | jq -r '.items[] | select(.name=="i_send_to_3rd_party") | .id')
+            POLL=$(echo "$J" | jq -r '.items[] | select(.name=="i_poll_3rd_party") | .id')
+            curl -s -H "$AUTH" -H "Content-Type: application/json" -X POST -d '{"from_failed":false,"jobs":["'"$SEND"'","'"$POLL"'"]}' "$API/workflow/${CIRCLE_WORKFLOW_ID}/rerun"
 
 workflows:
   workflow-a:
@@ -40,3 +36,4 @@ workflows:
       - i_poll_3rd_party:
           requires:
             - i_send_to_3rd_party
+          context: api_token
