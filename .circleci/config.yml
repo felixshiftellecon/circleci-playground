@@ -1,11 +1,10 @@
 version: 2.1
 
-orbs:
-  ios: nextraq/ios@1.0.7
-
 jobs:
   job_a:
-    executor: ios/macos
+    machine:
+      image: ubuntu-2004:current
+    resource_class: medium
     steps:
       - checkout
       - save_cache:
