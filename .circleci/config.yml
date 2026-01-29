@@ -10,7 +10,7 @@ jobs:
       - save_cache:
           key: v1-nothing
           paths:
-            - i_dont_exsist/
+            - i_dont_exist/
       - restore_cache:
           key: v1-nothing 
 
