@@ -1,37 +1,635 @@
 version: 2.1
 
-setup: true
+executors:
+  base:
+    docker:
+      - image: cimg/base:stable
 
-orbs:
-  path-filtering: circleci/path-filtering@0.1.0
-  continuation: circleci/continuation@0.2.0
+# ---------------------------------------------------------------------------
+# persist_to_workspace glob test suite
+#
+# Tests every glob pattern supported by Go's filepath.Match:
+#   *        – any sequence of non-separator characters
+#   ?        – any single non-separator character
+#   [abc]    – character class
+#   [a-z]    – character range
+#   [^a]     – negated character class
+#   dir/*/f  – hierarchical / multi-segment paths
+#   .        – entire directory tree
+#   (none)   – exact file/directory path
+#
+# Each workflow is ISOLATED so its workspace contains ONLY the files
+# matched by the glob under test. A downstream verify job attaches and
+# lists exactly what arrived.
+# ---------------------------------------------------------------------------
+
+commands:
+  build_test_tree:
+    description: Create a rich directory tree under /tmp/workspace
+    steps:
+      - run:
+          name: Build test directory structure
+          command: |
+            set -e
+            W=/tmp/workspace && mkdir -p $W
+
+            # ── Root-level files ──
+            echo "txt-root"      > $W/readme.txt
+            echo "md-root"       > $W/notes.md
+            echo "log-root"      > $W/app.log
+            echo "json-root"     > $W/data.json
+            echo "xml-root"      > $W/data.xml
+            echo "yaml-root"     > $W/config.yaml
+            echo "yml-root"      > $W/config.yml
+            echo "csv-root"      > $W/report.csv
+            echo "hidden-root"   > $W/.hidden
+            echo "no-ext"        > $W/Makefile
+
+            # Single-char-name files (for ? and [ ] tests)
+            for c in a b c; do echo "$c" > $W/$c.txt; done
+            for n in 1 2; do echo "$n" > $W/$n.txt; done
+            echo "ab" > $W/ab.txt
+
+            # ── Nested directories ──
+            mkdir -p $W/src/main/java/com/example
+            mkdir -p $W/src/test/java/com/example
+            mkdir -p $W/build/libs
+            mkdir -p $W/build/reports/tests
+            mkdir -p $W/docs/api
+            mkdir -p $W/logs/2024/01
+            mkdir -p $W/logs/2024/02
+            mkdir -p $W/dist/css $W/dist/js $W/dist/images
+
+            # Source files
+            echo "Main.java"     > $W/src/main/java/com/example/Main.java
+            echo "Utils.java"    > $W/src/main/java/com/example/Utils.java
+            echo "MainTest.java" > $W/src/test/java/com/example/MainTest.java
+
+            # Build outputs
+            echo "app-jar"       > $W/build/libs/app.jar
+            echo "app-war"       > $W/build/libs/app.war
+            echo "test-report"   > $W/build/reports/tests/index.html
+
+            # Docs
+            echo "readme"        > $W/docs/README.md
+            echo "api-ref"       > $W/docs/api/reference.html
+
+            # Logs
+            echo "jan-log"       > $W/logs/2024/01/app.log
+            echo "feb-log"       > $W/logs/2024/02/app.log
+
+            # Dist assets
+            echo "style"         > $W/dist/css/style.css
+            echo "script"        > $W/dist/js/app.js
+            echo "vendor"        > $W/dist/js/vendor.js
+            echo "logo"          > $W/dist/images/logo.png
+            echo "icon"          > $W/dist/images/icon.svg
+
+            # Edge-case names
+            echo "bracket"       > "$W/file[1].txt"
+            echo "space"         > "$W/file with spaces.txt"
+
+            echo "=== Full tree ===" && find $W -type f | sort
+
+  verify_workspace:
+    description: Attach workspace and list everything that arrived
+    parameters:
+      pattern_label:
+        type: string
+    steps:
+      - attach_workspace:
+          at: /tmp/ws
+      - run:
+          name: "VERIFY: << parameters.pattern_label >>"
+          command: |
+            echo "============================================"
+            echo "GLOB PATTERN: << parameters.pattern_label >>"
+            echo "============================================"
+            echo ""
+            echo "── Files received ──"
+            find /tmp/ws -type f | sed 's|^/tmp/ws/||' | sort
+            echo ""
+            echo "── Directories received ──"
+            find /tmp/ws -mindepth 1 -type d | sed 's|^/tmp/ws/||' | sort
+            echo ""
+            echo "── Total file count: $(find /tmp/ws -type f | wc -l | tr -d ' ') ──"
+            echo "============================================"
+
+jobs:
+  # ═══════════════════════════════════════════════════════════════════════
+  # Each persist_* job: builds the tree, then persists with ONE glob.
+  # Each verify_* job: attaches and reports what arrived.
+  # ═══════════════════════════════════════════════════════════════════════
+
+  # 1) *.txt – star with extension (root only, * won't cross /)
+  persist_star_extension:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - "*.txt"
+
+  verify_star_extension:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: "*.txt"
+
+  # 2) build/libs/* – star inside a specific subdirectory
+  persist_star_in_dir:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - "build/libs/*"
+
+  verify_star_in_dir:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: "build/libs/*"
+
+  # 3) ?.txt – question mark (single character)
+  persist_question_mark:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - "?.txt"
+
+  verify_question_mark:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: "?.txt"
+
+  # 4) [abc].txt – character class
+  persist_char_class:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - "[abc].txt"
+
+  verify_char_class:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: "[abc].txt"
+
+  # 5) [a-c].txt – character range
+  persist_char_range:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - "[a-c].txt"
+
+  verify_char_range:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: "[a-c].txt"
+
+  # 6) [^0-9].txt – negated character class
+  persist_negated_class:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - "[^0-9].txt"
+
+  verify_negated_class:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: "[^0-9].txt"
+
+  # 7) dist/*/app.* – hierarchical star (wildcard in dir + file)
+  persist_hierarchical_star:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - "dist/*/app.*"
+
+  verify_hierarchical_star:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: "dist/*/app.*"
+
+  # 8) build/libs/*.[jw]ar – character class in extension
+  persist_extension_class:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - "build/libs/*.[jw]ar"
+
+  verify_extension_class:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: "build/libs/*.[jw]ar"
+
+  # 9) docs – whole directory (plain name, no glob)
+  persist_whole_directory:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - docs
+
+  verify_whole_directory:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: "docs (whole directory)"
+
+  # 10) logs/2024/*/app.log – deep nested star
+  persist_deep_nested_star:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - "logs/2024/*/app.log"
+
+  verify_deep_nested_star:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: "logs/2024/*/app.log"
+
+  # 11) logs/2024/0?/app.log – question mark in directory segment
+  persist_question_in_dir:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - "logs/2024/0?/app.log"
+
+  verify_question_in_dir:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: "logs/2024/0?/app.log"
+
+  # 12) Multiple paths in one persist_to_workspace
+  persist_multiple_paths:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - "*.md"
+            - "*.json"
+            - "build/libs/*.jar"
+
+  verify_multiple_paths:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: "*.md + *.json + build/libs/*.jar (multiple paths)"
+
+  # 13) .hidden – exact dotfile name
+  persist_hidden_file:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - ".hidden"
+
+  verify_hidden_file:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: ".hidden (exact dotfile)"
+
+  # 14) .* – dot-star (match all dotfiles)
+  persist_dot_star:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - ".*"
+
+  verify_dot_star:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: ".* (all dotfiles)"
+
+  # 15) config.y*ml – star in extension (matches yaml and yml)
+  persist_star_in_extension:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - "config.y*ml"
+
+  verify_star_in_extension:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: "config.y*ml"
+
+  # 16) * – bare star (root-level everything?)
+  persist_bare_star:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - "*"
+
+  verify_bare_star:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: "* (bare star)"
+
+  # 17) Exact file path (no glob characters at all)
+  persist_exact_path:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - "src/main/java/com/example/Main.java"
+
+  verify_exact_path:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: "src/main/java/com/example/Main.java (exact path)"
+
+  # 18) src/*/java/com/example/*.java – stars at multiple path levels
+  persist_multi_level_star:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - "src/*/java/com/example/*.java"
+
+  verify_multi_level_star:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: "src/*/java/com/example/*.java (multi-level)"
+
+  # 19) file with spaces.txt – spaces in filename
+  persist_file_with_spaces:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - "file with spaces.txt"
+
+  verify_file_with_spaces:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: "file with spaces.txt"
+
+  # 20) . – the everything pattern (entire root tree)
+  persist_dot:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - .
+
+  verify_dot:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: ". (entire tree)"
+
+  # 21) */*.js – star/star across one directory level
+  persist_star_slash_star:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - "*/*.js"
+
+  verify_star_slash_star:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: "*/*.js (one dir deep)"
+
+  # 22) build – whole directory name without trailing slash
+  persist_dir_no_slash:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - build
+
+  verify_dir_no_slash:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: "build (dir name, no slash)"
+
+  # 23) build/ – directory with trailing slash
+  persist_dir_with_slash:
+    executor: base
+    steps:
+      - build_test_tree
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - "build/"
+
+  verify_dir_with_slash:
+    executor: base
+    steps:
+      - verify_workspace:
+          pattern_label: "build/ (dir name WITH trailing slash)"
+
+# ══════════════════════════════════════════════════════════════════════════
+# WORKFLOWS – one per glob pattern, fully isolated workspaces
+# ══════════════════════════════════════════════════════════════════════════
 
 workflows:
-  setup-workflow:
+  test-01-star-extension:
     jobs:
-      - path-filtering/filter:
-          name: check path
-          mapping: |
-            path_a/.* run-path-a true
-            path_b/.* run-path-b true
-          base-revision: main
-          config-path: .circleci/continue-config.yml
-          filters:
-            tags:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from Tag
-          configuration_path: .circleci/continue_config.yml
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from API
-          configuration_path: ./.circleci/continue_config.yml
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              ignore: /.*/
+      - persist_star_extension
+      - verify_star_extension:
+          requires: [persist_star_extension]
+
+  test-02-star-in-dir:
+    jobs:
+      - persist_star_in_dir
+      - verify_star_in_dir:
+          requires: [persist_star_in_dir]
+
+  test-03-question-mark:
+    jobs:
+      - persist_question_mark
+      - verify_question_mark:
+          requires: [persist_question_mark]
+
+  test-04-char-class:
+    jobs:
+      - persist_char_class
+      - verify_char_class:
+          requires: [persist_char_class]
+
+  test-05-char-range:
+    jobs:
+      - persist_char_range
+      - verify_char_range:
+          requires: [persist_char_range]
+
+  test-06-negated-class:
+    jobs:
+      - persist_negated_class
+      - verify_negated_class:
+          requires: [persist_negated_class]
+
+  test-07-hierarchical-star:
+    jobs:
+      - persist_hierarchical_star
+      - verify_hierarchical_star:
+          requires: [persist_hierarchical_star]
+
+  test-08-extension-class:
+    jobs:
+      - persist_extension_class
+      - verify_extension_class:
+          requires: [persist_extension_class]
+
+  test-09-whole-directory:
+    jobs:
+      - persist_whole_directory
+      - verify_whole_directory:
+          requires: [persist_whole_directory]
+
+  test-10-deep-nested-star:
+    jobs:
+      - persist_deep_nested_star
+      - verify_deep_nested_star:
+          requires: [persist_deep_nested_star]
+
+  test-11-question-in-dir:
+    jobs:
+      - persist_question_in_dir
+      - verify_question_in_dir:
+          requires: [persist_question_in_dir]
+
+  test-12-multiple-paths:
+    jobs:
+      - persist_multiple_paths
+      - verify_multiple_paths:
+          requires: [persist_multiple_paths]
+
+  test-13-hidden-file:
+    jobs:
+      - persist_hidden_file
+      - verify_hidden_file:
+          requires: [persist_hidden_file]
+
+  test-14-dot-star:
+    jobs:
+      - persist_dot_star
+      - verify_dot_star:
+          requires: [persist_dot_star]
+
+  test-15-star-in-extension:
+    jobs:
+      - persist_star_in_extension
+      - verify_star_in_extension:
+          requires: [persist_star_in_extension]
+
+  test-16-bare-star:
+    jobs:
+      - persist_bare_star
+      - verify_bare_star:
+          requires: [persist_bare_star]
+
+  test-17-exact-path:
+    jobs:
+      - persist_exact_path
+      - verify_exact_path:
+          requires: [persist_exact_path]
+
+  test-18-multi-level-star:
+    jobs:
+      - persist_multi_level_star
+      - verify_multi_level_star:
+          requires: [persist_multi_level_star]
+
+  test-19-file-with-spaces:
+    jobs:
+      - persist_file_with_spaces
+      - verify_file_with_spaces:
+          requires: [persist_file_with_spaces]
+
+  test-20-dot-everything:
+    jobs:
+      - persist_dot
+      - verify_dot:
+          requires: [persist_dot]
+
+  test-21-star-slash-star:
+    jobs:
+      - persist_star_slash_star
+      - verify_star_slash_star:
+          requires: [persist_star_slash_star]
+
+  test-22-dir-no-slash:
+    jobs:
+      - persist_dir_no_slash
+      - verify_dir_no_slash:
+          requires: [persist_dir_no_slash]
+
+  test-23-dir-with-slash:
+    jobs:
+      - persist_dir_with_slash
+      - verify_dir_with_slash:
+          requires: [persist_dir_with_slash]
