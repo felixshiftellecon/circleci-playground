@@ -18,6 +18,15 @@ workflows:
           filters:
             tags:
               ignore: /.*/
+      - path-filtering/filter:
+          mapping: |
+            path_a/.* run-path-a true
+            path_b/.* run-path-b true
+          base-revision: main
+          config-path: .circleci/continue-config.yml
+          filters:
+            tags:
+              ignore: /.*/
       - continuation/continue:
           configuration_path: .circleci/continue_config.yml
           filters:
