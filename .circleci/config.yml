@@ -1,7 +1,5 @@
 version: 2.1
 
-setup: true
-
 orbs:
   node: circleci/node@7.2.1
 
