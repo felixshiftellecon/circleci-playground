@@ -11,6 +11,6 @@ workflows:
           executor:
             name: node/default
       - node/run:
-          bun-run: build
+          bun-run: test
           executor:
             name: node/default
