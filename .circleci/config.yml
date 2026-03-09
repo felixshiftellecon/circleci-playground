@@ -7,6 +7,6 @@ workflows:
   setup-workflow:
     jobs:
       - private-orb-test/hello:
-        - to: me
+          to: me
       - private-orb-test/hello:
-        - to: you
+          to: you
