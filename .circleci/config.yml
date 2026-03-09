@@ -10,7 +10,6 @@ workflows:
   setup-workflow:
     jobs:
       - path-filtering/filter:
-          name: check path
           mapping: |
             path_a/.* run-path-a true
             path_b/.* run-path-b true
@@ -20,7 +19,6 @@ workflows:
             tags:
               ignore: /.*/
       - continuation/continue:
-          name: Continue from Tag
           configuration_path: .circleci/continue_config.yml
           filters:
             tags:
@@ -28,7 +26,6 @@ workflows:
             branches:
               ignore: /.*/
       - continuation/continue:
-          name: Continue from API
           configuration_path: ./.circleci/continue_config.yml
           filters:
             tags:
