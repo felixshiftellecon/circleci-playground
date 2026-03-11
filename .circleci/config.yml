@@ -2,11 +2,20 @@ version: 2.1
 
 orbs:
   private-orb-test: felixshiftellecon/private-orb-test@1.0.1
+  node: circleci/node@7.2.1
 
 workflows:
   setup-workflow:
     jobs:
+      - node/run:
+          bun-run: build
+          executor:
+            name: node/default
       - private-orb-test/hello:
           to: me
+          requires:
+            - node/run
       - private-orb-test/hello:
           to: you
+          requires:
+            - node/run
