@@ -1,8 +1,5 @@
 version: 2.1
 
-orbs: 
-  orb-test: felixshiftellecon/orb-test@1.0.0
-
 executors:
   base:
     docker:
@@ -12,7 +9,7 @@ jobs:
   job_a:
     executor: base
     steps:
-      - orb-test/greet
+      - run: echo "Hello John
 
 workflows:
   job-workflow:
