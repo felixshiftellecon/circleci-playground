@@ -27,12 +27,19 @@ jobs:
       - setup_remote_docker:
           version: default
       - run: docker --version
-  version-26:
+  version-edge:
     executor: base
     resource_class: medium.gen2
     steps:
       - setup_remote_docker:
-          version: 26.0.0
+          version: edge
+      - run: docker --version
+  version-24:
+    executor: base
+    resource_class: medium.gen2
+    steps:
+      - setup_remote_docker:
+          version: docker24
       - run: docker --version
 
 workflows:
