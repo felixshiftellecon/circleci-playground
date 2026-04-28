@@ -47,4 +47,5 @@ workflows:
     jobs:
       - no-version-set
       - version-default
-      - version-26
+      - version-edge
+      - version-24
