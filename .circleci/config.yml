@@ -1,10 +1,10 @@
 version: 2.1
 
 # Config policy fixture: literal circleci/path-filtering pin (CPM sees semver).
-# Branch: cpm-pf-0.1.0
+# Branch: cpm-pf-1
 
 orbs:
-  path-filtering: circleci/path-filtering@0.1.0
+  path-filtering: circleci/path-filtering@1
 
 executors:
   base:
@@ -16,7 +16,7 @@ jobs:
     executor: base
     resource_class: small
     steps:
-      - run: echo "path-filtering orb literal pin 0.1.0"
+      - run: echo "path-filtering orb literal pin 1"
 
 workflows:
   policy_fixture:
