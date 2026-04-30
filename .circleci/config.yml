@@ -1,19 +1,10 @@
-# Flat config for config-policy testing (API pipeline parameters + orb pin).
-# This branch intentionally does NOT use setup: true. With dynamic config, declaring
-# the same pipeline parameter in both setup and continuation and then triggering
-# via the API with a value that differs from the setup default is unsupported; see:
-# https://circleci.com/docs/guides/orchestrate/pipeline-variables/#pipeline-parameters-and-dynamic-configuration
-# https://circleci.com/docs/guides/orchestrate/dynamic-config/#config-continuation-constraints
-
 version: 2.1
 
-parameters:
-  path_filtering_orb_pin:
-    type: string
-    default: "3.0.0"
+# Config policy fixture: literal circleci/path-filtering pin (CPM sees semver).
+# Branch: cpm-pf-3.0.0
 
 orbs:
-  path-filtering: circleci/path-filtering@<< pipeline.parameters.path_filtering_orb_pin >>
+  path-filtering: circleci/path-filtering@3.0.0
 
 executors:
   base:
@@ -25,7 +16,7 @@ jobs:
     executor: base
     resource_class: small
     steps:
-      - run: echo "path_filtering_orb_pin=<< pipeline.parameters.path_filtering_orb_pin >>"
+      - run: echo "path-filtering orb literal pin 3.0.0"
 
 workflows:
   policy_fixture:
