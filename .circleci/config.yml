@@ -2,8 +2,14 @@ version: 2.1
 
 setup: true
 
+parameters:
+  # Resolved into the path-filtering orb line before policy evaluation (API trigger to test pins).
+  path_filtering_orb_pin:
+    type: string
+    default: "3.0.0"
+
 orbs:
-  path-filtering: circleci/path-filtering@0.1.0
+  path-filtering: circleci/path-filtering@<< pipeline.parameters.path_filtering_orb_pin >>
   continuation: circleci/continuation@0.2.0
 
 workflows:
