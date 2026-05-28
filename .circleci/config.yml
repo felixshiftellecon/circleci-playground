@@ -1,37 +1,68 @@
 version: 2.1
 
-setup: true
+# OAuth repro for checkout + HTTPS clone credential behavior.
+# Org: gh/felixshiftellecon (GitHub OAuth, not GitHub App standalone).
+# Branch: test/checkout-oauth-credential-repro
 
-orbs:
-  path-filtering: circleci/path-filtering@0.1.0
-  continuation: circleci/continuation@0.2.0
+executors:
+  base:
+    docker:
+      - image: cimg/base:stable
+
+jobs:
+  checkout-credential-repro:
+    executor: base
+    resource_class: small
+    steps:
+      - checkout:
+          path: /tmp/deps/service-repository
+      - run:
+          name: Diagnose git config after checkout
+          command: |
+            set -xuo pipefail
+            echo "=== org slug (expect gh/felixshiftellecon for OAuth) ==="
+            echo "${CIRCLE_PROJECT_REPONAME} @ ${CIRCLE_PROJECT_USERNAME}"
+            echo "=== git config after checkout ==="
+            git config --global --list || true
+            echo "=== checked-out repo remote ==="
+            git -C /tmp/deps/service-repository remote -v
+      - run:
+          name: Install github.com HTTPS credential helper (workflows-orb pattern)
+          command: |
+            set -euo pipefail
+            CRED_HELPER="${HOME}/.git-credential-github.sh"
+            cat > "${CRED_HELPER}" << 'HELPER_EOF'
+            #!/bin/bash
+            case "$1" in
+              get)
+                echo "username=x-access-token"
+                echo "password=${GITHUB_TOKEN}"
+                ;;
+            esac
+            HELPER_EOF
+            chmod 700 "${CRED_HELPER}"
+            git config --global credential."https://github.com".helper "${CRED_HELPER}"
+            git config --global --add url."https://github.com/".insteadOf "git@github.com:"
+            git config --global --add url."https://github.com/".insteadOf "ssh://git@github.com/"
+            echo "=== git config after helper install ==="
+            git config --global --list
+            cat "${CRED_HELPER}"
+      - run:
+          name: Clone same repo over HTTPS
+          command: |
+            set -xuo pipefail
+            rm -rf /tmp/deps/same-repo
+            git clone --depth 1 "https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git" /tmp/deps/same-repo
+            echo "same-repo clone: OK"
+      - run:
+          name: Clone different private repo over HTTPS
+          command: |
+            set -xuo pipefail
+            rm -rf /tmp/deps/other-private-repo
+            git clone --depth 1 https://github.com/felixshiftellecon/private-circleci-playground.git /tmp/deps/other-private-repo
+            echo "other-private-repo clone: OK"
 
 workflows:
-  setup-workflow:
+  checkout_credential_repro:
     jobs:
-      - path-filtering/filter:
-          name: check path
-          mapping: |
-            path_a/.* run-path-a true
-            path_b/.* run-path-b true
-          base-revision: main
-          config-path: .circleci/continue-config.yml
-          filters:
-            tags:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from Tag
-          configuration_path: .circleci/continue_config.yml
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from API
-          configuration_path: ./.circleci/continue_config.yml
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              ignore: /.*/
+      - checkout-credential-repro
