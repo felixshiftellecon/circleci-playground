@@ -31,15 +31,15 @@ jobs:
           command: |
             set -euo pipefail
             CRED_HELPER="${HOME}/.git-credential-github.sh"
-            cat > "${CRED_HELPER}" << 'HELPER_EOF'
-            #!/bin/bash
-            case "$1" in
-              get)
-                echo "username=x-access-token"
-                echo "password=${GITHUB_TOKEN}"
-                ;;
-            esac
-            HELPER_EOF
+            printf '%s\n' \
+              '#!/bin/bash' \
+              'case "$1" in' \
+              '  get)' \
+              '    echo "username=x-access-token"' \
+              '    echo "password=${GITHUB_TOKEN}"' \
+              '    ;;' \
+              'esac' \
+              > "${CRED_HELPER}"
             chmod 700 "${CRED_HELPER}"
             git config --global credential."https://github.com".helper "${CRED_HELPER}"
             git config --global --add url."https://github.com/".insteadOf "git@github.com:"
