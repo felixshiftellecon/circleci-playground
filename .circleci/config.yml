@@ -1,37 +1,34 @@
 version: 2.1
-
 setup: true
 
+# Theory B (setup workflow): read an in-repo YAML file at runtime, build a JSON
+# parameters map, and hand it to circleci/continuation `continue` so those values
+# become PIPELINE parameters in the continued config.
+
 orbs:
-  path-filtering: circleci/path-filtering@0.1.0
-  continuation: circleci/continuation@0.2.0
+  continuation: circleci/continuation@1.0.0
+
+jobs:
+  build-params:
+    docker:
+      - image: cimg/base:2024.01
+    steps:
+      - checkout
+      - run:
+          name: Install yq
+          command: |
+            curl -sSL "https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64" -o /tmp/yq
+            chmod +x /tmp/yq
+      - run:
+          name: Build pipeline parameters JSON from in-repo app-config.yml
+          command: |
+            /tmp/yq -o=json '.parameters' app-config.yml | tee /tmp/pipeline-parameters.json
+      - continuation/continue:
+          configuration_path: .circleci/continued.yml
+          # `parameters` accepts a path to a JSON file (the orb cats it at runtime).
+          parameters: /tmp/pipeline-parameters.json
 
 workflows:
-  setup-workflow:
+  setup:
     jobs:
-      - path-filtering/filter:
-          name: check path
-          mapping: |
-            path_a/.* run-path-a true
-            path_b/.* run-path-b true
-          base-revision: main
-          config-path: .circleci/continue-config.yml
-          filters:
-            tags:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from Tag
-          configuration_path: .circleci/continue_config.yml
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from API
-          configuration_path: ./.circleci/continue_config.yml
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              ignore: /.*/
+      - build-params

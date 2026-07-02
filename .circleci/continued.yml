@@ -1,0 +1,43 @@
+version: 2.1
+
+# Continued config: declares top-level PIPELINE parameters that match the keys
+# produced by the setup workflow from app-config.yml. If continuation injected
+# them, the defaults below are overridden by the in-repo file's values.
+
+parameters:
+  deploy_env:
+    type: string
+    default: "UNSET"
+  run_integration_tests:
+    type: boolean
+    default: false
+  worker_count:
+    type: integer
+    default: 0
+  image_tag:
+    type: string
+    default: "UNSET"
+
+jobs:
+  report:
+    docker:
+      - image: cimg/base:2024.01
+    steps:
+      - run:
+          name: Prove pipeline params were injected from the in-repo file
+          command: |
+            echo "deploy_env            = << pipeline.parameters.deploy_env >>"
+            echo "run_integration_tests = << pipeline.parameters.run_integration_tests >>"
+            echo "worker_count          = << pipeline.parameters.worker_count >>"
+            echo "image_tag             = << pipeline.parameters.image_tag >>"
+            # Fail the job if the values did NOT flow from app-config.yml:
+            test "<< pipeline.parameters.deploy_env >>" = "staging"
+            test "<< pipeline.parameters.run_integration_tests >>" = "true"
+            test "<< pipeline.parameters.worker_count >>" = "3"
+            test "<< pipeline.parameters.image_tag >>" = "v1.4.2"
+            echo "OK: all pipeline parameters matched the in-repo file."
+
+workflows:
+  continued:
+    jobs:
+      - report

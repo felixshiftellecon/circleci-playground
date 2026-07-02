@@ -1,0 +1,8 @@
+# Generic in-repo file whose values become PIPELINE parameters in the
+# continued config. Edit these values and the continued pipeline changes,
+# without touching either config file.
+parameters:
+  deploy_env: "staging"
+  run_integration_tests: true
+  worker_count: 3
+  image_tag: "v1.4.2"
