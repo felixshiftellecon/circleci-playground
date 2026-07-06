@@ -1,34 +1,26 @@
 version: 2.1
-setup: true
 
-# Theory B (setup workflow): read an in-repo YAML file at runtime, build a JSON
-# parameters map, and hand it to circleci/continuation `continue` so those values
-# become PIPELINE parameters in the continued config.
+parameters:
+  test:
+    type: string
+    default: "pass me"
 
 orbs:
-  continuation: circleci/continuation@1.0.0
-
-jobs:
-  build-params:
-    docker:
-      - image: cimg/base:2024.01
-    steps:
-      - checkout
-      - run:
-          name: Install yq
-          command: |
-            curl -sSL "https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64" -o /tmp/yq
-            chmod +x /tmp/yq
-      - run:
-          name: Build pipeline parameters JSON from in-repo app-config.yml
-          command: |
-            /tmp/yq -o=json '.parameters' app-config.yml | tee /tmp/pipeline-parameters.json
-      - continuation/continue:
-          configuration_path: .circleci/continued.yml
-          # `parameters` accepts a path to a JSON file (the orb cats it at runtime).
-          parameters: /tmp/pipeline-parameters.json
+  inline-orb:
+    jobs:
+      orb-job:
+        docker:
+          - image: cimg/base:stable
+        resource_class: small
+        parameters:
+          job_param_1:
+            type: string
+            default: "don't show me"
+        steps:
+          - run: echo << parameters.job_param_1 >>
 
 workflows:
-  setup:
+  test-workflow:
     jobs:
-      - build-params
+      - inline-orb/orb-job:
+          job_param_1: << pipeline.parameters.test >>
