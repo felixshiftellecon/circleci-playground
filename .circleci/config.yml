@@ -1,37 +1,141 @@
 version: 2.1
 
-setup: true
+# =============================================================================
+# Experiment: how does a fan-in `requires` map with multiple jobs behave?
+#
+# Question under test:
+#   cleanup:
+#     requires:
+#       - job_a: [failed, canceled]
+#       - job_b: [failed, canceled]
+#   Does cleanup run if EITHER job fails, or only if BOTH fail?
+#
+# Docs say: a job waits until ALL upstream jobs attain one of the listed
+# statuses  ->  AND across jobs, OR within each job's status list.
+# The scenarios below prove it and test the API-cancel follow-ups.
+# =============================================================================
 
-orbs:
-  path-filtering: circleci/path-filtering@0.1.0
-  continuation: circleci/continuation@0.2.0
+executors:
+  base:
+    docker:
+      - image: cimg/base:stable
+  py:
+    docker:
+      - image: cimg/python:3.12
+
+jobs:
+  pass:
+    executor: base
+    steps:
+      - run: 'echo "this job succeeds"; exit 0'
+
+  fail:
+    executor: base
+    steps:
+      - run: 'echo "this job fails"; exit 1'
+
+  long:
+    executor: base
+    steps:
+      - run:
+          name: sleep so it is still running when a sibling fails
+          command: sleep 300
+
+  cleanup:
+    executor: base
+    steps:
+      - run: 'echo "===== CLEANUP JOB EXECUTED ====="'
+
+  # on_fail -> cancel the ENTIRE workflow via the v2 API
+  fail_then_cancel_workflow:
+    executor: base
+    steps:
+      - run: 'echo "about to fail"; exit 1'
+      - run:
+          name: on_fail -> POST /workflow/{id}/cancel
+          when: on_fail
+          command: |
+            echo "Cancelling whole workflow ${CIRCLE_WORKFLOW_ID}"
+            curl -sS -X POST -H "Circle-Token: ${CIRCLE_TOKEN}" \
+              "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/cancel"
+
+  # on_fail -> cancel ONLY the still-running sibling job (precise approach)
+  fail_then_cancel_sibling:
+    executor: py
+    steps:
+      - run: 'echo "about to fail"; exit 1'
+      - run:
+          name: on_fail -> find running sibling and cancel just that job
+          when: on_fail
+          command: |
+            python3 - \<<'PY'
+            import os, json, urllib.request
+            tok = os.environ["CIRCLE_TOKEN"]
+            wf  = os.environ["CIRCLE_WORKFLOW_ID"]
+            me  = int(os.environ["CIRCLE_BUILD_NUM"])
+            slug = "gh/felixshiftellecon/circleci-playground"
+
+            def api(url, method="GET"):
+                r = urllib.request.Request(url, method=method,
+                                           headers={"Circle-Token": tok})
+                return json.load(urllib.request.urlopen(r))
+
+            jobs = api(f"https://circleci.com/api/v2/workflow/{wf}/job")["items"]
+            for j in jobs:
+                num = j.get("job_number")
+                if num and num != me and j.get("status") == "running":
+                    print(f"Cancelling sibling job {j['name']} #{num}")
+                    api(f"https://circleci.com/api/v1.1/project/{slug}/{num}/cancel",
+                        method="POST")
+            PY
 
 workflows:
-  setup-workflow:
+  # -- Scenario 1: only ONE of the two required jobs fails ------------------
+  # Expect: s1-cleanup does NOT run (s1-pass succeeded, so its dependency
+  # -- failed/canceled -- is never satisfied). Proves AND semantics.
+  s1_one_fails:
     jobs:
-      - path-filtering/filter:
-          name: check path
-          mapping: |
-            path_a/.* run-path-a true
-            path_b/.* run-path-b true
-          base-revision: main
-          config-path: .circleci/continue-config.yml
-          filters:
-            tags:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from Tag
-          configuration_path: .circleci/continue_config.yml
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from API
-          configuration_path: ./.circleci/continue_config.yml
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              ignore: /.*/
+      - pass: {name: s1-pass}
+      - fail: {name: s1-fail}
+      - cleanup:
+          name: s1-cleanup
+          requires:
+            - s1-pass: [failed, canceled]
+            - s1-fail: [failed, canceled]
+
+  # -- Scenario 2: BOTH required jobs fail ----------------------------------
+  # Expect: s2-cleanup RUNS.
+  s2_both_fail:
+    jobs:
+      - fail: {name: s2-fail-a}
+      - fail: {name: s2-fail-b}
+      - cleanup:
+          name: s2-cleanup
+          requires:
+            - s2-fail-a: [failed, canceled]
+            - s2-fail-b: [failed, canceled]
+
+  # -- Scenario 3: on_fail cancels the WHOLE workflow -----------------------
+  # Question: does s3-cleanup run, or does cancelling the workflow also
+  # cancel the pending cleanup job?
+  s3_cancel_workflow:
+    jobs:
+      - fail_then_cancel_workflow: {name: s3-fail}
+      - long: {name: s3-long}
+      - cleanup:
+          name: s3-cleanup
+          requires:
+            - s3-fail: [failed, canceled]
+            - s3-long: [failed, canceled]
+
+  # -- Scenario 4: on_fail cancels ONLY the running sibling (precise) -------
+  # Expect: s4-fail = failed, s4-long = canceled, so s4-cleanup RUNS.
+  s4_cancel_sibling:
+    jobs:
+      - fail_then_cancel_sibling: {name: s4-fail}
+      - long: {name: s4-long}
+      - cleanup:
+          name: s4-cleanup
+          requires:
+            - s4-fail: [failed, canceled]
+            - s4-long: [failed, canceled]
