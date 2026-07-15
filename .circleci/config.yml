@@ -20,6 +20,12 @@ parameters:
   test-number:
     type: integer
     default: 0
+  # When true, the setup job forwards a 513-char value to the continue API,
+  # which should reject it (>512) -> the "Continue Pipeline" step fails VISIBLY
+  # in the UI on this setup pipeline.
+  force-overlong:
+    type: boolean
+    default: false
 
 jobs:
   show-and-continue:
@@ -35,13 +41,22 @@ jobs:
             echo "test-value   = ${TEST_VALUE}"
             echo "value length = ${#TEST_VALUE}"
             echo "test-number  = << pipeline.parameters.test-number >>"
+      - run:
+          name: "Build continuation parameters (overlong toggle)"
+          command: |
+            if [ "<< pipeline.parameters.force-overlong >>" = "true" ]; then
+              VALUE=$(printf 'x%.0s' $(seq 1 513))   # 513 chars -> exceeds the 512 limit
+              echo "Forwarding an OVERLONG value: ${#VALUE} chars (expect continue API to REJECT)"
+            else
+              VALUE="${TEST_VALUE}"
+              echo "Forwarding value: ${#VALUE} chars"
+            fi
+            jq -n --arg v "$VALUE" --argjson n "<< pipeline.parameters.test-number >>" \
+              '{"forwarded-value": $v, "forwarded-number": $n}' > /tmp/continue-params.json
+            echo "Wrote /tmp/continue-params.json (value length: ${#VALUE})"
       - continuation/continue:
           configuration_path: .circleci/continue-config.yml
-          parameters: |
-            {
-              "forwarded-value": "<< pipeline.parameters.test-value >>",
-              "forwarded-number": << pipeline.parameters.test-number >>
-            }
+          parameters: /tmp/continue-params.json
 
 workflows:
   setup:

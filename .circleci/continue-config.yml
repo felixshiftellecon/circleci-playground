@@ -20,6 +20,9 @@ parameters:
   test-number:
     type: integer
     default: 0
+  force-overlong:
+    type: boolean
+    default: false
 
 jobs:
   show-continued-params:
