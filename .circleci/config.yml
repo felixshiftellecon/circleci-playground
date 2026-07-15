@@ -28,6 +28,7 @@ jobs:
     environment:
       TEST_VALUE: << pipeline.parameters.test-value >>
     steps:
+      - checkout
       - run:
           name: "Path 1 - params received by the SETUP pipeline"
           command: |
