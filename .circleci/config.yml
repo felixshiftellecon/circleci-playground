@@ -1,37 +1,48 @@
 version: 2.1
 
+# Parameter test — SETUP pipeline.
+# Exercises pipeline parameters via TWO paths:
+#   Path 1 (API/UI):  parameters supplied to THIS setup pipeline at trigger time.
+#   Path 2 (continue): parameters forwarded into the continued config through
+#                      continuation/continue's `parameters` arg (the continue API).
+
 setup: true
 
 orbs:
-  path-filtering: circleci/path-filtering@0.1.0
-  continuation: circleci/continuation@0.2.0
+  continuation: circleci/continuation@1.0.0
+
+parameters:
+  # Supply at trigger time, e.g. API v2 POST .../pipeline/run:
+  #   { "parameters": { "test-value": "hello", "test-number": 7 } }
+  test-value:
+    type: string
+    default: default-from-config
+  test-number:
+    type: integer
+    default: 0
+
+jobs:
+  show-and-continue:
+    docker:
+      - image: cimg/base:stable
+    environment:
+      TEST_VALUE: << pipeline.parameters.test-value >>
+    steps:
+      - run:
+          name: "Path 1 - params received by the SETUP pipeline"
+          command: |
+            echo "test-value   = ${TEST_VALUE}"
+            echo "value length = ${#TEST_VALUE}"
+            echo "test-number  = << pipeline.parameters.test-number >>"
+      - continuation/continue:
+          configuration_path: .circleci/continue-config.yml
+          parameters: |
+            {
+              "forwarded-value": "<< pipeline.parameters.test-value >>",
+              "forwarded-number": << pipeline.parameters.test-number >>
+            }
 
 workflows:
-  setup-workflow:
+  setup:
     jobs:
-      - path-filtering/filter:
-          name: check path
-          mapping: |
-            path_a/.* run-path-a true
-            path_b/.* run-path-b true
-          base-revision: main
-          config-path: .circleci/continue-config.yml
-          filters:
-            tags:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from Tag
-          configuration_path: .circleci/continue_config.yml
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - continuation/continue:
-          name: Continue from API
-          configuration_path: ./.circleci/continue_config.yml
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              ignore: /.*/
+      - show-and-continue
