@@ -11,6 +11,15 @@ parameters:
   forwarded-number:
     type: integer
     default: -1
+  # Explicitly-set SETUP pipeline params propagate into the continued pipeline,
+  # so the continued config must also declare them or compilation errors with
+  # "Unexpected argument(s): test-value".
+  test-value:
+    type: string
+    default: default-from-config
+  test-number:
+    type: integer
+    default: 0
 
 jobs:
   show-continued-params:
