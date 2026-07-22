@@ -1,0 +1,9 @@
+branches:
+  defaultBase: main
+pr:
+  merge:
+    method: squash
+# TODO(repo owner): set preview.primaryEnvironment + preview.environments.<name>.urlTemplate/backendBaseUrl if this repo gains a staging/preview deployment.
+# TODO(repo owner): set notifications.slack.mergeAnnouncements.channelId/channelName if a Slack merge-announcement channel exists.
+# TODO(repo owner): add ci.generatedFileCommands entries if generated files (e.g. compiled configs) are introduced.
+
